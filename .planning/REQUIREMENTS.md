@@ -74,25 +74,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOC-01 | TBD | Pending |
-| LOC-02 | TBD | Pending |
-| LOC-03 | TBD | Pending |
-| CURR-01 | TBD | Pending |
-| ANOM-01 | TBD | Pending |
-| ANOM-02 | TBD | Pending |
-| ANOM-03 | TBD | Pending |
-| ANOM-04 | TBD | Pending |
-| VIZ-01 | TBD | Pending |
-| VIZ-02 | TBD | Pending |
-| ROBU-01 | TBD | Pending |
-| PLAT-01 | TBD | Pending |
-| PLAT-02 | TBD | Pending |
+| LOC-01 | Phase 1 | Pending |
+| LOC-02 | Phase 1 | Pending |
+| LOC-03 | Phase 1 | Pending |
+| CURR-01 | Phase 2 | Pending |
+| ANOM-01 | Phase 2 | Pending |
+| ANOM-02 | Phase 2 | Pending |
+| ANOM-03 | Phase 2 | Pending |
+| ANOM-04 | Phase 2 | Pending |
+| VIZ-01 | Phase 3 | Pending |
+| VIZ-02 | Phase 3 | Pending |
+| ROBU-01 | Phase 3 | Pending |
+| PLAT-01 | Phase 1 | Pending |
+| PLAT-02 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13 ⚠️ (roadmap creation will fill this in)
+- Mapped to phases: 13
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-07-13*
-*Last updated: 2026-07-13 after initial definition*
+*Last updated: 2026-07-13 after roadmap creation*
