@@ -1,0 +1,60 @@
+:root {
+  /* Spacing scale (UI-SPEC) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* Color roles (UI-SPEC) */
+  --color-dominant: #ffffff;
+  --color-secondary: #f4f5f7;
+  --color-accent: #2563eb;
+  --color-destructive: #dc2626;
+
+  /* Typography (UI-SPEC) */
+  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+
+  --font-size-body: 16px;
+  --font-weight-body: 400;
+  --line-height-body: 1.5;
+
+  --font-size-label: 14px;
+  --font-weight-label: 400;
+  --line-height-label: 1.4;
+
+  --font-size-heading: 20px;
+  --font-weight-heading: 600;
+  --line-height-heading: 1.2;
+
+  --font-size-display: 28px;
+  --font-weight-display: 600;
+  --line-height-display: 1.2;
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  line-height: var(--line-height-body);
+  color: #08060d;
+  background: var(--color-dominant);
+}
