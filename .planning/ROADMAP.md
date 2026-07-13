@@ -32,10 +32,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The selected location is encoded in the URL, so sharing that URL loads the same location for anyone else
   4. The app is live on a public URL, requires no account or login, and runs entirely on free-tier hosting
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Scaffold (Vite+React+TS 6.0.3) + CARTO map + click/drag pin + URL state (LOC-01, LOC-03)
+- [x] 01-01-PLAN.md — Scaffold (Vite+React+TS 6.0.3) + CARTO map + click/drag pin + URL state (LOC-01, LOC-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -85,6 +85,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Location Picker & Shareable Shell | 0/3 | Not started | - |
+| 1. Location Picker & Shareable Shell | 1/3 | In Progress|  |
 | 2. Current Conditions & Anomaly Engine | 0/TBD | Not started | - |
 | 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |

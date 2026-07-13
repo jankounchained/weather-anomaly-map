@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 1
-current_phase_name: Location Picker & Shareable Shell
+current_phase: 01
+current_phase_name: location-picker-shareable-shell
 status: executing
-stopped_at: Phase 01 UI-SPEC approved
-last_updated: "2026-07-13T14:59:14.859Z"
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-07-13T20:41:23.885Z"
 last_activity: 2026-07-13
-last_activity_desc: Roadmap created from REQUIREMENTS.md and research/SUMMARY.md
+last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
-**Current focus:** Phase 1 — Location Picker & Shareable Shell
+**Current focus:** Phase 01 — location-picker-shareable-shell
 
 ## Current Position
 
-Phase: 1 of 3 (Location Picker & Shareable Shell)
-Plan: 0 of TBD in current phase
+Phase: 01 (location-picker-shareable-shell) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-07-13 — Roadmap created from REQUIREMENTS.md and research/SUMMARY.md
+Last activity: 2026-07-13 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P01 | 25min | 3 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,8 @@ Recent decisions affecting current work:
 
 - Roadmap: 3-phase structure (coarse granularity) — Location/Shell → Current Conditions/Anomaly Engine → Historical Charts/Edge Cases, following research's dependency-ordered vertical slices
 - Roadmap: PLAT-01/PLAT-02 (no login, free hosting) assigned to Phase 1 since they are foundational architecture decisions established from the first deploy onward
+- [Phase ?]: hasSelection (pin visibility) tracked locally in App.tsx via hasUrlSelection(), not added to useSelectedLocation's return shape, to keep Task 2's tested hook contract stable — Task 3 files_modified list only allows MapView.tsx/App.tsx, not useSelectedLocation.ts
+- [Phase ?]: readLocationFromUrl falls back per-field to its own default rather than an all-or-nothing default object — Matches RESEARCH.md Pattern 2 reference implementation extended with V5 range validation
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-13T14:40:51.460Z
-Stopped at: Phase 01 UI-SPEC approved
-Resume file: .planning/phases/01-location-picker-shareable-shell/01-UI-SPEC.md
+Last session: 2026-07-13T20:41:23.879Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None

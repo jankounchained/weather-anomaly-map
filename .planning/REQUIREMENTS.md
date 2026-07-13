@@ -9,9 +9,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Location
 
-- [ ] **LOC-01**: User can pick a location by clicking or dragging a pin on an interactive map
+- [x] **LOC-01**: User can pick a location by clicking or dragging a pin on an interactive map
 - [ ] **LOC-02**: User sees the selected location's place name (reverse-geocoded), falling back to coordinates if lookup fails
-- [ ] **LOC-03**: Selected location is encoded in the URL so a specific view can be shared with others
+- [x] **LOC-03**: Selected location is encoded in the URL so a specific view can be shared with others
 
 ### Current Conditions
 
@@ -74,9 +74,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOC-01 | Phase 1 | Pending |
+| LOC-01 | Phase 1 | Complete |
 | LOC-02 | Phase 1 | Pending |
-| LOC-03 | Phase 1 | Pending |
+| LOC-03 | Phase 1 | Complete |
 | CURR-01 | Phase 2 | Pending |
 | ANOM-01 | Phase 2 | Pending |
 | ANOM-02 | Phase 2 | Pending |
@@ -89,6 +89,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-02 | Phase 1 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 13 total
 - Mapped to phases: 13
 - Unmapped: 0
