@@ -87,8 +87,8 @@ describe('reverseGeocode', () => {
   })
 
   it('wires the timeout via AbortController + ~3000ms setTimeout and always clears the timer', async () => {
-    const setTimeoutSpy = vi.spyOn(global, 'setTimeout')
-    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout')
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ city: 'Prague' }))
 
     await reverseGeocode(50.0755, 14.4378)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import { MapView } from '../map/MapView'
 import { useSelectedLocation } from '../map/useSelectedLocation'
+import { useReverseGeocode } from '../geocoding/useReverseGeocode'
 import { LocationPanel } from './LocationPanel'
 
 /**
@@ -20,6 +21,13 @@ function hasUrlSelection(): boolean {
 function App() {
   const { lat, lng, zoom, setLocation } = useSelectedLocation()
   const [hasSelection, setHasSelection] = useState(hasUrlSelection)
+  // No lookup fires before a pin exists - pass null until hasSelection is
+  // true, so the default Czech Republic center never triggers a wasted
+  // BigDataCloud fetch (UI-SPEC "No pin exists on initial load").
+  const { status, name } = useReverseGeocode(
+    hasSelection ? lat : null,
+    hasSelection ? lng : null,
+  )
 
   const handleSelect = (nextLat: number, nextLng: number) => {
     setLocation(nextLat, nextLng)
@@ -37,7 +45,13 @@ function App() {
           onSelect={handleSelect}
         />
       </div>
-      <LocationPanel />
+      <LocationPanel
+        hasSelection={hasSelection}
+        status={status}
+        name={name}
+        lat={lat}
+        lng={lng}
+      />
     </div>
   )
 }
