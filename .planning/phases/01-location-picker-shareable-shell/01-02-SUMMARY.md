@@ -190,3 +190,7 @@ None. Both threats identified in this plan's `<threat_model>` (T-01-02 rendering
 ---
 *Phase: 01-location-picker-shareable-shell*
 *Completed: 2026-07-13*
+
+## Self-Check: PASSED
+
+All 8 files verified present on disk (4 created this plan, 3 modified, plus this SUMMARY); all 4 commit hashes (de1e119, b73fdde, 010ee7d, 99bc212) verified present in git log.
