@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The selected location is encoded in the URL, so sharing that URL loads the same location for anyone else
   4. The app is live on a public URL, requires no account or login, and runs entirely on free-tier hosting
 
-**Plans**: 3/3 plans complete
+**Plans**: 4 plans (3 complete, 1 gap-closure pending)
 **Wave 1**
 
 - [x] 01-01-PLAN.md — Scaffold (Vite+React+TS 6.0.3) + CARTO map + click/drag pin + URL state (LOC-01, LOC-03)
@@ -44,6 +44,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 01-03-PLAN.md — Deploy to Cloudflare Pages + verify public shareable URL (PLAT-01, PLAT-02)
+
+**Wave 4** *(gap closure — closes the CR-01 shareable-URL round-trip BLOCKER from 01-VERIFICATION.md)*
+
+- [ ] 01-04-PLAN.md — Clamp/wrap the location write path + validate hasUrlSelection + renderHook coverage (LOC-03, PLAT-01)
 
 **UI hint**: yes
 
