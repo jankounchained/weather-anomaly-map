@@ -19,10 +19,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Anomaly
 
-- [ ] **ANOM-01**: User can see today's temperature anomaly as a delta (°C) vs the 30-year historical average for that calendar day at that location, shown as the primary, most prominent number
-- [ ] **ANOM-02**: User can see today's temperature anomaly as a z-score vs the 30-year historical average, shown as a secondary/supporting stat
-- [ ] **ANOM-03**: User can see a plain-language verdict (e.g. "slightly warmer than usual") translating the anomaly into an intuitive read
-- [ ] **ANOM-04**: Anomaly baseline is computed from a day-of-year window (not a single sample per year) across 30 years of historical data, using sample standard deviation
+- [x] **ANOM-01**: User can see today's temperature anomaly as a delta (°C) vs the 30-year historical average for that calendar day at that location, shown as the primary, most prominent number
+- [x] **ANOM-02**: User can see today's temperature anomaly as a z-score vs the 30-year historical average, shown as a secondary/supporting stat
+- [x] **ANOM-03**: User can see a plain-language verdict (e.g. "slightly warmer than usual") translating the anomaly into an intuitive read
+- [x] **ANOM-04**: Anomaly baseline is computed from a day-of-year window (not a single sample per year) across 30 years of historical data, using sample standard deviation
 
 ### Visualization
 
@@ -78,10 +78,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOC-02 | Phase 1 | Complete |
 | LOC-03 | Phase 1 | Complete |
 | CURR-01 | Phase 2 | Complete |
-| ANOM-01 | Phase 2 | Pending |
-| ANOM-02 | Phase 2 | Pending |
-| ANOM-03 | Phase 2 | Pending |
-| ANOM-04 | Phase 2 | Pending |
+| ANOM-01 | Phase 2 | Complete |
+| ANOM-02 | Phase 2 | Complete |
+| ANOM-03 | Phase 2 | Complete |
+| ANOM-04 | Phase 2 | Complete |
 | VIZ-01 | Phase 3 | Pending |
 | VIZ-02 | Phase 3 | Pending |
 | ROBU-01 | Phase 3 | Pending |

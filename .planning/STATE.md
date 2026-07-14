@@ -6,14 +6,14 @@ current_phase: 02
 current_phase_name: current-conditions-anomaly-engine
 status: executing
 stopped_at: Phase 2 context gathered
-last_updated: "2026-07-14T19:06:19.145Z"
+last_updated: "2026-07-14T19:15:34.111Z"
 last_activity: 2026-07-14
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 33
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 ## Current Position
 
 Phase: 02 (current-conditions-anomaly-engine) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-07-14 — Phase 02 execution started
 
@@ -60,6 +60,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 01 P03 | 8min | 2 tasks | 1 files |
 | Phase 01 P04 | 15min | 3 tasks | 8 files |
 | Phase 02 P01 | 20min | 3 tasks | 8 files |
+| Phase 02 P02 | 7min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,9 @@ Recent decisions affecting current work:
 - [Phase 01]: wrapLng short-circuits for in-range values to avoid floating-point drift in the modulo wrap formula (Rule 1 auto-fix during 01-04) — The plan's literal formula introduced ~1e-13 drift for in-range longitudes, breaking exact idempotence required by the wrapLng(14.42)===14.42 acceptance case
 - [Phase 01]: setLocation's locationRef is updated in a useEffect, not during render (Rule 1 auto-fix during 01-04, satisfies react-hooks refs-during-render lint rule) — Mutating ref.current in the render body is a hard eslint-plugin-react-hooks 7.x lint failure; the effect-based update preserves the stable dependency-free useCallback design
 - [Phase 02]: getCurrentWeather throws (V5) instead of reverseGeocode's silent-null fallback, since weather-fetch failure needs a distinct error state
+- [Phase ?]: getHistoricalBaseline queries archive-api.open-meteo.com over [currentYear-30, currentYear-1] - 30 complete past years, current partial year always excluded to avoid baseline data-leakage (Pitfall 1)
+- [Phase ?]: formatDelta uses the Unicode minus sign (U+2212), not ASCII hyphen, for negative deltas per D-06's exact reference values
+- [Phase ?]: computeAnomalyForToday derives startYear/endYear from the min/max year present in the passed daily series rather than hard-coding them, keeping anomaly.ts fully decoupled from the fetch layer
 
 ### Pending Todos
 
@@ -99,6 +103,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-14T19:05:53.764Z
+Last session: 2026-07-14T19:14:38.596Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-current-conditions-anomaly-engine/02-CONTEXT.md

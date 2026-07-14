@@ -65,7 +65,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User sees a plain-language verdict (e.g. "slightly warmer than usual") translating the anomaly
   5. The anomaly is computed from a stable day-of-year window baseline across 30 years (not a single-day sample) using sample standard deviation, so the same location and date consistently produce a trustworthy reading
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 **Wave 1**
 
@@ -73,7 +73,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — Anomaly engine vertical slice: pure anomaly math + 30-year archive baseline + AnomalyCard delta/verdict/z-score/tooltip (ANOM-01, ANOM-02, ANOM-03, ANOM-04)
+- [x] 02-02-PLAN.md — Anomaly engine vertical slice: pure anomaly math + 30-year archive baseline + AnomalyCard delta/verdict/z-score/tooltip (ANOM-01, ANOM-02, ANOM-03, ANOM-04)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -104,5 +104,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
-| 2. Current Conditions & Anomaly Engine | 1/3 | In Progress|  |
+| 2. Current Conditions & Anomaly Engine | 2/3 | In Progress|  |
 | 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |
