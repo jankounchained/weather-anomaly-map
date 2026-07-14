@@ -35,8 +35,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Platform
 
-- [ ] **PLAT-01**: Dashboard is usable by anyone via a shared URL — no accounts, no login required
-- [ ] **PLAT-02**: App runs entirely on free hosting tiers (frontend and any backend/API layer)
+- [x] **PLAT-01**: Dashboard is usable by anyone via a shared URL — no accounts, no login required
+- [x] **PLAT-02**: App runs entirely on free hosting tiers (frontend and any backend/API layer)
 
 ## v2 Requirements
 
@@ -85,8 +85,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VIZ-01 | Phase 3 | Pending |
 | VIZ-02 | Phase 3 | Pending |
 | ROBU-01 | Phase 3 | Pending |
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
 
 **Coverage:**
 

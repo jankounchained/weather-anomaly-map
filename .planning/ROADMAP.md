@@ -13,7 +13,7 @@ A static, client-only SPA taking users from "drop a pin" to "know if today is un
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Location Picker & Shareable Shell** - Users can drop a pin, see its place name, share the exact view via URL, and reach the app with no login on free hosting
+- [x] **Phase 1: Location Picker & Shareable Shell** - Users can drop a pin, see its place name, share the exact view via URL, and reach the app with no login on free hosting (completed 2026-07-14)
 - [ ] **Phase 2: Current Conditions & Anomaly Engine** - Users can see today's temperature and a statistically sound, easy-to-interpret anomaly (delta, z-score, verdict) vs. the 30-year norm
 - [ ] **Phase 3: Historical Trend Charts & Edge Cases** - Users can see each of the last ~7 days plotted against its own historical range, and get a graceful message when historical data isn't available
 
@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The selected location is encoded in the URL, so sharing that URL loads the same location for anyone else
   4. The app is live on a public URL, requires no account or login, and runs entirely on free-tier hosting
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 **Wave 1**
 
 - [x] 01-01-PLAN.md — Scaffold (Vite+React+TS 6.0.3) + CARTO map + click/drag pin + URL state (LOC-01, LOC-03)
@@ -43,7 +43,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — Deploy to Cloudflare Pages + verify public shareable URL (PLAT-01, PLAT-02)
+- [x] 01-03-PLAN.md — Deploy to Cloudflare Pages + verify public shareable URL (PLAT-01, PLAT-02)
 
 **UI hint**: yes
 
@@ -85,6 +85,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Location Picker & Shareable Shell | 2/3 | In Progress|  |
+| 1. Location Picker & Shareable Shell | 3/3 | Complete   | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 0/TBD | Not started | - |
 | 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |
