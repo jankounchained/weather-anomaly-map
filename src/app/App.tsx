@@ -4,6 +4,8 @@ import { MapView } from '../map/MapView'
 import { useSelectedLocation, isValidUrlSelection } from '../map/useSelectedLocation'
 import { useReverseGeocode } from '../geocoding/useReverseGeocode'
 import { useCurrentWeather } from '../weather/useCurrentWeather'
+import { useHistoricalBaseline } from '../weather/useHistoricalBaseline'
+import { computeAnomalyForToday } from '../anomaly/anomaly'
 import { LocationPanel } from './LocationPanel'
 import { AnomalyCard } from './AnomalyCard'
 
@@ -28,6 +30,21 @@ function App() {
     hasSelection ? lat : null,
     hasSelection ? lng : null,
   )
+  const baseline = useHistoricalBaseline(
+    hasSelection ? lat : null,
+    hasSelection ? lng : null,
+    'temperature_2m_mean',
+  )
+  // D-09: only compute the anomaly once BOTH hooks have resolved, so the
+  // card's combined loading gate and this computation can never disagree.
+  const anomaly =
+    current.status === 'resolved' &&
+    baseline.status === 'resolved' &&
+    baseline.daily &&
+    current.localDate != null &&
+    current.tempC != null
+      ? computeAnomalyForToday(baseline.daily, current.localDate, current.tempC)
+      : null
 
   const handleSelect = (nextLat: number, nextLng: number) => {
     setLocation(nextLat, nextLng)
@@ -55,8 +72,10 @@ function App() {
         <AnomalyCard
           hasSelection={hasSelection}
           currentStatus={current.status}
+          baselineStatus={baseline.status}
           tempC={current.tempC}
           units={current.units}
+          anomaly={anomaly}
         />
       </LocationPanel>
     </div>

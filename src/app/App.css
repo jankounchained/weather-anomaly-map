@@ -122,3 +122,61 @@
 .anomaly-card--error .anomaly-card__body {
   color: var(--color-destructive);
 }
+
+.anomaly-card--resolved {
+  gap: var(--space-xs);
+}
+
+.anomaly-card__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.anomaly-card__info {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-heading);
+  line-height: 1;
+  cursor: help;
+  padding: 0;
+}
+
+/* D-08 hero: the delta reads as the single most prominent number on the
+   card, larger and heavier than App.css's existing --font-size-display
+   scale (already used for the plain current-temperature display). */
+.anomaly-card__delta {
+  margin: 0;
+  font-size: calc(var(--font-size-display) * 1.7);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.anomaly-card__verdict {
+  margin: 0;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--line-height-heading);
+}
+
+/* D-08 secondary chip: clearly de-emphasized vs. the delta/verdict above. */
+.anomaly-card__zscore {
+  margin: var(--space-xs) 0 0;
+  display: inline-block;
+  width: fit-content;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-label);
+  line-height: var(--line-height-label);
+  color: #4b5563;
+  background: var(--color-secondary);
+  border-radius: 999px;
+  padding: 2px var(--space-sm);
+}
