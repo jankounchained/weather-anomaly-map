@@ -89,6 +89,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Location Picker & Shareable Shell | 4/4 | Complete   | 2026-07-14 |
+| 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 0/TBD | Not started | - |
 | 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |
