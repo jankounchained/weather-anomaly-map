@@ -3,7 +3,9 @@ import './App.css'
 import { MapView } from '../map/MapView'
 import { useSelectedLocation, isValidUrlSelection } from '../map/useSelectedLocation'
 import { useReverseGeocode } from '../geocoding/useReverseGeocode'
+import { useCurrentWeather } from '../weather/useCurrentWeather'
 import { LocationPanel } from './LocationPanel'
+import { AnomalyCard } from './AnomalyCard'
 
 function App() {
   const { lat, lng, zoom, setLocation } = useSelectedLocation()
@@ -19,6 +21,10 @@ function App() {
   // true, so the default Czech Republic center never triggers a wasted
   // BigDataCloud fetch (UI-SPEC "No pin exists on initial load").
   const { status, name } = useReverseGeocode(
+    hasSelection ? lat : null,
+    hasSelection ? lng : null,
+  )
+  const current = useCurrentWeather(
     hasSelection ? lat : null,
     hasSelection ? lng : null,
   )
@@ -45,7 +51,14 @@ function App() {
         name={name}
         lat={lat}
         lng={lng}
-      />
+      >
+        <AnomalyCard
+          hasSelection={hasSelection}
+          currentStatus={current.status}
+          tempC={current.tempC}
+          units={current.units}
+        />
+      </LocationPanel>
     </div>
   )
 }

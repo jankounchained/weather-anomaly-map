@@ -83,3 +83,42 @@
     transform: rotate(360deg);
   }
 }
+
+.anomaly-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.anomaly-card__body {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  line-height: var(--line-height-body);
+}
+
+.anomaly-card__temp {
+  margin: 0;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-display);
+  line-height: var(--line-height-display);
+}
+
+.anomaly-card--loading {
+  flex-direction: row;
+  align-items: center;
+}
+
+.anomaly-card__spinner {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border: 2px solid var(--color-accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: location-display-spin 0.8s linear infinite;
+}
+
+.anomaly-card--error .anomaly-card__body {
+  color: var(--color-destructive);
+}
