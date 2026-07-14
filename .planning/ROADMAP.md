@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The selected location is encoded in the URL, so sharing that URL loads the same location for anyone else
   4. The app is live on a public URL, requires no account or login, and runs entirely on free-tier hosting
 
-**Plans**: 4 plans (3 complete, 1 gap-closure pending)
+**Plans**: 4/4 plans complete
 **Wave 1**
 
 - [x] 01-01-PLAN.md — Scaffold (Vite+React+TS 6.0.3) + CARTO map + click/drag pin + URL state (LOC-01, LOC-03)
@@ -47,7 +47,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 4** *(gap closure — closes the CR-01 shareable-URL round-trip BLOCKER from 01-VERIFICATION.md)*
 
-- [ ] 01-04-PLAN.md — Clamp/wrap the location write path + validate hasUrlSelection + renderHook coverage (LOC-03, PLAT-01)
+- [x] 01-04-PLAN.md — Clamp/wrap the location write path + validate hasUrlSelection + renderHook coverage (LOC-03, PLAT-01)
 
 **UI hint**: yes
 
@@ -89,6 +89,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Location Picker & Shareable Shell | 3/3 | Complete   | 2026-07-14 |
+| 1. Location Picker & Shareable Shell | 4/4 | Complete   | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 0/TBD | Not started | - |
 | 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |
