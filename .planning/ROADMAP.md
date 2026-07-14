@@ -14,7 +14,7 @@ A static, client-only SPA taking users from "drop a pin" to "know if today is un
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Location Picker & Shareable Shell** - Users can drop a pin, see its place name, share the exact view via URL, and reach the app with no login on free hosting (completed 2026-07-14)
-- [ ] **Phase 2: Current Conditions & Anomaly Engine** - Users can see today's temperature and a statistically sound, easy-to-interpret anomaly (delta, z-score, verdict) vs. the 30-year norm
+- [x] **Phase 2: Current Conditions & Anomaly Engine** - Users can see today's temperature and a statistically sound, easy-to-interpret anomaly (delta, z-score, verdict) vs. the 30-year norm (completed 2026-07-14)
 - [ ] **Phase 3: Historical Trend Charts & Edge Cases** - Users can see each of the last ~7 days plotted against its own historical range, and get a graceful message when historical data isn't available
 
 ## Phase Details
@@ -65,7 +65,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User sees a plain-language verdict (e.g. "slightly warmer than usual") translating the anomaly
   5. The anomaly is computed from a stable day-of-year window baseline across 30 years (not a single-day sample) using sample standard deviation, so the same location and date consistently produce a trustworthy reading
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 
 **Wave 1**
 
@@ -77,7 +77,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 02-03-PLAN.md — Human-verify checkpoint: full anomaly card end-to-end against live data (CURR-01, ANOM-01..04)
+- [x] 02-03-PLAN.md — Human-verify checkpoint: full anomaly card end-to-end against live data (CURR-01, ANOM-01..04)
 
 **UI hint**: yes
 
@@ -104,5 +104,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
-| 2. Current Conditions & Anomaly Engine | 2/3 | In Progress|  |
+| 2. Current Conditions & Anomaly Engine | 3/3 | Complete   | 2026-07-14 |
 | 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |
