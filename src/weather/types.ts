@@ -33,3 +33,33 @@ export interface UseCurrentWeatherResult {
   localDate: string | null
   units: string | null
 }
+
+/** Parsed subset of Open-Meteo's /v1/archive JSON response. Only the
+ * fields the baseline fetch actually uses are modeled - kept
+ * dependency-free per CLAUDE.md. `daily`'s second key is dynamic (named
+ * after the requested `variable`), so it's indexed rather than fixed to
+ * `temperature_2m_mean` - callers read it via `daily[variable]`. */
+export interface ArchiveDailyResponse {
+  utc_offset_seconds?: number
+  timezone?: string
+  daily: {
+    time: string[]
+    [variable: string]: string[] | (number | null)[]
+  }
+}
+
+/** A normalized daily series - `values` already resolved from the
+ * archive's dynamic `daily[variable]` key - so anomaly.ts consumes it
+ * without knowing the archive's variable-specific field name. */
+export interface DailySeries {
+  time: string[]
+  values: (number | null)[]
+}
+
+/** Hook return contract: `daily` is null before a pin exists (idle), while
+ * loading, or when the archive fetch failed/malformed - the consumer
+ * renders its error/fallback branch in that case. */
+export interface UseHistoricalBaselineResult {
+  status: WeatherStatus
+  daily: DailySeries | null
+}

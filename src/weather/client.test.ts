@@ -6,7 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from 'vitest'
-import { getCurrentWeather, localDateFrom } from './client'
+import { getCurrentWeather, getHistoricalBaseline, localDateFrom } from './client'
 
 function jsonResponse(body: unknown, ok = true, status = 200) {
   return {
@@ -89,5 +89,88 @@ describe('getCurrentWeather', () => {
 describe('localDateFrom', () => {
   it("splits on 'T', taking the date portion as the pin-local today", () => {
     expect(localDateFrom('2026-07-14T20:30')).toBe('2026-07-14')
+  })
+})
+
+describe('getHistoricalBaseline', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('requests the archive URL with the exact expected params', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        daily: {
+          time: ['2020-07-14'],
+          temperature_2m_mean: [20.1],
+        },
+      }),
+    )
+
+    await getHistoricalBaseline(50.0755, 14.4378)
+
+    expect(fetch).toHaveBeenCalledTimes(1)
+    const [calledUrl] = vi.mocked(fetch).mock.calls[0]!
+    const url = new URL(String(calledUrl))
+    expect(url.origin + url.pathname).toBe(
+      'https://archive-api.open-meteo.com/v1/archive',
+    )
+    expect(url.searchParams.get('latitude')).toBe('50.0755')
+    expect(url.searchParams.get('longitude')).toBe('14.4378')
+    expect(url.searchParams.get('daily')).toBe('temperature_2m_mean')
+    expect(url.searchParams.get('timezone')).toBe('auto')
+  })
+
+  it('spans the last 30 complete past years (end = currentYear-1, start = currentYear-30)', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        daily: {
+          time: ['2020-07-14'],
+          temperature_2m_mean: [20.1],
+        },
+      }),
+    )
+
+    const currentYear = new Date().getUTCFullYear()
+    await getHistoricalBaseline(50.0755, 14.4378)
+
+    const [calledUrl] = vi.mocked(fetch).mock.calls[0]!
+    const url = new URL(String(calledUrl))
+    expect(url.searchParams.get('start_date')).toBe(
+      `${currentYear - 30}-01-01`,
+    )
+    expect(url.searchParams.get('end_date')).toBe(`${currentYear - 1}-12-31`)
+  })
+
+  it('throws an Error containing the status on a non-2xx response', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({}, false, 500))
+
+    await expect(getHistoricalBaseline(50.0755, 14.4378)).rejects.toThrow(
+      '500',
+    )
+  })
+
+  it('throws rather than resolving when the daily series is empty', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        daily: {
+          time: [],
+          temperature_2m_mean: [],
+        },
+      }),
+    )
+
+    await expect(getHistoricalBaseline(50.0755, 14.4378)).rejects.toThrow()
+  })
+
+  it('throws rather than resolving when the daily object is missing entirely', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({}))
+
+    await expect(getHistoricalBaseline(50.0755, 14.4378)).rejects.toThrow()
   })
 })
