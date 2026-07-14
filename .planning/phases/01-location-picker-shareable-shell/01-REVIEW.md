@@ -19,9 +19,9 @@ files_reviewed_list:
   - src/map/useSelectedLocation.test.ts
   - src/map/useSelectedLocation.ts
 findings:
-  critical: 1
+  critical: 0
   warning: 4
-  info: 3
+  info: 4
   total: 8
 status: issues_found
 ---
@@ -35,144 +35,119 @@ status: issues_found
 
 ## Summary
 
-Reviewed the location picker + shareable-URL shell (map, URL-state hook, coordinate helpers, reverse-geocode hook, and the location panel UI). No hardcoded secrets, `eval`, `innerHTML`/`dangerouslySetInnerHTML`, empty catch blocks, or leftover debug statements were found on a pattern scan of all 14 files. The reverse-geocode fallback path is genuinely careful about not special-casing failure modes (D-02), and the URL-read path (`readLocationFromUrl`) does validate and clamp correctly.
+Re-reviewed the location picker + shareable-URL shell after plan 01-04's gap-closure pass. The prior review's `CR-01` (unclamped/unwrapped write path breaking the shareable-URL round trip), `WR-01` (`hasSelection` disagreeing with the URL hook's own validation), `WR-02` (side effect inside a `useState` updater), `WR-03` (untyped geocode response), `IN-01` (lenient trailing-garbage parsing), and `IN-02` (undocumented unused CSS token) are all verifiably fixed in the current code: `setLocation` now clamps latitude and wraps longitude at the single write boundary, `isValidUrlSelection` reuses the same `parseGuarded` validation as the read path, the URL write happens outside the state updater, the geocode response is cast to `ReverseGeocodeResult`, a strict `^-?\d+(\.\d+)?$` regex rejects trailing-garbage numerics, and `--color-destructive` now carries a "reserved for later" comment. `IN-03` is only partially closed — see IN-03 below.
 
-However, the write path back to the URL (`setLocation`) does **not** apply the same clamping that the read path enforces, which breaks the "shareable via URL" round-trip guarantee for a common, non-exotic Leaflet interaction (panning across repeated world copies, then clicking). There is also a real gap between how `App.tsx` decides "a pin exists" (raw presence of `lat`/`lng` keys) and how `useSelectedLocation` decides the actual coordinates (validated, defaults substituted on failure), which produces a state where a malformed shared link shows a pin at the default center and fires a wasted geocode lookup — the exact behavior the code's own comments say they're trying to avoid.
+No hardcoded secrets, `eval`, `innerHTML`/`dangerouslySetInnerHTML`, empty catch blocks, or debug artifacts were found. All dynamic text renders through ordinary JSX text nodes (no raw-HTML sink), consistent with the code's own XSS-avoidance comments.
 
-## Critical Issues
-
-### CR-01: `setLocation` writes unclamped/unwrapped lat/lng to the URL, breaking the shareable-link round trip
-
-**File:** `src/map/useSelectedLocation.ts:98-107`
-**Issue:** `readLocationFromUrl` (the read path) validates every field with `parseGuarded`, rejecting any value that `clampLat`/`clampLng`/`clampZoom` would change (`src/map/useSelectedLocation.ts:23-34`). But `setLocation` — the *write* path invoked on every map click/drag (`src/map/MapView.tsx:20,41`, `src/app/App.tsx:32-35`) — only applies `round4`, never `clampLat`/`clampLng`:
-
-```ts
-const setLocation = useCallback(
-  (lat: number, lng: number, zoom?: number) => {
-    setLocationState((prev) => {
-      const nextZoom = zoom ?? prev.zoom
-      writeLocationToUrl(lat, lng, nextZoom)          // no clamp
-      return { lat: round4(lat), lng: round4(lng), zoom: nextZoom } // no clamp
-    })
-  },
-  [],
-)
-```
-
-Leaflet's default `MapContainer` (no `maxBounds`/`noWrap` set in `src/map/MapView.tsx:74-87`) allows continuous horizontal panning across repeated "world copies." A click after panning past ±180° longitude returns an unwrapped `e.latlng.lng` outside `[-180, 180]` (e.g. `200`, `380`) straight from `ClickHandler` (`src/map/MapView.tsx:17-24`). That raw value flows unclamped into `writeLocationToUrl`, producing a URL like `?lat=..&lng=380&zoom=..`.
-
-When that link is reopened, `readLocationFromUrl` correctly identifies `lng=380` as out-of-range (`clampLng(380) !== 380`) and rejects it, silently falling back to `DEFAULT_CENTER` (`src/lib/coords.ts:6`) instead of the location the original user actually selected and shared. This directly defeats the project's core "shareable via URL" value proposition (see `.claude/CLAUDE.md` constraints) for an interaction pattern (world-wrap panning) that is common, not exotic.
-
-**Fix:** Normalize longitude (wrap, not clamp — longitude is cyclic so clamping to 180 would collapse many distinct real-world points onto the antimeridian) and clamp latitude before storing/writing:
-
-```ts
-function wrapLng(lng: number): number {
-  return ((((lng + 180) % 360) + 360) % 360) - 180
-}
-
-const setLocation = useCallback(
-  (lat: number, lng: number, zoom?: number) => {
-    setLocationState((prev) => {
-      const nextLat = clampLat(round4(lat))
-      const nextLng = round4(wrapLng(lng))
-      const nextZoom = zoom ?? prev.zoom
-      writeLocationToUrl(nextLat, nextLng, nextZoom)
-      return { lat: nextLat, lng: nextLng, zoom: nextZoom }
-    })
-  },
-  [],
-)
-```
+This pass surfaces four Warnings (a still-open zoom round-trip gap carried forward from the prior review as `WR-04`, plus three new gaps — an unmemoized map-event handlers object causing listener churn, an unvalidated write path for lat/lng, and a decimal-zoom truncation edge case) and four Info items. None of these are security or data-loss issues; they are correctness/robustness gaps and code-quality nits.
 
 ## Warnings
 
-### WR-01: `hasUrlSelection()` checks key presence, not validity — malformed shared link shows a pin at the default center and fires a wasted geocode fetch
+### WR-01: `ClickHandler` passes a brand-new handlers object to `useMapEvents` on every render, causing the map's click listener to be torn down and rebuilt constantly
 
-**File:** `src/app/App.tsx:16-19, 27-30`
-**Issue:** `hasUrlSelection` only checks that both `lat` and `lng` keys are present in the query string:
+**File:** `src/map/MapView.tsx:17-24`
+**Issue:** `useMapEvents` (react-leaflet) keys its listener-binding effect on referential identity of the handlers object it's given (`node_modules/react-leaflet/lib/hooks.js:22-34`: `useEffect(() => { map.on(handlers); return () => map.off(handlers) }, [map, handlers])`). `ClickHandler` passes an inline object literal every render:
 
-```ts
-function hasUrlSelection(): boolean {
-  const params = new URLSearchParams(window.location.search)
-  return params.has('lat') && params.has('lng')
+```tsx
+function ClickHandler({ onSelect }: ClickHandlerProps) {
+  useMapEvents({
+    click(e) {
+      onSelect(e.latlng.lat, e.latlng.lng)
+    },
+  })
+  return null
 }
 ```
 
-It does not run the values through the same `parseGuarded`/clamp validation that `readLocationFromUrl` uses. So a link like `?lat=abc&lng=999` sets `hasSelection = true`, while `useSelectedLocation` resolves `lat`/`lng` to `DEFAULT_CENTER` (both fields fail validation independently). The result: `MapView` renders a `DraggablePin` at the default Czech-Republic center (`src/map/MapView.tsx:83-85`) as if the user had explicitly chosen that spot, and `useReverseGeocode` fires a real lookup against that default center (`src/app/App.tsx:27-30`) — precisely the "wasted BigDataCloud fetch against the default center" the code's own comment says this design is meant to prevent (`src/app/App.tsx:24-26`).
-
-**Fix:** Derive `hasSelection` from the same validated read, e.g. reuse `readLocationFromUrl`'s per-field guard to check both raw params are individually valid before treating the link as carrying an explicit selection:
-
-```ts
-function hasUrlSelection(): boolean {
-  const params = new URLSearchParams(window.location.search)
-  if (!params.has('lat') || !params.has('lng')) return false
-  const lat = parseFloat(params.get('lat')!)
-  const lng = parseFloat(params.get('lng')!)
-  return (
-    Number.isFinite(lat) && clampLat(lat) === lat &&
-    Number.isFinite(lng) && clampLng(lng) === lng
+Since this object is a new reference every render, the effect's cleanup (`map.off(oldHandlers)`) and re-run (`map.on(newHandlers)`) fire on **every** render of `MapView`/`App` — not just when `onSelect` actually changes. In this app, `App` re-renders on every `useReverseGeocode` status transition (idle→loading→resolved happens on every single pin placement), so the map's click listener is unbound and rebound repeatedly per click. `DraggablePin` in the same file correctly memoizes its `eventHandlers` with `useMemo(..., [onSelect])` (`src/map/MapView.tsx:35-46`) — `ClickHandler` should follow the same pattern for consistency and to avoid needless listener churn.
+**Fix:**
+```tsx
+function ClickHandler({ onSelect }: ClickHandlerProps) {
+  const handlers = useMemo(
+    () => ({
+      click(e: LeafletMouseEvent) {
+        onSelect(e.latlng.lat, e.latlng.lng)
+      },
+    }),
+    [onSelect],
   )
+  useMapEvents(handlers)
+  return null
 }
 ```
 
-### WR-02: Side effect (`writeLocationToUrl`) executed inside a `useState` updater function
+### WR-02: `setLocation` writes to the shared URL without validating `lat`/`lng` are finite numbers
 
-**File:** `src/map/useSelectedLocation.ts:98-107`
-**Issue:** `setLocationState((prev) => { ...; writeLocationToUrl(...); return ...})` performs a side effect (writing to browser history) directly inside a functional state updater. React requires updater functions to be pure — under `<StrictMode>` (used in `src/main.tsx:23`), React intentionally invokes updater functions twice in development to surface exactly this kind of impurity. In this case the double call is idempotent (same URL written twice) so it isn't user-visible today, but it's a latent correctness hazard: any future change that makes `writeLocationToUrl` non-idempotent (e.g. adding an analytics ping, or an increment-based unique id) will silently fire twice per state update.
-**Fix:** Move the side effect out of the updater, e.g. compute the next value first and call `writeLocationToUrl` after `setLocationState` (or in a `useEffect` keyed on `[lat, lng, zoom]`):
+**File:** `src/map/useSelectedLocation.ts:132-145`
+**Issue:** The read path (`parseGuarded`, `src/map/useSelectedLocation.ts:26-41`) explicitly checks `Number.isFinite(value)` before accepting a URL-sourced coordinate. The write path has no equivalent guard:
 
 ```ts
 const setLocation = useCallback((lat: number, lng: number, zoom?: number) => {
-  setLocationState((prev) => {
-    const nextZoom = zoom ?? prev.zoom
-    return { lat: round4(lat), lng: round4(lng), zoom: nextZoom }
-  })
+  const nextLat = clampLat(round4(lat))
+  const nextLng = round4(wrapLng(lng))
+  ...
+  writeLocationToUrl(nextLat, nextLng, nextZoom)
+  setLocationState({ lat: nextLat, lng: nextLng, zoom: nextZoom })
 }, [])
-
-// Elsewhere: useEffect(() => writeLocationToUrl(lat, lng, zoom), [lat, lng, zoom])
 ```
 
-### WR-03: Parsed geocode response is untyped (`any`) — `ReverseGeocodeResult` is declared but never used
-
-**File:** `src/geocoding/useReverseGeocode.ts:34-38`, `src/geocoding/types.ts:6-12`
-**Issue:** `types.ts` defines `ReverseGeocodeResult` specifically to model "the fields the app actually uses from BigDataCloud's response," but `useReverseGeocode.ts` never imports or applies it:
-
-```ts
-const data = await res.json()   // data: any
-const parts = [data.city || data.locality, data.principalSubdivision, data.countryName].filter(Boolean)
-```
-
-`res.json()` returns `Promise<any>`, so `data.city`, `data.locality`, etc. are all untyped — a rename/typo in a field (e.g. `data.contryName`) would compile silently and just resolve to an empty parts array (falls back to coordinates) rather than being caught at build time. This also leaves `ReverseGeocodeResult` as dead code.
+`clampLat(NaN)` and `wrapLng(NaN)` both evaluate to `NaN` (e.g. `Math.min(90, Math.max(-90, NaN))` is `NaN`), and `String(NaN)` is `"NaN"`. If any future caller of `setLocation` (or a regression in `MapView`'s event wiring) ever passes a non-finite value, `"NaN"` would be written straight into the shareable URL query string with no defensive rejection — the exact class of bug the read path was hardened against. Today's only callers (`ClickHandler`'s `e.latlng.lat/lng` and `DraggablePin`'s `marker.getLatLng()`) always supply real numbers, so this isn't currently reachable, but it's a real asymmetry between the read and write boundaries of the same module.
 **Fix:**
 ```ts
-const data = (await res.json()) as ReverseGeocodeResult
+const setLocation = useCallback((lat: number, lng: number, zoom?: number) => {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+  const nextLat = clampLat(round4(lat))
+  ...
+}, [])
 ```
 
-### WR-04: Zoom is never captured from user map interaction — shareable URL can only ever reflect the initial zoom
+### WR-03: Zoom URL parameter silently accepts and truncates decimal values instead of rejecting them
 
-**File:** `src/map/MapView.tsx` (no zoom-change handler), `src/map/useSelectedLocation.ts:98-107`
-**Issue:** `MapContainer`'s `zoom` prop is intentionally read once at mount (documented in `src/map/MapView.tsx:67-72`), and no `zoomend`/`useMapEvents` handler exists to feed the user's subsequent scroll-wheel/zoom-control changes back into `useSelectedLocation`. Every call site for `setLocation` (`handleSelect` in `src/app/App.tsx:32-35`) omits the optional `zoom` argument, so `zoom` in state/URL is fixed forever at whatever `readLocationFromUrl` produced at mount. A user who zooms in/out and then shares the link will share a URL that recreates their pin at the *wrong* zoom level, contradicting the "shareable via URL" goal for the zoom dimension specifically.
-**Fix:** Add a zoom-tracking handler alongside `ClickHandler` (e.g. `useMapEvents({ zoomend(e) { onZoomChange(e.target.getZoom()) } })`) and wire it to call `setLocation(lat, lng, newZoom)` so zoom participates in the URL round trip, or explicitly scope this out with a comment if deferred to a later phase.
+**File:** `src/map/useSelectedLocation.ts:24-41, 64-68`
+**Issue:** `parseGuarded`'s validity regex (`STRICT_SIGNED_DECIMAL = /^-?\d+(\.\d+)?$/`) is shared across lat, lng, and zoom, and deliberately allows decimal strings (needed for lat/lng). For zoom, the parse function is `parseInt(v, 10)`, which truncates rather than rejects a decimal string:
+
+```ts
+const zoom = parseGuarded(params.get('zoom'), (v) => parseInt(v, 10), clampZoom)
+```
+
+A shared link like `?lat=50.1&lng=14.4&zoom=7.9` passes the regex (it's a syntactically valid decimal), `parseInt("7.9", 10)` silently truncates to `7`, and since `clampZoom(7) === 7` the value is accepted as "valid" — even though the raw input was never actually round-tripped. This contradicts the module's own documented contract ("Any missing, malformed, or out-of-range value is treated as invalid") and isn't caught by the existing test suite, which only exercises decimal trailing-garbage on `lat`, never a decimal `zoom`.
+**Fix:** Round-trip-check the parsed value against the raw string for integer-only fields, or use an integer-only regex for zoom:
+```ts
+const STRICT_INTEGER = /^-?\d+$/
+const zoom = parseGuarded(params.get('zoom'), (v) => parseInt(v, 10), clampZoom, STRICT_INTEGER)
+```
+
+### WR-04: Zoom is never captured from user map interaction — shareable URL can only ever reflect the initial zoom (carried forward, still open)
+
+**File:** `src/map/MapView.tsx` (no zoom-change handler), `src/app/App.tsx:26-29`
+**Issue:** This is unchanged from the prior review pass and was not addressed by plan 01-04. `MapContainer`'s `zoom` prop is intentionally read once at mount (by design, per the comment at `src/map/MapView.tsx:67-72`), and no `zoomend` handler feeds the user's subsequent scroll-wheel/zoom-control changes back into `useSelectedLocation`. `handleSelect` in `App.tsx` never passes the optional third `zoom` argument to `setLocation`, so `zoom` in state/URL is fixed forever at whatever `readLocationFromUrl` produced at mount. A user who zooms in/out and then shares the link will share a URL that recreates their pin at the *wrong* zoom level.
+**Fix:** Add a zoom-tracking handler alongside `ClickHandler` (e.g. `useMapEvents({ zoomend(e) { onZoomChange(e.target.getZoom()) } })`) wired to call `setLocation(lat, lng, newZoom)`, or explicitly scope zoom out of the shareable-URL contract for this phase with a note in `PROJECT.md`/`ROADMAP.md` so it isn't silently forgotten.
 
 ## Info
 
-### IN-01: `parseGuarded` uses lenient `parseFloat`/`parseInt`, accepting trailing garbage
+### IN-01: `handleSelect` in `App.tsx` is not memoized, compounding WR-01's listener-churn issue
 
-**File:** `src/map/useSelectedLocation.ts:23-34`
-**Issue:** `parseFloat("50.1abc")` returns `50.1` (not `NaN`), and `parseInt("8.9xyz", 10)` returns `8`. Since `parseGuarded` only checks `Number.isFinite` and whether clamping changes the value, a query string like `?lat=50.1garbage&lng=14.4&zoom=8` is silently accepted as `lat=50.1` rather than being rejected as malformed. The current test suite only exercises fully non-numeric strings (`lat=abc`), not partially-numeric ones, so this gap isn't caught by tests either.
-**Fix:** Validate with a stricter numeric regex before parsing, e.g. `/^-?\d+(\.\d+)?$/.test(raw)`, or use `Number(raw)` (which returns `NaN` for any trailing non-numeric characters) instead of `parseFloat`/`parseInt`.
+**File:** `src/app/App.tsx:26-29`
+**Issue:** `const handleSelect = (nextLat, nextLng) => { setLocation(...); setHasSelection(true) }` is a fresh closure on every render, unlike `setLocation` (stable via `useCallback` in `useSelectedLocation`). It's passed straight through as `MapView`'s `onSelect` prop, which is a dependency of `DraggablePin`'s memoized `eventHandlers` (`src/map/MapView.tsx:35-46`) — so that memoization never actually pays off, and `DraggablePin`'s drag handler is recreated every render too. Functionally harmless today (the closure always calls the same stable underlying setters), but it defeats the memoization already in place elsewhere in the same file.
+**Fix:** `const handleSelect = useCallback((nextLat: number, nextLng: number) => { setLocation(nextLat, nextLng); setHasSelection(true) }, [setLocation])`.
 
-### IN-02: Unused CSS custom property `--color-destructive`
+### IN-02: Unused CSS custom properties `--font-size-display`, `--font-weight-display`, `--line-height-display`
 
-**File:** `src/index.css:15`
-**Issue:** `--color-destructive: #dc2626;` is declared in the design-token block but never referenced by any of the reviewed `.css` files (`App.css`, `index.css`). Likely reserved for a future error-state UI, but as it stands it's dead CSS.
-**Fix:** Either use it in the current error/fallback UI (`.location-display--fallback` could use it, if a distinct "unresolved" affordance is wanted) or remove it until it's needed, with a comment noting it's reserved for a future phase.
+**File:** `src/index.css:35-37`
+**Issue:** These three design tokens are declared but never referenced by any of the reviewed `.css` files, and (unlike `--color-destructive` at line 17) carry no comment explaining they're reserved for a later phase.
+**Fix:** Either use them where a "display"-scale heading is needed, or add a one-line comment noting they're reserved for a future phase (matching the pattern already used for `--color-destructive`).
 
-### IN-03: Hooks under test only cover their extracted pure helpers, not the hooks themselves
+### IN-03: `useReverseGeocode` hook's stale-response race-guard logic still has zero direct test coverage (partially closed)
 
-**File:** `src/map/useSelectedLocation.test.ts`, `src/geocoding/useReverseGeocode.test.ts`
-**Issue:** `useSelectedLocation.test.ts` tests `readLocationFromUrl`/`writeLocationToUrl` directly but never renders `useSelectedLocation` itself (e.g. via `@testing-library/react`'s `renderHook`) — so the `setLocation` clamping gap (CR-01) and the updater-side-effect issue (WR-02) both live in code paths with zero direct test coverage. Similarly, `useReverseGeocode.test.ts` only tests the extracted `reverseGeocode` function, not the `useReverseGeocode` hook's stale-response race-guard logic (`requestIdRef`, `cancelled` flag) — the most complex logic in the geocoding module.
-**Fix:** Add `renderHook`-based tests: one for `useSelectedLocation` asserting that clicking/selecting a location outside `[-180,180]`/`[-90,90]` gets clamped before being written to state/URL, and one for `useReverseGeocode` asserting that a superseded lat/lng change discards the earlier in-flight response.
+**File:** `src/geocoding/useReverseGeocode.test.ts`, `src/geocoding/useReverseGeocode.ts:67-99`
+**Issue:** Plan 01-04 closed the `useSelectedLocation` half of this finding (there's now a `renderHook`-based `describe('useSelectedLocation', ...)` block covering the clamp/wrap write path). The `useReverseGeocode` half remains open: `useReverseGeocode.test.ts` still only imports and exercises the extracted `reverseGeocode(lat, lng)` function, never the `useReverseGeocode` hook itself. The hook's most complex logic — the `requestIdRef` stale-response guard and the `cancelled` unmount guard (`src/geocoding/useReverseGeocode.ts:74-88`) — has no test asserting that a superseded lat/lng change discards an earlier in-flight response, or that unmounting mid-fetch doesn't call `setState` on an unmounted component.
+**Fix:** Add a `renderHook`-based test that changes the hook's `lat`/`lng` arguments before the first `fetch` mock resolves, then resolves both mocked responses out of order, and asserts the hook's final `name` matches the *later* selection, not the later-resolving promise.
+
+### IN-04: `writeLocationToUrl` drops any existing URL hash fragment
+
+**File:** `src/map/useSelectedLocation.ts:100-111`
+**Issue:** `writeLocationToUrl` rebuilds the URL as `` `${window.location.pathname}?${params.toString()}` ``, which silently discards `window.location.hash` if one was present. The app doesn't currently use a hash for anything, so this is latent rather than active, but it's a foot-gun for a future feature (e.g. an in-page anchor or hash-based sub-view) that assumes `replaceState` calls elsewhere preserve the fragment.
+**Fix:** `` const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}` ``.
 
 ---
 
