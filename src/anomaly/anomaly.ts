@@ -1,0 +1,154 @@
+// Pure anomaly-statistics math: day-of-year windowing, mean/sample stddev,
+// delta/z-score, and verdict classification. Hand-rolled per CLAUDE.md
+// ("hand-roll, don't add a dependency") and STACK.md - no simple-statistics
+// or other math dependency, in the same spirit as src/lib/coords.ts.
+import type { AnomalyResult, VerdictTier } from './types'
+
+/** Arithmetic mean of a sample (feeds delta/z-score - ANOM-01, ANOM-02). */
+export function mean(values: number[]): number {
+  return values.reduce((sum, v) => sum + v, 0) / values.length
+}
+
+/** Sample standard deviation (n-1 denominator, matches spreadsheet STDEV.S)
+ * - ANOM-04, Pitfall 3. Returns 0 for fewer than 2 samples (guard). */
+export function sampleStdDev(values: number[]): number {
+  if (values.length < 2) return 0
+  const m = mean(values)
+  const variance =
+    values.reduce((sum, v) => sum + (v - m) ** 2, 0) / (values.length - 1)
+  return Math.sqrt(variance)
+}
+
+/** delta/z-score of `today` against a baseline sample (ANOM-01, ANOM-02).
+ * zScore is null (never Infinity/NaN) when the baseline has zero variance
+ * or fewer than two samples - Pitfall 2. */
+export function computeAnomaly(
+  today: number,
+  baseline: number[],
+): AnomalyResult {
+  const m = mean(baseline)
+  const sd = sampleStdDev(baseline)
+  const delta = today - m
+  const zScore = sd === 0 || baseline.length < 2 ? null : delta / sd
+  return { delta, zScore }
+}
+
+/** Neutral-tone verdict copy per tier (D-03, D-04 - practical daily-check
+ * tone, not a climate report or a playful app). */
+export const VERDICT_LABEL: Record<VerdictTier, string> = {
+  'much-colder': 'Much colder than usual',
+  'slightly-colder': 'Slightly colder than usual',
+  typical: 'Typical for today',
+  'slightly-warmer': 'Slightly warmer than usual',
+  'much-warmer': 'Much warmer than usual',
+}
+
+/** D-05 tier cutoffs, symmetric around 0: |z| < 0.5 -> typical;
+ * 0.5 <= |z| < 1.5 -> slight; |z| >= 1.5 -> much (sign picks
+ * warmer/colder). */
+export function classifyVerdict(zScore: number): VerdictTier {
+  const abs = Math.abs(zScore)
+  const sign = zScore >= 0 ? 'warmer' : 'colder'
+  if (abs < 0.5) return 'typical'
+  if (abs < 1.5) return `slightly-${sign}` as VerdictTier
+  return `much-${sign}` as VerdictTier
+}
+
+/** Looks up the D-04 neutral-tone copy for a verdict tier (ANOM-03). */
+export function verdictLabel(tier: VerdictTier): string {
+  return VERDICT_LABEL[tier]
+}
+
+/** Whole-number °C delta with an explicit sign (D-06) - avoids implying
+ * station-level decimal precision from what is actually modeled/reanalysis
+ * data (Pitfall 4). */
+export function formatDelta(delta: number): string {
+  const rounded = Math.round(delta)
+  if (rounded === 0) return '0'
+  return rounded > 0 ? `+${rounded}` : `−${Math.abs(rounded)}`
+}
+
+/** Day-of-year window bounds for one target year (D-01, D-02). Folds
+ * Feb 29 -> Feb 28 before constructing the anchor, so a leap year's window
+ * naturally includes Feb 29 as one more sample and a non-leap year's window
+ * simply has no Feb 29 to include - no special-case branch needed. Uses
+ * real Date arithmetic so a window anchored near Jan 1/Dec 31 correctly
+ * spans into the adjacent calendar year. */
+export function windowBounds(
+  year: number,
+  month: number, // 1-12
+  day: number,
+  halfWidthDays: number,
+): { start: string; end: string } {
+  const safeDay = month === 2 && day === 29 ? 28 : day
+  const anchor = Date.UTC(year, month - 1, safeDay)
+  const start = new Date(anchor - halfWidthDays * 86_400_000)
+  const end = new Date(anchor + halfWidthDays * 86_400_000)
+  return {
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
+  }
+}
+
+/** Filters a daily series to the values whose date falls inside the target
+ * day-of-year's +/-halfWidthDays window for any year in [startYear,
+ * endYear], skipping null values (ANOM-04). */
+export function filterDayOfYearWindow(
+  daily: { time: string[]; values: (number | null)[] },
+  targetMonth: number,
+  targetDay: number,
+  startYear: number,
+  endYear: number,
+  halfWidthDays = 5,
+): number[] {
+  const ranges: { start: string; end: string }[] = []
+  for (let y = startYear; y <= endYear; y++) {
+    ranges.push(windowBounds(y, targetMonth, targetDay, halfWidthDays))
+  }
+  const result: number[] = []
+  for (let i = 0; i < daily.time.length; i++) {
+    const t = daily.time[i]!
+    const v = daily.values[i]
+    if (v != null && ranges.some((r) => t >= r.start && t <= r.end)) {
+      result.push(v)
+    }
+  }
+  return result
+}
+
+/** Computes today's anomaly against the +/-5-day day-of-year baseline
+ * window derived from `daily` (ANOM-01/02/03/04). Returns null when the
+ * window yields fewer than 2 samples (insufficient baseline). Degenerate
+ * variance (zScore null) falls back to a 'typical' verdict rather than
+ * propagating NaN (Pitfall 2). */
+export function computeAnomalyForToday(
+  daily: { time: string[]; values: (number | null)[] },
+  localDate: string,
+  todayTemp: number,
+  halfWidthDays = 5,
+): { delta: number; zScore: number | null; verdictTier: VerdictTier } | null {
+  const parts = localDate.split('-')
+  const targetMonth = Number(parts[1])
+  const targetDay = Number(parts[2])
+
+  const years = daily.time
+    .map((t) => Number(t.slice(0, 4)))
+    .filter((y) => Number.isFinite(y))
+  if (years.length === 0) return null
+  const startYear = Math.min(...years)
+  const endYear = Math.max(...years)
+
+  const samples = filterDayOfYearWindow(
+    daily,
+    targetMonth,
+    targetDay,
+    startYear,
+    endYear,
+    halfWidthDays,
+  )
+  if (samples.length < 2) return null
+
+  const { delta, zScore } = computeAnomaly(todayTemp, samples)
+  const verdictTier = classifyVerdict(zScore ?? 0)
+  return { delta, zScore, verdictTier }
+}
