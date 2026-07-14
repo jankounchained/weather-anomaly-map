@@ -6,7 +6,11 @@
 // coordinates when `name` is null. No data-fetching library, no proxy/
 // backend - a direct browser fetch (CLAUDE.md, PLAT-02).
 import { useEffect, useRef, useState } from 'react'
-import type { ReverseGeocodeStatus, UseReverseGeocodeResult } from './types'
+import type {
+  ReverseGeocodeResult,
+  ReverseGeocodeStatus,
+  UseReverseGeocodeResult,
+} from './types'
 
 const TIMEOUT_MS = 3000
 
@@ -31,7 +35,7 @@ export async function reverseGeocode(
     const res = await fetch(url, { signal: controller.signal })
     if (!res.ok) return null // includes 402 fair-use ban -> fall back
 
-    const data = await res.json()
+    const data = (await res.json()) as ReverseGeocodeResult
     const parts = [data.city || data.locality, data.principalSubdivision, data.countryName].filter(
       Boolean,
     )

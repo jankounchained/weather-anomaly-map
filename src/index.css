@@ -12,6 +12,8 @@
   --color-dominant: #ffffff;
   --color-secondary: #f4f5f7;
   --color-accent: #2563eb;
+  /* reserved UI-SPEC design token, not yet consumed: for a future
+     error/destructive state (e.g. Phase 2+ weather-fetch error UI). */
   --color-destructive: #dc2626;
 
   /* Typography (UI-SPEC) */
