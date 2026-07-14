@@ -15,7 +15,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Current Conditions
 
-- [ ] **CURR-01**: User can see the current temperature for the selected location
+- [x] **CURR-01**: User can see the current temperature for the selected location
 
 ### Anomaly
 
@@ -77,7 +77,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOC-01 | Phase 1 | Complete |
 | LOC-02 | Phase 1 | Complete |
 | LOC-03 | Phase 1 | Complete |
-| CURR-01 | Phase 2 | Pending |
+| CURR-01 | Phase 2 | Complete |
 | ANOM-01 | Phase 2 | Pending |
 | ANOM-02 | Phase 2 | Pending |
 | ANOM-03 | Phase 2 | Pending |

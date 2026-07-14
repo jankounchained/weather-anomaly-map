@@ -65,11 +65,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User sees a plain-language verdict (e.g. "slightly warmer than usual") translating the anomaly
   5. The anomaly is computed from a stable day-of-year window baseline across 30 years (not a single-day sample) using sample standard deviation, so the same location and date consistently produce a trustworthy reading
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Current-temperature vertical slice: src/weather/ client + useCurrentWeather hook + AnomalyCard shell (CURR-01)
+- [x] 02-01-PLAN.md — Current-temperature vertical slice: src/weather/ client + useCurrentWeather hook + AnomalyCard shell (CURR-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -104,5 +104,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
-| 2. Current Conditions & Anomaly Engine | 0/3 | Not started | - |
+| 2. Current Conditions & Anomaly Engine | 1/3 | In Progress|  |
 | 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |
