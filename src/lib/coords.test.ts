@@ -5,6 +5,7 @@ import {
   clampLng,
   clampZoom,
   formatCoords,
+  wrapLng,
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
 } from './coords'
@@ -57,6 +58,28 @@ describe('clampZoom', () => {
 
   it('passes through in-range values unchanged', () => {
     expect(clampZoom(7)).toBe(7)
+  })
+})
+
+describe('wrapLng', () => {
+  it('wraps a longitude past the antimeridian instead of clamping to 180', () => {
+    expect(wrapLng(200)).toBe(-160)
+  })
+
+  it('wraps a longitude past the negative antimeridian instead of clamping to -180', () => {
+    expect(wrapLng(-200)).toBe(160)
+  })
+
+  it('wraps a longitude more than one full cycle out of range', () => {
+    expect(wrapLng(380)).toBe(20)
+  })
+
+  it('passes through an in-range value unchanged (idempotent)', () => {
+    expect(wrapLng(14.42)).toBe(14.42)
+  })
+
+  it('passes through the boundary value -90 unchanged', () => {
+    expect(wrapLng(-90)).toBe(-90)
   })
 })
 

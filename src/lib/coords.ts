@@ -27,6 +27,23 @@ export function clampLng(lng: number): number {
   return Math.min(180, Math.max(-180, lng))
 }
 
+/**
+ * Wrap a cyclic longitude into the valid [-180, 180] range (CR-01).
+ * Unlike clampLng, this preserves distinct real-world points instead of
+ * collapsing everything past the antimeridian onto 180/-180 - e.g. a click
+ * reporting 200 (after panning across a repeated world copy) wraps to -160,
+ * not 180. Idempotent for values already in range.
+ */
+export function wrapLng(lng: number): number {
+  // Short-circuit for in-range values: the modulo arithmetic below is
+  // exact for genuinely cyclic (out-of-range) input, but floating-point
+  // error in the intermediate +180/-180 shift can perturb an already
+  // in-range value by ~1e-13 (e.g. 14.42 -> 14.419999999999959). Returning
+  // early keeps wrapLng exactly idempotent for the common case.
+  if (lng >= -180 && lng <= 180) return lng
+  return ((((lng + 180) % 360) + 360) % 360) - 180
+}
+
 /** Clamp a zoom level into Leaflet's valid integer zoom range. */
 export function clampZoom(zoom: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom))

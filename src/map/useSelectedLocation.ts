@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
@@ -6,6 +6,7 @@ import {
   clampLng,
   clampZoom,
   round4,
+  wrapLng,
 } from '../lib/coords'
 
 export interface SelectedLocation {
@@ -20,12 +21,18 @@ export interface SelectedLocation {
  * or out-of-range value is treated as invalid and the caller substitutes
  * the field's own default rather than a silently-clamped value.
  */
+const STRICT_SIGNED_DECIMAL = /^-?\d+(\.\d+)?$/
+
 function parseGuarded(
   raw: string | null,
   parse: (value: string) => number,
   clamp: (value: number) => number,
 ): number | null {
   if (raw === null) return null
+  // Reject trailing-garbage numeric strings (e.g. "50.1garbage") before
+  // parsing - parseFloat/parseInt would otherwise silently accept the
+  // leading numeric prefix and discard the rest (IN-01).
+  if (!STRICT_SIGNED_DECIMAL.test(raw)) return null
   const value = parse(raw)
   if (!Number.isFinite(value)) return null
   // If clamping changes the value, it was out of range -> invalid.
@@ -68,6 +75,24 @@ export function readLocationFromUrl(
 }
 
 /**
+ * True only if the URL carries BOTH a lat and a lng param that each pass
+ * the same per-field parseGuarded validation readLocationFromUrl uses
+ * (finite and in-range). Reuses parseGuarded rather than duplicating the
+ * numeric logic, so "a pin exists" (App) and "the coordinates are valid"
+ * (this hook) can never disagree - a malformed shared link (e.g.
+ * ?lat=abc&lng=999, or a single valid field) is uniformly no-selection
+ * (WR-01).
+ */
+export function isValidUrlSelection(
+  search: string = typeof window !== 'undefined' ? window.location.search : '',
+): boolean {
+  const params = new URLSearchParams(search)
+  const lat = parseGuarded(params.get('lat'), (v) => parseFloat(v), clampLat)
+  const lng = parseGuarded(params.get('lng'), (v) => parseFloat(v), clampLng)
+  return lat !== null && lng !== null
+}
+
+/**
  * Write lat/lng/zoom to the URL query string via history.replaceState
  * (never pushState/location assignment - Pitfall 2/Anti-Patterns). Lat/lng
  * are rounded to 4 decimals (D-10) before writing.
@@ -94,17 +119,30 @@ export function useSelectedLocation() {
   const [location, setLocationState] = useState<SelectedLocation>(() =>
     readLocationFromUrl(),
   )
+  // Mirrors `location` so setLocation can read the current zoom without
+  // depending on `location` in its useCallback deps (keeps the callback a
+  // stable, referentially-equal function across renders). Updated in an
+  // effect rather than during render - mutating a ref while rendering is a
+  // react-hooks lint violation ("Cannot access refs during render").
+  const locationRef = useRef(location)
+  useEffect(() => {
+    locationRef.current = location
+  }, [location])
 
-  const setLocation = useCallback(
-    (lat: number, lng: number, zoom?: number) => {
-      setLocationState((prev) => {
-        const nextZoom = zoom ?? prev.zoom
-        writeLocationToUrl(lat, lng, nextZoom)
-        return { lat: round4(lat), lng: round4(lng), zoom: nextZoom }
-      })
-    },
-    [],
-  )
+  const setLocation = useCallback((lat: number, lng: number, zoom?: number) => {
+    // Normalize at the single write boundary: clamp lat (in-range collapse
+    // at the poles is expected), wrap lng (cyclic - a click after
+    // world-copy panning must not collapse onto the antimeridian). Every
+    // value written to the shared URL is in-range regardless of source
+    // (CR-01).
+    const nextLat = clampLat(round4(lat))
+    const nextLng = round4(wrapLng(lng))
+    const nextZoom = zoom ?? locationRef.current.zoom
+    // The write side effect runs OUTSIDE the state updater (WR-02) -
+    // setLocationState below only computes the next state.
+    writeLocationToUrl(nextLat, nextLng, nextZoom)
+    setLocationState({ lat: nextLat, lng: nextLng, zoom: nextZoom })
+  }, [])
 
   return { ...location, setLocation }
 }
