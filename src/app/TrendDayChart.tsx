@@ -12,6 +12,17 @@
 // ReferenceLine uses ifOverflow="visible" (never the recharts default
 // "discard") so an edge-case mean never silently vanishes (Pitfall 2, D-03).
 //
+// 03-05 gap closure (VIZ-02 Gap 1): every TrendDayChart instance now keeps
+// its own YAxis hidden - the Y-axis is rendered exactly once, via the
+// exported TrendYAxisColumn below, in its own narrow explicit-width column
+// to the LEFT of the 7-tile row (see TrendRow.tsx). This makes all 7 tiles
+// present an identical plot-area width instead of the leftmost slot being
+// squeezed by inline tick labels sharing its fixed chart width.
+// formatActualTooltip also gained two defensive guards (03-REVIEW.md
+// IN-01/IN-03): a malformed dateStr falls back to the raw string rather
+// than throwing during render, and a null units falls back to a sensible
+// default rather than leaving a dangling degree symbol.
+//
 // Cites: D-01, D-02, D-03, D-04, D-06, D-08, D-12, D-14, VIZ-02.
 import { useMemo } from 'react'
 import {
@@ -36,6 +47,11 @@ export interface TrendDayChartProps {
 
 const CHART_WIDTH = 88
 const CHART_HEIGHT = 120
+// Explicit narrow width for any visible Y-axis (03-05 Gap 1 fix) - never
+// rely on Recharts' ~60px default reservation, which is what squeezed the
+// leftmost tile's plot area before this fix. Wide enough for a 2-3 digit
+// Celsius tick with a minus sign (e.g. "-12") at 14px font.
+const AXIS_WIDTH = 40
 
 /** Formats the actual-marker tooltip copy per 03-UI-SPEC.md's Copywriting
  * Contract: "{Mon D} — {rounded temp}°{units} ({+/-N}° vs. 30-yr avg)". */
@@ -46,14 +62,22 @@ function formatActualTooltip(
   units: string | null,
 ): string {
   const date = new Date(`${dateStr}T00:00:00Z`)
-  const monthDay = date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
+  // IN-01: a malformed dateStr produces an Invalid Date, and
+  // toLocaleDateString throws a RangeError on it - fall back to the raw
+  // string rather than letting that throw crash the render path.
+  const monthDay = Number.isNaN(date.getTime())
+    ? dateStr
+    : date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      })
   const roundedActual = Math.round(actual)
   const delta = formatDelta(actual - meanValue)
-  return `${monthDay} — ${roundedActual}°${units ?? ''} (${delta}° vs. 30-yr avg)`
+  // IN-03: fall back to a sensible default unit rather than leaving a
+  // dangling degree symbol ("21°") when units hasn't resolved yet.
+  const resolvedUnits = units ?? 'C'
+  return `${monthDay} — ${roundedActual}°${resolvedUnits} (${delta}° vs. 30-yr avg)`
 }
 
 /** Custom shape for the historical dots (D-01, D-04): a small translucent
@@ -142,6 +166,7 @@ export function TrendDayChart({
           dataKey="y"
           domain={yDomain}
           hide={!showYAxis}
+          width={AXIS_WIDTH}
           tick={{ fill: 'var(--color-muted)', fontSize: 14 }}
         />
         <Scatter
@@ -162,5 +187,41 @@ export function TrendDayChart({
         />
       </ComposedChart>
     </div>
+  )
+}
+
+/** No-op shape for the decorative empty Scatter in TrendYAxisColumn below -
+ * renders nothing, exists only so the chart has a cartesian data series to
+ * anchor its axis to. */
+function emptyShape() {
+  return <g />
+}
+
+export interface TrendYAxisColumnProps {
+  yDomain: [number, number]
+}
+
+/** Renders the trend row's single shared Y-axis (D-06), in its own narrow
+ * explicit-width column meant to sit to the LEFT of the 7-tile row
+ * (03-05 gap closure, VIZ-02 Gap 1) - every TrendDayChart tile keeps its
+ * own YAxis hidden, so this is the ONLY visible temperature axis rendered
+ * for the whole row. Takes the identical yDomain TrendRow computes once and
+ * passes to every tile (D-06), so the shared scale stays perfectly
+ * aligned. No auto-sizing container - explicit width/height, the same
+ * jsdom-safety rule TrendDayChart follows above (03-RESEARCH.md
+ * Pitfall 3). */
+export function TrendYAxisColumn({ yDomain }: TrendYAxisColumnProps) {
+  return (
+    <ComposedChart width={AXIS_WIDTH} height={CHART_HEIGHT}>
+      <XAxis type="number" dataKey="x" domain={[0, 1]} hide />
+      <YAxis
+        type="number"
+        dataKey="y"
+        domain={yDomain}
+        width={AXIS_WIDTH}
+        tick={{ fill: 'var(--color-muted)', fontSize: 14 }}
+      />
+      <Scatter data={[]} shape={emptyShape} isAnimationActive={false} />
+    </ComposedChart>
   )
 }

@@ -32,9 +32,9 @@ created: 2026-07-15
 
 *(Not a template-required section, but load-bearing context for planner/executor.)*
 
-### Panel width (resolves 03-RESEARCH.md Open Question 1 / Pitfall 4)
+### Panel width (resolves 03-RESEARCH.md Open Question 1 / Pitfall 4; updated 03-05 gap closure)
 
-- **`location-panel` widens from 360px to 720px** (both the `flex: 0 0 360px` and `width: 360px` declarations in `src/app/App.css` change to `720px`). This is a locked decision, not left implicit: 7 mini-charts at a readable 88px width plus 6× 8px gaps need 664px of row width; 720px panel minus 16px left/right padding (`--space-md`, unchanged) leaves 688px of content width — enough for the row with ~24px of breathing room, no horizontal scroll needed.
+- **`location-panel` widens from 360px to 760px** (both the `flex: 0 0 360px` and `width: 360px` declarations in `src/app/App.css` change to `760px`). Original locked decision (03-01..03-04) sized the panel to 720px assuming the leftmost tile alone carried the Y-axis tick labels inside its own 88px chart width. The 03-05 gap-closure fix moves the Y-axis out of the tile row entirely into its own shared column (see "Chart Visual Encoding" → "Y-axis (temperature)" below), which needs its own explicit row width budget: a 40px axis column + `var(--space-sm)` (8px) gap to the chart row + 7 mini-charts at 88px + 6× 8px inter-tile gaps = 712px of row content width. 760px panel minus 32px left/right padding (`--space-md` × 2, unchanged) leaves 728px of content width — enough for the row with 16px of breathing room, no horizontal scroll needed.
 - Widening (not horizontally scrolling) was chosen per 03-RESEARCH.md's own recommendation: it matches D-06's "compare at a glance" intent, where every day's chart is simultaneously visible.
 - `map-region` keeps `flex: 1 1 auto` — it absorbs the width difference automatically; no change needed there. This assumes a desktop viewport ≥1280px (consistent with the app's existing no-breakpoints, desktop-first stance — mobile is deferred to v2 PLAT-03).
 - `location-panel`'s existing `overflow-y: auto` is untouched — vertical scroll (if the panel's total content height exceeds viewport height) continues to work exactly as before; no new horizontal overflow is introduced.
@@ -71,12 +71,24 @@ No form inputs, buttons, or modals are added in this phase — the trend row is 
 
 | Property | Value |
 |----------|-------|
-| Slot width | 88px (fixed — no `ResponsiveContainer`, per 03-RESEARCH.md Pitfall 3) |
+| Slot width | 88px (fixed — no `ResponsiveContainer`, per 03-RESEARCH.md Pitfall 3). Now identical across all 7 slots — every tile's own `YAxis` is hidden (see "Y-axis (temperature)" below), so all 7 plot areas are pixel-equal (03-05 gap closure, VIZ-02 Gap 1). |
 | Slot total height | 140px |
 | Weekday/"Today" label row height | 16px |
 | Gap between label row and chart/placeholder body | `var(--space-xs)` (4px) |
 | Chart/placeholder body height | 120px |
 | Gap between the 7 slots | `var(--space-sm)` (8px) |
+
+### Shared Y-axis column (new, 03-05 gap closure — VIZ-02 Gap 1)
+
+Rendered once, to the LEFT of the 7-tile `.trend-row__charts` row, inside a `.trend-row__axis` column that mirrors each tile's own label-row + chart-row layout so its ticks line up vertically with every tile's plot area:
+
+| Property | Value |
+|----------|-------|
+| Column width | 40px (fixed, explicit — `AXIS_WIDTH` in `TrendDayChart.tsx`, reused by both the standalone axis and any per-tile `YAxis` that might ever be shown) |
+| Spacer height (aligns with the label row above every tile) | 16px, empty (no text) |
+| Gap between spacer and axis chart body | `var(--space-xs)` (4px), matching every tile |
+| Axis chart body height | 120px — identical to `CHART_HEIGHT`, so ticks line up with every tile's plot area |
+| Gap between the axis column and the 7-tile chart row | `var(--space-sm)` (8px) |
 
 ### Weekday / "Today" label (renders above every slot, populated or placeholder)
 
@@ -94,7 +106,7 @@ The "Today" slot is visually identifiable by label alone (bold + accent color), 
 | Historical dots (~30 years, D-01) | `Scatter` | fill `rgba(37, 99, 235, 0.22)` (translucent `--color-accent`), no stroke | Radius ~3px. Jittered x-position only (D-04) — precompute via a deterministic seeded offset in a `useMemo`, never `Math.random()` inline in render (03-RESEARCH.md Anti-Pattern) |
 | Mean reference line (D-03) | `ReferenceLine` | stroke `--color-accent` (`#2563EB`), `strokeWidth: 2`, solid | `ifOverflow="visible"` — **not** the Recharts default `"discard"` — so a mean sitting at the shared domain's edge stays visible rather than silently vanishing (03-RESEARCH.md Pitfall 2). This is a locked visual requirement, not optional polish. |
 | Actual-value marker (D-02) | `Scatter` (single point) | fill `#EA580C` (new token, see below), `1px` white stroke, `diamond` shape | Deliberately a second hue (orange vs. the blue family used for dots/mean/accent) so it reads as visually distinct at a glance per D-02, not just a differently-shaped dot in the same color family. Reserved *exclusively* for this marker — never used elsewhere in the UI, same reserved-for discipline as `--color-destructive`. |
-| Y-axis (temperature) | `YAxis` | tick color `#4b5563`, `--font-size-label` (14px) | **Only the leftmost (oldest) day's chart renders visible tick labels.** The other 6 charts pass `hide` on their `YAxis` but use the identical `domain` prop (D-06) — this avoids repeating axis chrome 6× in an 88px-wide slot while keeping every day's dots vertically comparable via the shared scale. |
+| Y-axis (temperature) | `YAxis` | tick color `#4b5563`, `--font-size-label` (14px), explicit `width` — never the Recharts default ~60px reservation | **(Updated 03-05 gap closure, VIZ-02 Gap 1.)** Every one of the 7 `TrendDayChart` tiles now hides its own `YAxis` (`showYAxis={false}` for all 7, no per-index asymmetry) — the axis renders exactly ONCE, via a standalone `TrendYAxisColumn`, in its own 40px-wide explicit-width column to the LEFT of the 7-tile row. This makes all 7 tiles pixel-identical (same plot-area width for the dot cloud / mean line / diamond), fixing the previous defect where the leftmost tile's inline visible ticks ate into its own fixed chart width and looked squished relative to its 6 siblings. `TrendYAxisColumn` uses the identical shared `domain` prop (D-06) as every tile, so the axis stays perfectly aligned to the shared scale. |
 | X-axis | `XAxis` | — | `type="number"`, fixed `domain={[0, 1]}`, `hide` — x carries no semantic meaning (D-04); never render x ticks/labels/gridlines |
 | Domain padding | — | — | Computed once in `TrendRow` per 03-RESEARCH.md Pattern 3 (10% padding, floor/ceil) — generous enough that every day's mean/dots/actual fits without triggering the `ReferenceLine` overflow case above |
 | Tooltip / hover detail | native `title` attribute on the actual-value marker only | — | e.g. `"Jul 12 — 23°C (+2° vs. 30-yr avg)"`. No Recharts `Tooltip` component in v1 — matches the codebase's existing `title`-attribute pattern (`AnomalyCard`'s info button) rather than introducing a new interaction affordance. Historical dots get no individual tooltip — they represent the *distribution*, not individually-labeled data points. |

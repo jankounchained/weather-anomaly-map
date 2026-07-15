@@ -19,8 +19,11 @@
 }
 
 .location-panel {
-  flex: 0 0 720px;
-  width: 720px;
+  /* 03-05 gap closure: widened from 720px to fit the shared trend-row
+     Y-axis column (see .trend-row__axis) without introducing a horizontal
+     scrollbar - see 03-UI-SPEC.md Panel width math. */
+  flex: 0 0 760px;
+  width: 760px;
   height: 100%;
   background: var(--color-secondary);
   display: flex;
@@ -198,6 +201,33 @@
   color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* 03-05 gap closure (VIZ-02 Gap 1): houses the shared Y-axis column next
+   to the 7-tile chart row, so the axis renders exactly once instead of
+   living inside the leftmost tile's own chart. */
+.trend-row__body {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+/* Mirrors .trend-day's own label-row + chart-row column layout so the
+   axis's tick labels line up vertically with every tile's plot area. */
+.trend-row__axis {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  gap: var(--space-xs);
+}
+
+/* Empty spacer matching .trend-day__label's height - keeps the axis's
+   chart body vertically aligned with the 7 tiles' chart bodies below
+   their (taller, real) label row. */
+.trend-row__axis-spacer {
+  display: block;
+  height: 16px;
 }
 
 .trend-row__charts {
