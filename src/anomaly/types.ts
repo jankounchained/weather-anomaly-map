@@ -23,3 +23,18 @@ export type VerdictTier =
   | 'typical'
   | 'slightly-warmer'
   | 'much-warmer'
+
+/** Per-day trend-chart input (VIZ-01). The `usable` discriminant is what
+ * TrendDayChart (Plan 03) branches on to render either the dot/strip chart
+ * or the "not enough history" placeholder - one shape, one code path,
+ * whether the cause is a genuine data desert or a fetch-timing gap
+ * (D-11, D-12, D-14). */
+export type TrendDayResult =
+  | {
+      dateStr: string
+      usable: true
+      samples: number[]
+      mean: number
+      actual: number
+    }
+  | { dateStr: string; usable: false }

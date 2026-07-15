@@ -8,7 +8,9 @@ import {
   formatDelta,
   windowBounds,
   filterDayOfYearWindow,
+  hasUsableSampleCount,
   computeAnomalyForToday,
+  computeTrendDay,
 } from './anomaly'
 
 describe('mean', () => {
@@ -124,6 +126,18 @@ describe('filterDayOfYearWindow', () => {
   })
 })
 
+describe('hasUsableSampleCount', () => {
+  it('gates on ceil(totalYears/2) - a 30-year baseline needs >=15 samples (D-09, Assumption A3)', () => {
+    expect(hasUsableSampleCount(new Array(15).fill(0), 30)).toBe(true)
+    expect(hasUsableSampleCount(new Array(14).fill(0), 30)).toBe(false)
+  })
+
+  it('rounds the odd-totalYears boundary up - a 29-year baseline also needs >=15 samples', () => {
+    expect(hasUsableSampleCount(new Array(15).fill(0), 29)).toBe(true)
+    expect(hasUsableSampleCount(new Array(14).fill(0), 29)).toBe(false)
+  })
+})
+
 describe('computeAnomalyForToday', () => {
   it('computes a delta/verdict from a synthetic multi-year day-of-year window', () => {
     const daily = {
@@ -137,6 +151,7 @@ describe('computeAnomalyForToday', () => {
       ],
       values: [18, 19, 20, 19, 20, 21],
     }
+    // 2 represented years -> threshold ceil(2/2)=1; all 6 in-window samples clear it.
     const result = computeAnomalyForToday(daily, '2021-07-11', 25)
     expect(result).not.toBeNull()
     expect(result!.delta).toBeCloseTo(25 - mean([18, 19, 20, 19, 20, 21]), 5)
@@ -148,18 +163,82 @@ describe('computeAnomalyForToday', () => {
       time: ['2019-07-11', '2020-07-11'],
       values: [15, 15],
     }
+    // 2 represented years -> threshold ceil(2/2)=1; both samples clear it.
     const result = computeAnomalyForToday(daily, '2021-07-11', 15)
     expect(result).not.toBeNull()
     expect(result!.zScore).toBeNull()
     expect(result!.verdictTier).toBe('typical')
   })
 
-  it('returns null when the window yields fewer than 2 samples', () => {
+  it('returns null when the window yields fewer samples than half of the represented years', () => {
+    // 3 represented years (2018-2020) -> threshold ceil(3/2)=2; only 1 sample falls in-window.
     const daily = {
-      time: ['2020-07-11'],
-      values: [15],
+      time: ['2018-01-01', '2019-01-01', '2020-07-11'],
+      values: [-5, -6, 15],
     }
     const result = computeAnomalyForToday(daily, '2021-07-11', 15)
     expect(result).toBeNull()
+  })
+
+  it('returns null for a sparse 30-year baseline that clears the old ">=2 samples" floor but fails the D-10 stricter gate (regression)', () => {
+    const time: string[] = []
+    const values: (number | null)[] = []
+    for (let y = 1991; y <= 2020; y++) {
+      // Every year has a null day-of-year value except two, which fall in-window.
+      time.push(`${y}-07-11`)
+      values.push(y === 1995 || y === 2005 ? 20 : null)
+    }
+    const daily = { time, values }
+    // 30 represented years -> threshold ceil(30/2)=15; only 2 non-null in-window samples.
+    // Previously this returned a result under the old `samples.length < 2` gate would have
+    // needed 0 or 1 samples to fail - here it demonstrates the D-10 regression: a
+    // technically-"≥2-samples" baseline that is still far too sparse to be usable.
+    const result = computeAnomalyForToday(daily, '2021-07-11', 25)
+    expect(result).toBeNull()
+  })
+})
+
+describe('computeTrendDay', () => {
+  it('returns { usable: false, dateStr } when actualTemp is null', () => {
+    const daily = {
+      time: ['2019-07-11', '2020-07-11'],
+      values: [15, 16],
+    }
+    const result = computeTrendDay(daily, '2021-07-11', null)
+    expect(result).toEqual({ dateStr: '2021-07-11', usable: false })
+  })
+
+  it('returns { usable: false, dateStr } when actualTemp is non-finite', () => {
+    const daily = {
+      time: ['2019-07-11', '2020-07-11'],
+      values: [15, 16],
+    }
+    const result = computeTrendDay(daily, '2021-07-11', NaN)
+    expect(result).toEqual({ dateStr: '2021-07-11', usable: false })
+  })
+
+  it('returns { usable: false, dateStr } when the window fails the shared hasUsableSampleCount gate', () => {
+    // 3 represented years (2018-2020) -> threshold ceil(3/2)=2; only 1 sample falls in-window.
+    const daily = {
+      time: ['2018-01-01', '2019-01-01', '2020-07-11'],
+      values: [-5, -6, 15],
+    }
+    const result = computeTrendDay(daily, '2021-07-11', 25)
+    expect(result).toEqual({ dateStr: '2021-07-11', usable: false })
+  })
+
+  it('returns { usable: true, dateStr, samples, mean, actual } for a healthy day', () => {
+    const daily = {
+      time: ['2019-07-11', '2020-07-11'],
+      values: [15, 17],
+    }
+    const result = computeTrendDay(daily, '2021-07-11', 20)
+    expect(result).toEqual({
+      dateStr: '2021-07-11',
+      usable: true,
+      samples: [15, 17],
+      mean: 16,
+      actual: 20,
+    })
   })
 })

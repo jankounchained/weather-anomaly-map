@@ -2,7 +2,7 @@
 // delta/z-score, and verdict classification. Hand-rolled per CLAUDE.md
 // ("hand-roll, don't add a dependency") and STACK.md - no simple-statistics
 // or other math dependency, in the same spirit as src/lib/coords.ts.
-import type { AnomalyResult, VerdictTier } from './types'
+import type { AnomalyResult, TrendDayResult, VerdictTier } from './types'
 
 /** Arithmetic mean of a sample (feeds delta/z-score - ANOM-01, ANOM-02). */
 export function mean(values: number[]): number {
@@ -116,11 +116,31 @@ export function filterDayOfYearWindow(
   return result
 }
 
+/** Single "usable history" gate (D-09/D-10): operationalizes D-09's "at
+ * least half of the ~30 years must have real values" as a sample-count
+ * floor. ERA5 archive coverage is effectively all-or-nothing per location
+ * (RESEARCH.md Pitfall 1 - a genuine data desert returns near-zero
+ * samples, a real location returns hundreds), so a sample-count floor of
+ * ceil(totalYears/2) cleanly separates the two while reusing
+ * filterDayOfYearWindow's flattened output as-is. This is the ONLY place
+ * the Math.ceil(totalYears/2) threshold expression appears (D-10: one
+ * shared definition, no duplicated inline checks) - both
+ * computeAnomalyForToday and computeTrendDay call through here so today's
+ * anomaly and every trend day can never drift apart. */
+export function hasUsableSampleCount(
+  samples: number[],
+  totalYears: number,
+): boolean {
+  return samples.length >= Math.ceil(totalYears / 2)
+}
+
 /** Computes today's anomaly against the +/-5-day day-of-year baseline
  * window derived from `daily` (ANOM-01/02/03/04). Returns null when the
- * window yields fewer than 2 samples (insufficient baseline). Degenerate
- * variance (zScore null) falls back to a 'typical' verdict rather than
- * propagating NaN (Pitfall 2). */
+ * window fails the shared hasUsableSampleCount gate - fewer than half of
+ * the baseline's represented years have a real value for this day (D-09,
+ * D-10: retrofit of the old "< 2 samples" floor to the stricter shared
+ * rule). Degenerate variance (zScore null) falls back to a 'typical'
+ * verdict rather than propagating NaN (Pitfall 2). */
 export function computeAnomalyForToday(
   daily: { time: string[]; values: (number | null)[] },
   localDate: string,
@@ -146,9 +166,62 @@ export function computeAnomalyForToday(
     endYear,
     halfWidthDays,
   )
-  if (samples.length < 2) return null
+  if (!hasUsableSampleCount(samples, endYear - startYear + 1)) return null
 
   const { delta, zScore } = computeAnomaly(todayTemp, samples)
   const verdictTier = classifyVerdict(zScore ?? 0)
   return { delta, zScore, verdictTier }
+}
+
+/** Computes one day's trend-chart input against the +/-5-day day-of-year
+ * baseline window derived from `daily` (VIZ-01, D-11, D-13). `daily` is the
+ * SAME 30-year archive series already fetched once via
+ * useHistoricalBaseline - this reuses filterDayOfYearWindow per day
+ * against that one series rather than issuing a new fetch (RESEARCH.md
+ * Pattern 1/03-CONTEXT.md efficiency note). Returns `{ usable: false,
+ * dateStr }` when `actualTemp` is null/non-finite OR the window fails the
+ * shared hasUsableSampleCount gate - one unusable code path regardless of
+ * cause (data desert vs. a fetch-timing gap, D-14). Returns `{ usable:
+ * true, dateStr, samples, mean, actual }` for a healthy day. */
+export function computeTrendDay(
+  daily: { time: string[]; values: (number | null)[] },
+  dateStr: string,
+  actualTemp: number | null,
+  halfWidthDays = 5,
+): TrendDayResult {
+  const parts = dateStr.split('-')
+  const targetMonth = Number(parts[1])
+  const targetDay = Number(parts[2])
+
+  const years = daily.time
+    .map((t) => Number(t.slice(0, 4)))
+    .filter((y) => Number.isFinite(y))
+  if (years.length === 0) return { dateStr, usable: false }
+  const startYear = Math.min(...years)
+  const endYear = Math.max(...years)
+
+  const samples = filterDayOfYearWindow(
+    daily,
+    targetMonth,
+    targetDay,
+    startYear,
+    endYear,
+    halfWidthDays,
+  )
+
+  if (
+    actualTemp === null ||
+    !Number.isFinite(actualTemp) ||
+    !hasUsableSampleCount(samples, endYear - startYear + 1)
+  ) {
+    return { dateStr, usable: false }
+  }
+
+  return {
+    dateStr,
+    usable: true,
+    samples,
+    mean: mean(samples),
+    actual: actualTemp,
+  }
 }
