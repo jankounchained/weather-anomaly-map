@@ -237,6 +237,35 @@
   gap: var(--space-sm);
 }
 
+/* 03-05 gap closure (VIZ-02 Gap 2): persistent key for the trend charts'
+   dot/line/diamond marks - no card/border chrome, consistent with the
+   borderless trend row it sits beneath. */
+.trend-legend {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.trend-legend__item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.trend-legend__swatch {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+
+.trend-legend__label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-label);
+  color: var(--color-muted);
+}
+
 .trend-day {
   display: flex;
   flex-direction: column;
