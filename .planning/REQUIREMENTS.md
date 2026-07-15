@@ -26,8 +26,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Visualization
 
-- [ ] **VIZ-01**: User can see, for each of the last ~7 days, that day's actual temperature plotted against its own historical range/distribution for that calendar day (a "day vs. range" view repeated across the week)
-- [ ] **VIZ-02**: Historical range visualizations show the underlying historical data points/distribution, not just a single average line — the average is visually emphasized (e.g. brighter color, higher opacity) without hiding the spread
+- [x] **VIZ-01**: User can see, for each of the last ~7 days, that day's actual temperature plotted against its own historical range/distribution for that calendar day (a "day vs. range" view repeated across the week)
+- [x] **VIZ-02**: Historical range visualizations show the underlying historical data points/distribution, not just a single average line — the average is visually emphasized (e.g. brighter color, higher opacity) without hiding the spread
 
 ### Robustness
 
@@ -82,8 +82,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ANOM-02 | Phase 2 | Complete |
 | ANOM-03 | Phase 2 | Complete |
 | ANOM-04 | Phase 2 | Complete |
-| VIZ-01 | Phase 3 | Pending |
-| VIZ-02 | Phase 3 | Pending |
+| VIZ-01 | Phase 3 | Complete |
+| VIZ-02 | Phase 3 | Complete |
 | ROBU-01 | Phase 3 | Pending |
 | PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
