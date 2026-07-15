@@ -94,7 +94,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Each day's chart shows the underlying historical data points/distribution (not just a single average line), with the average visually emphasized (e.g. brighter/higher-opacity) without hiding the spread
   3. User sees a graceful, understandable message when the selected location has no usable historical data (e.g. ocean, remote areas)
 
-**Plans**: 6 plans (4 executed; 2 gap-closure plans added after 03-04's human-verify checkpoint found 2 legibility defects)
+**Plans**: 5/6 plans executed
 
 **Wave 1** *(parallel — no shared files)*
 
@@ -111,7 +111,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Gap closure** *(from 03-VERIFICATION.md gaps_found — closes the 2 VIZ-02 legibility defects the 03-04 checkpoint found)*
 
-- [ ] 03-05-PLAN.md — Fix leftmost-tile squish (equalize plot area) + add persistent legend for the dot/mean-line/diamond marks + sync 03-UI-SPEC.md (VIZ-01, VIZ-02)
+- [x] 03-05-PLAN.md — Fix leftmost-tile squish (equalize plot area) + add persistent legend for the dot/mean-line/diamond marks + sync 03-UI-SPEC.md (VIZ-01, VIZ-02)
 - [ ] 03-06-PLAN.md — Fresh human-verify checkpoint: re-confirm the leftmost tile matches its siblings and the legend resolves legibility, end-to-end vs. live data (VIZ-01, VIZ-02, ROBU-01)
 
 **UI hint**: yes
@@ -125,4 +125,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 3/3 | Complete    | 2026-07-14 |
-| 3. Historical Trend Charts & Edge Cases | 4/4 | Gaps found | - |
+| 3. Historical Trend Charts & Edge Cases | 5/6 | In Progress|  |

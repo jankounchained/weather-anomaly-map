@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: historical-trend-charts-edge-cases
-status: blocked
+status: executing
 stopped_at: 03-04 checkpoint ran, NOT approved - 2 issues found, gap closure needed
-last_updated: "2026-07-15T10:05:35.346Z"
+last_updated: "2026-07-15T10:53:44.737Z"
 last_activity: 2026-07-15
-last_activity_desc: Checkpoint 03-04 ran, issues found, gap closure required
+last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 3
-  completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  completed_phases: 2
+  total_plans: 13
+  completed_plans: 12
+  percent: 67
 ---
 
 # Project State
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 ## Current Position
 
-Phase: 03 (historical-trend-charts-edge-cases) — BLOCKED (gap closure needed)
-Plan: 4 of 4 ran (checkpoint executed, verdict recorded) — **NOT a clean pass**
-Status: Checkpoint 03-04 human-verify completed but was NOT approved. Two issues must be fixed and re-verified before Phase 3 can be marked done: (1) leftmost trend-chart tile visually squished vs. its siblings, (2) trend chart has no legend for its dots/mean-line/diamond symbols. See `.planning/phases/03-historical-trend-charts-edge-cases/03-04-SUMMARY.md`. Requirements VIZ-01/VIZ-02/ROBU-01 remain in PROJECT.md's `### Active` section, not yet moved to Validated.
-Last activity: 2026-07-15 — Checkpoint 03-04 ran, issues found, gap closure required
+Phase: 03 (historical-trend-charts-edge-cases) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-07-15 — Phase 03 execution started
 
 Progress: [██████████] 100% by plan count (all 4 plans in Phase 3 have produced a SUMMARY.md), but this is a MECHANICAL count only — Plan 03-04's SUMMARY documents a failed human-verify checkpoint, not a functional completion. Phase 3 is not actually done until the gap-closure fixes above are applied and re-verified.
 
@@ -67,6 +67,7 @@ Progress: [██████████] 100% by plan count (all 4 plans in Ph
 | Phase 03 P02 | 10min | 2 tasks | 7 files |
 | Phase 03 P03 | 15min | 3 tasks | 8 files |
 | Phase 03 P04 | 12min | 1 tasks | 0 files |
+| Phase 03 P05 | 20min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,9 @@ Recent decisions affecting current work:
 - [Phase 03-02]: getCurrentWeather extended in place to carry the 7-day recentDaily series in the same forecast request as current.temperature_2m (D-13), rather than a parallel fetch/hook
 - [Phase 03-03]: Used custom Scatter shape render functions (native circle/polygon SVG) for both historical dots and the actual-value marker rather than recharts' built-in shape strings, so the actual marker's native title tooltip attaches directly to the rendered SVG node
 - [Phase 03-03]: Paraphrased two doc-comment sentences in trend.ts/TrendDayChart.tsx to avoid the literal substrings 'Math.random(' and 'ResponsiveContainer' appearing anywhere in the files, since the plan's acceptance-criteria greps scan whole-file text including comments
+- [Phase ?]: Phase 3 Plan 5: Chose the shared Y-axis column approach (TrendYAxisColumn) over per-tile width compensation to close VIZ-02 Gap 1 - all 7 trend tiles now present an identical plot-area width
+- [Phase ?]: Phase 3 Plan 5: location-panel widened 720px -> 760px to fit the new shared axis column without introducing horizontal scroll
+- [Phase ?]: Phase 3 Plan 5: Added TrendLegend (persistent, native-SVG key reusing the chart's own color tokens) to close VIZ-02 Gap 2 - no legend previously existed
 
 ### Pending Todos
 
@@ -121,6 +125,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-15T09:52:12.952Z
+Last session: 2026-07-15T10:52:47.830Z
 Stopped at: 03-04 checkpoint ran, NOT approved - 2 issues found (squished leftmost chart tile, missing legend), gap closure needed before Phase 3 can be marked done. See 03-04-SUMMARY.md.
 Resume file: None
