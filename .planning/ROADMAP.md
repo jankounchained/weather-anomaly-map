@@ -93,7 +93,21 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Each day's chart shows the underlying historical data points/distribution (not just a single average line), with the average visually emphasized (e.g. brighter/higher-opacity) without hiding the spread
   3. User sees a graceful, understandable message when the selected location has no usable historical data (e.g. ocean, remote areas)
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+**Wave 1** *(parallel — no shared files)*
+
+- [ ] 03-01-PLAN.md — recharts dependency gate: [SUS] legitimacy human-verify + install recharts@3.9.2 (VIZ-01, VIZ-02)
+- [ ] 03-02-PLAN.md — Data + threshold slice: shared hasUsableSampleCount gate (D-09/D-10 retrofit) + computeTrendDay + 7-day forecast fetch (VIZ-01, ROBU-01)
+
+**Wave 2** *(blocked on Wave 1 — needs recharts + the data layer)*
+
+- [ ] 03-03-PLAN.md — Trend-row render slice: chart tokens + panel widening + trend.ts helpers + TrendDayChart + TrendRow wired below AnomalyCard (VIZ-01, VIZ-02, ROBU-01)
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 03-04-PLAN.md — Human-verify checkpoint: 7-day trend row end-to-end against live data + no-data path (VIZ-01, VIZ-02, ROBU-01)
+
 **UI hint**: yes
 
 ## Progress
@@ -105,4 +119,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 3/3 | Complete    | 2026-07-14 |
-| 3. Historical Trend Charts & Edge Cases | 0/TBD | Not started | - |
+| 3. Historical Trend Charts & Edge Cases | 0/4 | Not started | - |
