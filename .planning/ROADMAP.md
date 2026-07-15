@@ -93,7 +93,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Each day's chart shows the underlying historical data points/distribution (not just a single average line), with the average visually emphasized (e.g. brighter/higher-opacity) without hiding the spread
   3. User sees a graceful, understandable message when the selected location has no usable historical data (e.g. ocean, remote areas)
 
-**Plans**: 2/4 plans executed
+**Plans**: 3/4 plans executed
 
 **Wave 1** *(parallel — no shared files)*
 
@@ -102,7 +102,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 2** *(blocked on Wave 1 — needs recharts + the data layer)*
 
-- [ ] 03-03-PLAN.md — Trend-row render slice: chart tokens + panel widening + trend.ts helpers + TrendDayChart + TrendRow wired below AnomalyCard (VIZ-01, VIZ-02, ROBU-01)
+- [x] 03-03-PLAN.md — Trend-row render slice: chart tokens + panel widening + trend.ts helpers + TrendDayChart + TrendRow wired below AnomalyCard (VIZ-01, VIZ-02, ROBU-01)
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -119,4 +119,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 3/3 | Complete    | 2026-07-14 |
-| 3. Historical Trend Charts & Edge Cases | 2/4 | In Progress|  |
+| 3. Historical Trend Charts & Edge Cases | 3/4 | In Progress|  |

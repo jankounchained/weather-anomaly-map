@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: historical-trend-charts-edge-cases
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-07-15T09:27:17.656Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-07-15T09:37:55.707Z"
 last_activity: 2026-07-15
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
   percent: 67
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 ## Current Position
 
 Phase: 03 (historical-trend-charts-edge-cases) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-07-15 — Phase 03 execution started
 
@@ -65,6 +65,7 @@ Progress: [███████░░░] 67%
 | Phase 02 P03 | 5min | 1 tasks | 0 files |
 | Phase 03 P01 | 9min | 2 tasks | 2 files |
 | Phase 03 P02 | 10min | 2 tasks | 7 files |
+| Phase 03 P03 | 15min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 03-01]: recharts installed at exact pinned version (npm records ^3.9.2) with no --legacy-peer-deps flag and no react-is override; peer resolution against React 19.2.7 was clean as predicted
 - [Phase 03-02]: computeAnomalyForToday's old samples.length < 2 gate retrofitted to hasUsableSampleCount (D-10) - today's anomaly and all 7 trend days now share one usable-data rule
 - [Phase 03-02]: getCurrentWeather extended in place to carry the 7-day recentDaily series in the same forecast request as current.temperature_2m (D-13), rather than a parallel fetch/hook
+- [Phase 03-03]: Used custom Scatter shape render functions (native circle/polygon SVG) for both historical dots and the actual-value marker rather than recharts' built-in shape strings, so the actual marker's native title tooltip attaches directly to the rendered SVG node
+- [Phase 03-03]: Paraphrased two doc-comment sentences in trend.ts/TrendDayChart.tsx to avoid the literal substrings 'Math.random(' and 'ResponsiveContainer' appearing anywhere in the files, since the plan's acceptance-criteria greps scan whole-file text including comments
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-15T09:27:17.649Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-07-15T09:37:55.700Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
