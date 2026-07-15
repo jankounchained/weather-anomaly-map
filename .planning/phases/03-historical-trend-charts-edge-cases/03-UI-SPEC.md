@@ -152,7 +152,7 @@ Declared values (must be multiples of 4) — unchanged from Phase 1/2, reused as
 | 2xl | 48px | Not used this phase |
 | 3xl | 64px | Not used this phase |
 
-Exceptions: the 88×140px `TrendDayChart` slot footprint and the 720px panel width are **component/layout sizing decisions, not spacing-token values** — they don't need to be multiples of the 4px spacing scale (they aren't gaps/padding), though 88, 140, and 720 all happen to already be multiples of 4.
+Exceptions: the 88×140px `TrendDayChart` slot footprint and the 760px panel width (widened from 720px in the 03-05 gap closure) are **component/layout sizing decisions, not spacing-token values** — they don't need to be multiples of the 4px spacing scale (they aren't gaps/padding), though 88, 140, and 760 all happen to already be multiples of 4.
 
 ---
 
@@ -176,7 +176,7 @@ Usage this phase: **Label** (14px/400) renders weekday abbreviations, y-axis tic
 | Role | Value | Usage |
 |------|-------|-------|
 | Dominant (60%) | `#FFFFFF` | Page/map background (unchanged); placeholder card background (new this phase) |
-| Secondary (30%) | `#F4F5F7` | `location-panel` background (unchanged, now at 720px width) |
+| Secondary (30%) | `#F4F5F7` | `location-panel` background (unchanged, now at 760px width) |
 | Accent (10%) | `#2563EB` | Pin marker, loading spinners, focus outlines (unchanged) + **new this phase:** mean reference line (`--color-chart-mean`), historical dots at 22% opacity (`--color-chart-historical`), "Today" slot caption |
 | Destructive | `#DC2626` | Reserved for future destructive actions — still unused anywhere in the app, including this phase (no destructive action exists in Phase 3's scope) |
 | Chart — actual marker (new, phase-scoped) | `#EA580C` | The single actual-value diamond in each populated `TrendDayChart` — exclusively this use, never a button/link/other UI element |
