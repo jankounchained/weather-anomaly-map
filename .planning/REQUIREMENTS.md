@@ -31,7 +31,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Robustness
 
-- [ ] **ROBU-01**: User sees a graceful message when a clicked location has no usable historical data (e.g. ocean, remote areas)
+- [x] **ROBU-01**: User sees a graceful message when a clicked location has no usable historical data (e.g. ocean, remote areas)
 
 ### Platform
 
@@ -84,7 +84,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ANOM-04 | Phase 2 | Complete |
 | VIZ-01 | Phase 3 | Complete |
 | VIZ-02 | Phase 3 | Complete |
-| ROBU-01 | Phase 3 | Pending |
+| ROBU-01 | Phase 3 | Complete |
 | PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
 

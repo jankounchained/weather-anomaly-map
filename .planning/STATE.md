@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: historical-trend-charts-edge-cases
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-07-15T09:19:16.933Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-07-15T09:27:17.656Z"
 last_activity: 2026-07-15
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
   percent: 67
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 ## Current Position
 
 Phase: 03 (historical-trend-charts-edge-cases) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-07-15 — Phase 03 execution started
 
@@ -64,6 +64,7 @@ Progress: [███████░░░] 67%
 | Phase 02 P02 | 7min | 3 tasks | 10 files |
 | Phase 02 P03 | 5min | 1 tasks | 0 files |
 | Phase 03 P01 | 9min | 2 tasks | 2 files |
+| Phase 03 P02 | 10min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase ?]: computeAnomalyForToday derives startYear/endYear from the min/max year present in the passed daily series rather than hard-coding them, keeping anomaly.ts fully decoupled from the fetch layer
 - [Phase 02]: Checkpoint 02-03 approved as-is; zero-delta hero rendering as bare '0' deferred to a future phase (backlog, not gap-closure)
 - [Phase ?]: [Phase 03-01]: recharts installed at exact pinned version (npm records ^3.9.2) with no --legacy-peer-deps flag and no react-is override; peer resolution against React 19.2.7 was clean as predicted
+- [Phase 03-02]: computeAnomalyForToday's old samples.length < 2 gate retrofitted to hasUsableSampleCount (D-10) - today's anomaly and all 7 trend days now share one usable-data rule
+- [Phase 03-02]: getCurrentWeather extended in place to carry the 7-day recentDaily series in the same forecast request as current.temperature_2m (D-13), rather than a parallel fetch/hook
 
 ### Pending Todos
 
@@ -112,6 +115,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-15T09:19:16.926Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-07-15T09:27:17.649Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
