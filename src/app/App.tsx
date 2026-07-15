@@ -5,9 +5,10 @@ import { useSelectedLocation, isValidUrlSelection } from '../map/useSelectedLoca
 import { useReverseGeocode } from '../geocoding/useReverseGeocode'
 import { useCurrentWeather } from '../weather/useCurrentWeather'
 import { useHistoricalBaseline } from '../weather/useHistoricalBaseline'
-import { computeAnomalyForToday } from '../anomaly/anomaly'
+import { computeAnomalyForToday, computeTrendDay } from '../anomaly/anomaly'
 import { LocationPanel } from './LocationPanel'
 import { AnomalyCard } from './AnomalyCard'
+import { TrendRow } from './TrendRow'
 
 function App() {
   const { lat, lng, zoom, setLocation } = useSelectedLocation()
@@ -46,6 +47,24 @@ function App() {
       ? computeAnomalyForToday(baseline.daily, current.localDate, current.tempC)
       : null
 
+  // Same combined gate as `anomaly` above, plus a valid recentDaily series
+  // (D-13) - reuses the SINGLE already-fetched baseline.daily archive
+  // series for all 7 days (no new fetch, 03-CONTEXT.md efficiency note).
+  // TrendRow renders nothing when this is null (03-UI-SPEC.md gating).
+  const trendDays =
+    current.status === 'resolved' &&
+    baseline.status === 'resolved' &&
+    baseline.daily &&
+    current.recentDaily
+      ? current.recentDaily.time.map((dateStr, i) =>
+          computeTrendDay(
+            baseline.daily!,
+            dateStr,
+            current.recentDaily!.values[i] ?? null,
+          ),
+        )
+      : null
+
   const handleSelect = (nextLat: number, nextLng: number) => {
     setLocation(nextLat, nextLng)
     setHasSelection(true)
@@ -77,6 +96,7 @@ function App() {
           units={current.units}
           anomaly={anomaly}
         />
+        <TrendRow days={trendDays} units={current.units} />
       </LocationPanel>
     </div>
   )
