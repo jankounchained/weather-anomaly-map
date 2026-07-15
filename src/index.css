@@ -16,6 +16,19 @@
      error/destructive state (e.g. Phase 2+ weather-fetch error UI). */
   --color-destructive: #dc2626;
 
+  /* Trend chart tokens (03-UI-SPEC.md Chart Visual Encoding) */
+  /* translucent accent for the ~30 historical dots per day (D-01) */
+  --color-chart-historical: rgba(37, 99, 235, 0.22);
+  /* bright mean ReferenceLine (D-03) - reuses accent, no new hue */
+  --color-chart-mean: var(--color-accent);
+  /* distinct actual-value diamond marker (D-02) - new hue, reserved
+     exclusively for this marker */
+  --color-chart-actual: #ea580c;
+  /* formalizes the muted gray already inlined in AnomalyCard's zscore chip */
+  --color-muted: #4b5563;
+  /* placeholder card border only (D-12/D-14 empty state) */
+  --color-border-subtle: #e5e7eb;
+
   /* Typography (UI-SPEC) */
   --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     Helvetica, Arial, sans-serif;

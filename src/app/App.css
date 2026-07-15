@@ -19,8 +19,8 @@
 }
 
 .location-panel {
-  flex: 0 0 360px;
-  width: 360px;
+  flex: 0 0 720px;
+  width: 720px;
   height: 100%;
   background: var(--color-secondary);
   display: flex;
@@ -179,4 +179,70 @@
   background: var(--color-secondary);
   border-radius: 999px;
   padding: 2px var(--space-sm);
+}
+
+/* Trend row (VIZ-01/VIZ-02, D-05..D-08) - no card/border chrome at the row
+   level, sits directly on the panel background. */
+.trend-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Deliberately quieter than AnomalyCard's delta/verdict so the eye lands on
+   today's headline first (D-07). */
+.trend-row__heading {
+  margin: 0;
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trend-row__charts {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.trend-day {
+  display: flex;
+  flex-direction: column;
+  width: 88px;
+  gap: var(--space-xs);
+}
+
+.trend-day__label {
+  margin: 0;
+  height: 16px;
+  font-size: var(--font-size-label);
+  font-weight: 400;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* Today identifiable by label alone (bold + accent), independent of
+   position (D-08). */
+.trend-day__label--today {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+/* D-12/D-14 empty-state card - one visual path regardless of cause. */
+.trend-day__placeholder {
+  width: 88px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-xs);
+  background: var(--color-dominant);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  color: var(--color-muted);
+  font-size: var(--font-size-label);
+  box-sizing: border-box;
 }
