@@ -1,8 +1,8 @@
 ---
 phase: 03-historical-trend-charts-edge-cases
-reviewed: 2026-07-15T12:00:00Z
+reviewed: 2026-07-15T00:00:00Z
 depth: standard
-files_reviewed: 15
+files_reviewed: 17
 files_reviewed_list:
   - src/anomaly/anomaly.test.ts
   - src/anomaly/anomaly.ts
@@ -11,6 +11,8 @@ files_reviewed_list:
   - src/app/App.tsx
   - src/app/TrendDayChart.test.tsx
   - src/app/TrendDayChart.tsx
+  - src/app/TrendLegend.test.tsx
+  - src/app/TrendLegend.tsx
   - src/app/TrendRow.tsx
   - src/app/trend.test.ts
   - src/app/trend.ts
@@ -21,34 +23,33 @@ files_reviewed_list:
   - src/weather/useCurrentWeather.ts
 findings:
   critical: 0
-  warning: 2
+  warning: 5
   info: 3
-  total: 5
+  total: 8
 status: issues_found
 ---
 
 # Phase 03: Code Review Report
 
-**Reviewed:** 2026-07-15T12:00:00Z
+**Reviewed:** 2026-07-15T00:00:00Z
 **Depth:** standard
-**Files Reviewed:** 15
+**Files Reviewed:** 17
 **Status:** issues_found
 
 ## Summary
 
-Reviewed the anomaly-statistics module, trend-chart composition (App.tsx/TrendRow/TrendDayChart/trend.ts), and the weather fetch client/hooks layer against the stated design intent in the files' own doc comments (D-01..D-14, ANOM-01..04, V5 defensive parsing). `npx tsc --noEmit`, `npx eslint`, and the full Vitest suite (50 tests, 4 files) all pass cleanly, and edge-case coverage (leap-year windowing, year-boundary wraparound, degenerate/zero-variance baselines, sparse-baseline D-10 gating, null/NaN actual temps) is genuinely thorough — this is a well-tested slice.
+This review supersedes the prior 03-REVIEW.md and reflects the current state of the tree after the 03-05 (leftmost-tile squish + legend) and 03-06 (re-verify checkpoint) gap-closure work: the new `TrendLegend.tsx`/`TrendLegend.test.tsx` and the `TrendYAxisColumn` export inside `TrendDayChart.tsx`. No crash-risk, injection, or data-loss bug was found on any code path reachable from real user input — `fetch` targets are always literal HTTPS hosts, lat/lng are always numeric, and no raw-HTML sink exists anywhere in the reviewed React tree.
 
-No crash-risk, injection, or data-loss bugs were found. Two Warning-level issues were found: one is a real contract gap in `client.ts` where the archive fetch's own defensive-parsing claim ("an empty/malformed series must never reach anomaly.ts") is not fully honored — it validates emptiness but not length-parity between `time` and the value series, unlike its sibling `getCurrentWeather`, which does validate this exact case. The other is duplicated day-of-year window-derivation logic between `computeAnomalyForToday` and `computeTrendDay` that undercuts the module's own stated single-source-of-truth goal for keeping "today" and "trend day" calculations from drifting apart.
+However, two Warning-level findings from the prior review were **not actually fixed** by the 03-05/03-06 work (`getHistoricalBaseline`'s missing length-parity check, and the duplicated day-of-year window-derivation logic between `computeAnomalyForToday`/`computeTrendDay`) and are carried forward below with their original evidence re-verified against the current file contents. In addition, the gap-closure pass itself introduced/left two new gaps: it patched only one of the two call sites the original IN-01 finding named (`formatActualTooltip` in `TrendDayChart.tsx`, but not `formatSlotLabel` in `trend.ts`), and it shipped the new `TrendRow`/`TrendYAxisColumn` composition with zero test coverage (no `TrendRow.test.tsx` exists anywhere in the tree).
 
 ## Warnings
 
-### WR-01: `getHistoricalBaseline` doesn't validate time/value length-parity, unlike its sibling `getCurrentWeather`
+### WR-01: `getHistoricalBaseline` still doesn't validate time/value length-parity (carried forward, unfixed)
 
 **File:** `src/weather/client.ts:119-129`
-**Issue:** `getCurrentWeather` explicitly guards against a malformed forecast response by checking `data.daily.time.length !== data.daily.temperature_2m_mean.length` (line 65) and throwing. `getHistoricalBaseline`'s validation block only checks that `series` is a non-empty array — it never checks `data.daily.time.length === series.length`:
+**Issue:** `getCurrentWeather` explicitly guards against a malformed forecast response by checking `data.daily.time.length !== data.daily.temperature_2m_mean.length` (line 65) and throwing. `getHistoricalBaseline`'s validation block still only checks that `series` is a non-empty array — it never checks `data.daily.time.length === series.length`:
 
 ```ts
-// src/weather/client.ts:119-129
 const data = (await res.json()) as ArchiveDailyResponse
 const series = data.daily?.[variable]
 if (
@@ -62,7 +63,7 @@ if (
 }
 ```
 
-This directly contradicts the function's own doc comment two lines above ("an empty/malformed series must never reach anomaly.ts") and the file's stated "V5 defensive parsing" contract. `useHistoricalBaseline.ts` then does `values: response.daily[variable] as (number | null)[]` with a bare type assertion and no further check, so a truncated/misaligned archive response silently reaches `filterDayOfYearWindow`, which iterates by `time.length` and reads `values[i]` — any length mismatch silently under- or over-runs one of the two parallel arrays rather than raising the loud, distinct error state the module's comments promise. Because the anomaly score's accuracy is this app's stated core value, silently dropping/misaligning baseline samples instead of surfacing a fetch-error state is a real (if low-probability, API-dependent) correctness gap.
+This still contradicts the function's own doc comment ("an empty/malformed series must never reach anomaly.ts") and the file's stated "V5 defensive parsing" contract. `useHistoricalBaseline.ts` does `values: response.daily[variable] as (number | null)[]` with a bare type assertion and no further check, so a truncated/misaligned archive response silently reaches `filterDayOfYearWindow`, which iterates by `time.length` and reads `values[i]` — any length mismatch silently misaligns the two parallel arrays instead of raising the loud, distinct error state the module's comments promise. This directly touches the anomaly score's accuracy, the app's stated core value.
 **Fix:**
 ```ts
 if (
@@ -78,13 +79,12 @@ if (
 ```
 Also add a `client.test.ts` case mirroring the existing "mismatched lengths (7 vs 6)" test already present for `getCurrentWeather`.
 
-### WR-02: Day-of-year window derivation is duplicated between `computeAnomalyForToday` and `computeTrendDay`
+### WR-02: Day-of-year window derivation is still duplicated between `computeAnomalyForToday` and `computeTrendDay` (carried forward, unfixed)
 
 **File:** `src/anomaly/anomaly.ts:144-174` and `src/anomaly/anomaly.ts:186-227`
-**Issue:** The module's own comment on `hasUsableSampleCount` states: "This is the ONLY place the `Math.ceil(totalYears/2)` threshold expression appears... both `computeAnomalyForToday` and `computeTrendDay` call through here so today's anomaly and every trend day can never drift apart." In practice only the threshold *formula* is shared — the window-derivation logic that feeds it (parsing `month`/`day` from the date string, computing `years`/`startYear`/`endYear` from `daily.time`, calling `filterDayOfYearWindow`) is copy-pasted almost verbatim in both functions:
+**Issue:** The module's own comment on `hasUsableSampleCount` states this is "the ONLY place the `Math.ceil(totalYears/2)` threshold expression appears... both `computeAnomalyForToday` and `computeTrendDay` call through here so today's anomaly and every trend day can never drift apart." In practice only the threshold *formula* is shared — the window-derivation logic that feeds it is still copy-pasted verbatim in both functions:
 
 ```ts
-// repeated in both computeAnomalyForToday (154-168) and computeTrendDay (192-210)
 const parts = dateStr.split('-')
 const targetMonth = Number(parts[1])
 const targetDay = Number(parts[2])
@@ -95,8 +95,8 @@ const endYear = Math.max(...years)
 const samples = filterDayOfYearWindow(daily, targetMonth, targetDay, startYear, endYear, halfWidthDays)
 ```
 
-Any future change to this derivation (e.g. a different years-detection strategy, a different date-parsing approach) has to be applied in both places by hand, which is exactly the drift risk the surrounding comments call out as unacceptable for this pair of functions.
-**Fix:** Extract the shared block into a helper, e.g.:
+Any future change to this derivation (different years-detection strategy, different date parsing) must be applied by hand in both places — exactly the drift risk the surrounding comments call out as unacceptable.
+**Fix:** Extract a shared helper:
 ```ts
 function deriveWindowSamples(
   daily: { time: string[]; values: (number | null)[] },
@@ -116,32 +116,83 @@ function deriveWindowSamples(
 ```
 and have both `computeAnomalyForToday` and `computeTrendDay` call it, then apply `hasUsableSampleCount(samples, totalYears)` on the result.
 
-## Info
+### WR-03: `formatSlotLabel` still lacks the malformed-`dateStr` guard the original IN-01 named it for — the gap-closure fix was incomplete
 
-### IN-01: Unguarded `Date` construction from `dateStr` can throw uncaught in the render path
-
-**File:** `src/app/TrendDayChart.tsx:48` and `src/app/trend.ts:53`
-**Issue:** `formatActualTooltip` and `formatSlotLabel` both build `new Date(`${dateStr}T00:00:00Z`)` and immediately call `.toLocaleDateString(...)` with no validation of `dateStr`'s shape. If `dateStr` is ever malformed (an internal invariant violation upstream, not currently reachable from user input), `Date` silently produces an `Invalid Date`, and `toLocaleDateString` throws a `RangeError` synchronously during render with no error boundary in these files to catch it, crashing the trend row.
-**Fix:** Not urgent given current callers always pass validated ISO date strings, but worth a defensive check or an app-level error boundary around `TrendRow` given a single malformed day would otherwise take down the whole panel:
+**File:** `src/app/trend.ts:51-58`
+**Issue:** The prior review's IN-01 finding explicitly named **two** call sites needing a guard against `Invalid Date` crashing the render: `src/app/TrendDayChart.tsx:48` (`formatActualTooltip`) and `src/app/trend.ts:53` (`formatSlotLabel`). The gap-closure comment atop `TrendDayChart.tsx` claims: *"formatActualTooltip also gained two defensive guards (03-REVIEW.md IN-01/IN-03)"* — and indeed `formatActualTooltip` was fixed (line 68 now checks `Number.isNaN(date.getTime())`). But `formatSlotLabel` in `trend.ts` was left completely unguarded:
 ```ts
-const date = new Date(`${dateStr}T00:00:00Z`)
-if (Number.isNaN(date.getTime())) return dateStr // or a safe fallback label
+export function formatSlotLabel(dateStr: string, isToday: boolean): string {
+  if (isToday) return 'Today'
+  const date = new Date(`${dateStr}T00:00:00Z`)
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    timeZone: 'UTC',
+  })
+}
+```
+`dateStr` here comes from `current.recentDaily.time[i]`, which `client.ts` only validates as "an array of the right length" — it never validates that each element is a well-formed date string. If Open-Meteo (or any future data source) ever returns a malformed entry in that array, `toLocaleDateString` throws a `RangeError` synchronously during render, and there is no error boundary anywhere in the reviewed tree to catch it — the whole `TrendRow` (and everything below it in `LocationPanel`) would go down. `trend.test.ts`'s `formatSlotLabel` tests only exercise valid dates, so this gap has no regression test either.
+**Fix:** Apply the identical guard already proven in `TrendDayChart.tsx`:
+```ts
+export function formatSlotLabel(dateStr: string, isToday: boolean): string {
+  if (isToday) return 'Today'
+  const date = new Date(`${dateStr}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return dateStr
+  return date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })
+}
 ```
 
-### IN-02: `.location-panel` has a fixed 720px width with no responsive fallback
+### WR-04: New `TrendRow`/`TrendYAxisColumn` composition — the exact subject of the 03-05 gap closure — has zero test coverage
 
-**File:** `src/app/App.css:21-24`
-**Issue:** `.location-panel { flex: 0 0 720px; width: 720px; }` combined with `.map-region { flex: 1 1 auto; min-width: 0; }` means on any viewport narrower than roughly 720px + a usable map width, the map region is squeezed toward zero width while the panel stays fixed. There's no media query or `max-width: 100%` fallback anywhere in the file for narrow viewports.
-**Fix:** Add a breakpoint, e.g. `@media (max-width: 900px) { .location-panel { flex-basis: 100%; width: 100%; } .app-shell { flex-direction: column; } }`, if narrow-viewport support is in scope for this milestone.
+**File:** `src/app/TrendRow.tsx` (whole file), `src/app/TrendDayChart.tsx:200-227` (`TrendYAxisColumn`)
+**Issue:** There is no `TrendRow.test.tsx` anywhere in the repository (confirmed by directory search). `TrendRow.tsx` is the component that:
+- computes the shared y-domain once (`computeSharedYDomain(days)`),
+- decides which slot is "today" (`isToday={index === days.length - 1}`),
+- renders the new `TrendYAxisColumn` (also untested directly — `TrendDayChart.test.tsx` only exercises `TrendDayChart`, never the `TrendYAxisColumn` export it sits beside),
+- and renders `TrendLegend`.
 
-### IN-03: `formatActualTooltip` silently drops the unit suffix when `units` is null
+This is precisely the composition the 03-05/03-06 gap-closure plans were about (VIZ-02 Gap 1: shared axis; VIZ-02 Gap 2: legend), yet none of the wiring — the `days === null || days.length === 0` early return, the `isToday` index math, the axis/tile domain-sharing, or the fact that `TrendYAxisColumn` renders a `ComposedChart` with an intentionally-empty `Scatter` data array — is verified by any automated test. A regression here (e.g. an off-by-one on `isToday`, or a future Recharts upgrade that stops tolerating an empty-data Scatter with an explicit domain) would not be caught by the existing suite.
+**Fix:** Add `src/app/TrendRow.test.tsx` covering at minimum:
+```ts
+it('renders null when days is null or empty', () => { ... })
+it('marks the last day isToday and every other day not-today', () => { ... })
+it('renders TrendYAxisColumn once and 7 TrendDayChart tiles for a 7-day input', () => { ... })
+```
+and a direct render test for `TrendYAxisColumn` alone (mirrors the existing `TrendDayChart.test.tsx` pattern) asserting it renders an `<svg>` without throwing for a representative `yDomain`.
 
-**File:** `src/app/TrendDayChart.tsx:56`
-**Issue:** `` `${monthDay} — ${roundedActual}°${units ?? ''} (${delta}° vs. 30-yr avg)` `` falls back to an empty string when `units` is null, producing a tooltip like "Jul 14 — 21° (+3° vs. 30-yr avg)" with a dangling degree symbol and no unit letter, rather than omitting the unit cleanly or falling back to a sensible default (e.g. `'C'`).
-**Fix:** Either guard the call site so `TrendDayChart` isn't rendered with usable days before `units` resolves, or fall back explicitly: `units ?? 'C'`.
+### WR-05: `TrendLegend`'s `role="list"` container has no `role="listitem"` children — invalid ARIA list structure
+
+**File:** `src/app/TrendLegend.tsx:22-36, 40`
+**Issue:** The outer container declares `role="list"` (`<div className="trend-legend" role="list" aria-label="Trend chart legend">`), but `TrendLegendItem` renders each entry as a plain `<div className="trend-legend__item">` with no `role="listitem"`. Per the ARIA-in-HTML spec, a `list` role's required owned elements are `listitem` (or nested `group`/`list`); without them, assistive technology may not announce the legend as a list at all, or may announce an inconsistent/empty list, undermining the a11y intent the surrounding code comments explicitly call out (native SVG marks, `aria-hidden` swatches, explicit `aria-label`).
+**Fix:**
+```tsx
+function TrendLegendItem({ label, swatch }: TrendLegendItemProps) {
+  return (
+    <div className="trend-legend__item" role="listitem">
+      ...
+```
+
+## Info
+
+### IN-01: `computeAnomaly` returns a `NaN` delta for an empty baseline array — no defensive guard or test
+
+**File:** `src/anomaly/anomaly.ts:25-34`
+**Issue:** `computeAnomaly(today, [])` calls `mean([])`, which is `0/0 = NaN`; `delta = today - NaN` is `NaN`, while `zScore` correctly resolves to `null` (since `sampleStdDev([])` returns `0`). The result `{ delta: NaN, zScore: null }` is a silent NaN leak from an otherwise carefully NaN/Infinity-averse module (per its own "Pitfall 2" comments). Not currently reachable from either production caller — both `computeAnomalyForToday` and `computeTrendDay` gate on `hasUsableSampleCount` before calling `computeAnomaly`, which always requires at least 1 sample — but `computeAnomaly` is exported and unit-tested directly, and none of its tests exercise the empty-array case (`mean`'s own test suite doesn't cover `mean([])` either).
+**Fix:** Either guard `computeAnomaly` explicitly for the empty-baseline case, or document the precondition and add a unit test asserting the current behavior so a future refactor can't silently change it unnoticed.
+
+### IN-02: `.location-panel` still has a fixed pixel width with no responsive fallback (carried forward)
+
+**File:** `src/app/App.css:21-34`
+**Issue:** `.location-panel { flex: 0 0 760px; width: 760px; }` combined with `.map-region { flex: 1 1 auto; min-width: 0; }` means on any viewport narrower than roughly 760px + a usable map width, the map region is squeezed toward zero. There is still no media query or narrow-viewport fallback anywhere in the stylesheet (the 03-05 gap closure only changed the fixed width from 720px to 760px to fit the new axis column — it did not add responsiveness).
+**Fix:** Add a breakpoint if narrow-viewport support is in scope, e.g. `@media (max-width: 900px) { .app-shell { flex-direction: column; } .location-panel { flex-basis: auto; width: 100%; } }`.
+
+### IN-03: Y-axis tick styling and tile pixel dimensions are duplicated with no shared source
+
+**File:** `src/app/TrendDayChart.tsx:164-171, 217-223`; `src/app/App.css:272, 294-295`
+**Issue:** The `tick={{ fill: 'var(--color-muted)', fontSize: 14 }}` object passed to `YAxis` is written out twice — once in `TrendDayChart` and once in `TrendYAxisColumn` — with no shared constant, so the two axes (real per-tile axis vs. the new shared column) can silently drift in appearance if only one is edited. Separately, `CHART_WIDTH = 88` / `CHART_HEIGHT = 120` in `TrendDayChart.tsx` duplicate the `width: 88px` / `height: 120px` values hardcoded independently in `App.css`'s `.trend-day` and `.trend-day__placeholder` rules, with no single source of truth tying the JS chart dimensions to the CSS layout dimensions they must match pixel-for-pixel.
+**Fix:** Hoist a shared `const AXIS_TICK_STYLE = { fill: 'var(--color-muted)', fontSize: 14 }` and reuse it in both `YAxis` elements. For the CSS/TS dimension duplication, consider driving the CSS via a CSS custom property set once (e.g. `--trend-tile-width: 88px`) that both the stylesheet and (if ever needed) inline styles reference, rather than two independently-maintained magic numbers.
 
 ---
 
-_Reviewed: 2026-07-15T12:00:00Z_
+_Reviewed: 2026-07-15T00:00:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
