@@ -39,7 +39,7 @@ export function TrendLegend() {
   return (
     <div className="trend-legend" role="list" aria-label="Trend chart legend">
       <TrendLegendItem
-        label="Each of the last 30 years"
+        label="Temperatures on this day in the last 30 years"
         swatch={
           <circle
             cx={SWATCH_CENTER}
@@ -62,7 +62,7 @@ export function TrendLegend() {
         }
       />
       <TrendLegendItem
-        label="That day's temperature"
+        label="Temperature now"
         swatch={
           <polygon
             points={`${SWATCH_CENTER},1 ${SWATCH_SIZE - 1},${SWATCH_CENTER} ${SWATCH_CENTER},${SWATCH_SIZE - 1} 1,${SWATCH_CENTER}`}

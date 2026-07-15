@@ -6,9 +6,9 @@ describe('TrendLegend', () => {
   it('renders all three legend labels', () => {
     const { getByText } = render(<TrendLegend />)
 
-    expect(getByText('Each of the last 30 years')).toBeTruthy()
+    expect(getByText('Temperatures on this day in the last 30 years')).toBeTruthy()
     expect(getByText('30-year average')).toBeTruthy()
-    expect(getByText("That day's temperature")).toBeTruthy()
+    expect(getByText('Temperature now')).toBeTruthy()
   })
 
   it('renders native SVG swatches matching the chart marks (circle, line, diamond)', () => {

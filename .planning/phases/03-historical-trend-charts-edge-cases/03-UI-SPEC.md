@@ -112,7 +112,7 @@ The "Today" slot is visually identifiable by label alone (bold + accent color), 
 | X-axis | `XAxis` | — | `type="number"`, fixed `domain={[0, 1]}`, `hide` — x carries no semantic meaning (D-04); never render x ticks/labels/gridlines |
 | Domain padding | — | — | Computed once in `TrendRow` per 03-RESEARCH.md Pattern 3 (10% padding, floor/ceil) — generous enough that every day's mean/dots/actual fits without triggering the `ReferenceLine` overflow case above |
 | Tooltip / hover detail | native `title` attribute on the actual-value marker only | — | e.g. `"Jul 12 — 23°C (+2° vs. 30-yr avg)"`. No Recharts `Tooltip` component in v1 — matches the codebase's existing `title`-attribute pattern (`AnomalyCard`'s info button) rather than introducing a new interaction affordance. Historical dots get no individual tooltip — they represent the *distribution*, not individually-labeled data points. |
-| Legend (new, 03-05 gap closure — VIZ-02 Gap 2) | `TrendLegend` — native SVG (`circle`/`rect`/`polygon`), not Recharts | fills reuse `--color-chart-historical` / `--color-chart-mean` / `--color-chart-actual` verbatim | Persistent, always-visible key rendered once below the 7-tile row (not per-tile, not hover-only) so a first-time viewer never has to hover the actual-marker tooltip to learn what the marks mean. Three entries: pale dot swatch = "Each of the last 30 years", bright line swatch = "30-year average", orange diamond swatch = "That day's temperature" — see Copywriting Contract for the exact strings. |
+| Legend (new, 03-05 gap closure — VIZ-02 Gap 2) | `TrendLegend` — native SVG (`circle`/`rect`/`polygon`), not Recharts | fills reuse `--color-chart-historical` / `--color-chart-mean` / `--color-chart-actual` verbatim | Persistent, always-visible key rendered once below the 7-tile row (not per-tile, not hover-only) so a first-time viewer never has to hover the actual-marker tooltip to learn what the marks mean. Three entries: pale dot swatch = "Temperatures on this day in the last 30 years", bright line swatch = "30-year average", orange diamond swatch = "Temperature now" — see Copywriting Contract for the exact strings. |
 
 **New color tokens this phase adds to `src/index.css`:**
 ```css
@@ -196,7 +196,7 @@ Accent reserved for: **(1)** the map pin/marker, **(2)** loading-state spinners 
 | Error state | Same as above — no new error UI is introduced by this phase; `AnomalyCard`'s existing error branch (unchanged) already covers a total current-weather/baseline fetch failure |
 | Destructive confirmation | Not applicable — no destructive actions exist in this phase's scope |
 | Actual-marker hover detail (native `title`, not visible body copy) | `"{Mon DD} — {rounded temp}°{units} ({+/-N}° vs. 30-yr avg)"` — reuses `formatDelta`'s existing sign convention from `anomaly.ts` (Unicode minus, explicit `+`) rather than inventing a new delta format |
-| Legend labels (new this phase, 03-05 gap closure, VIZ-02 Gap 2) | Pale dot swatch: `Each of the last 30 years`. Bright line swatch: `30-year average`. Orange diamond swatch: `That day's temperature`. All three render persistently, below the 7-tile row, no hover required. |
+| Legend labels (new this phase, 03-05 gap closure, VIZ-02 Gap 2; wording corrected during 03-06 re-verify) | Pale dot swatch: `Temperatures on this day in the last 30 years`. Bright line swatch: `30-year average`. Orange diamond swatch: `Temperature now`. All three render persistently, below the 7-tile row, no hover required. |
 
 ---
 
