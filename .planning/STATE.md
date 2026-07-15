@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 current_phase_name: historical-trend-charts-edge-cases
-status: executing
-stopped_at: 03-04 checkpoint ran, NOT approved - 2 issues found, gap closure needed
-last_updated: "2026-07-15T10:53:44.737Z"
+status: complete
+stopped_at: 03-06 checkpoint approved - Phase 3 complete, all v1 requirements satisfied
+last_updated: "2026-07-15T12:02:11.932Z"
 last_activity: 2026-07-15
 last_activity_desc: Phase 03 execution started
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 13
-  completed_plans: 12
-  percent: 67
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 ## Current Position
 
-Phase: 03 (historical-trend-charts-edge-cases) — EXECUTING
-Plan: 2 of 6
-Status: Ready to execute
-Last activity: 2026-07-15 — Phase 03 execution started
+Phase: 03 (historical-trend-charts-edge-cases) — COMPLETE
+Plan: 6 of 6
+Status: Complete — all v1 requirements (VIZ-01, VIZ-02, ROBU-01) confirmed via the 03-06 human-verify checkpoint
+Last activity: 2026-07-15 — 03-06 checkpoint approved, Phase 3 complete
 
-Progress: [██████████] 100% by plan count (all 4 plans in Phase 3 have produced a SUMMARY.md), but this is a MECHANICAL count only — Plan 03-04's SUMMARY documents a failed human-verify checkpoint, not a functional completion. Phase 3 is not actually done until the gap-closure fixes above are applied and re-verified.
+Progress: [██████████] 100% — all 6 plans in Phase 3 have produced a SUMMARY.md, AND the 03-06 human-verify checkpoint returned an explicit "Approved" verdict (after one legend-wording round-trip on Gap 2). This is a genuine functional completion, not just a mechanical plan count: both defects the 03-04 checkpoint originally found are closed and reconfirmed against live data.
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100% by plan count (all 4 plans in Ph
 | Phase 03 P03 | 15min | 3 tasks | 8 files |
 | Phase 03 P04 | 12min | 1 tasks | 0 files |
 | Phase 03 P05 | 20min | 2 tasks | 6 files |
+| Phase 03 P06 | 25min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 3 Plan 5: Chose the shared Y-axis column approach (TrendYAxisColumn) over per-tile width compensation to close VIZ-02 Gap 1 - all 7 trend tiles now present an identical plot-area width
 - [Phase ?]: Phase 3 Plan 5: location-panel widened 720px -> 760px to fit the new shared axis column without introducing horizontal scroll
 - [Phase ?]: Phase 3 Plan 5: Added TrendLegend (persistent, native-SVG key reusing the chart's own color tokens) to close VIZ-02 Gap 2 - no legend previously existed
+- [Phase ?]: Phase 3 Plan 6: Reviewer rejected the 03-05 legend copy as confusing; supplied exact replacement wording (dot: 'Temperatures on this day in the last 30 years', diamond: 'Temperature now') applied verbatim and approved, clearing Phase 3 to close
 
 ### Pending Todos
 
@@ -108,7 +110,7 @@ None yet.
 
 - Phase 2 planning needs a deliberate decision on day-of-year window width (±3 to ±7 days cited in research, no single correct answer) and Feb 29 handling
 - Phase 1 planning needs a reverse-geocoding provider decision and a tile provider decision (attribution/usage-policy safe) — both flagged as open gaps in research/SUMMARY.md
-- Phase 3 gap closure needed before completion: (1) leftmost 7-day trend-chart tile visually squished vs. its 6 siblings - likely because showYAxis tick labels eat into the same fixed 88px ComposedChart width instead of getting extra allotted space (src/app/TrendDayChart.tsx / TrendRow.tsx); (2) no legend explaining the trend chart's dots/mean-line/diamond symbols. Human checkpoint 03-04 did NOT approve; VIZ-01/VIZ-02/ROBU-01 remain unmarked pending fix + re-verify. See 03-04-SUMMARY.md. (Non-blocking backlog item also noted: color historical dots by decade.)
+- ~~Phase 3 gap closure needed before completion~~ — RESOLVED 2026-07-15. Both defects the 03-04 checkpoint found (squished leftmost tile; missing legend) were fixed in Plan 03-05 and re-verified/approved in Plan 03-06. VIZ-01/VIZ-02/ROBU-01 are now all marked Complete in REQUIREMENTS.md. (Non-blocking backlog item still open: color historical dots by decade — see Roadmap Evolution below.)
 
 ### Roadmap Evolution
 
@@ -125,6 +127,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-15T10:52:47.830Z
-Stopped at: 03-04 checkpoint ran, NOT approved - 2 issues found (squished leftmost chart tile, missing legend), gap closure needed before Phase 3 can be marked done. See 03-04-SUMMARY.md.
+Last session: 2026-07-15T12:01:06.536Z
+Stopped at: 03-06 checkpoint approved ("Approved.") after one legend-wording round-trip (see 03-06-SUMMARY.md). Both 03-04 gaps (squished leftmost tile, missing legend) are closed. Phase 3 complete; all v1 requirements satisfied. No further phases queued.
 Resume file: None

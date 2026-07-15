@@ -15,8 +15,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Location Picker & Shareable Shell** - Users can drop a pin, see its place name, share the exact view via URL, and reach the app with no login on free hosting (completed 2026-07-14)
 - [x] **Phase 2: Current Conditions & Anomaly Engine** - Users can see today's temperature and a statistically sound, easy-to-interpret anomaly (delta, z-score, verdict) vs. the 30-year norm (completed 2026-07-14)
-- [ ] **Phase 3: Historical Trend Charts & Edge Cases** - Users can see each of the last ~7 days plotted against its own historical range, and get a graceful message when historical data isn't available (gaps found 2026-07-15, not yet complete)
-  - ⚠️ **Gaps found — verified via `03-VERIFICATION.md` (status: gaps_found, 9/11 must-haves).** The 03-04 human-verify checkpoint ran, but the reviewer did NOT approve: (1) the leftmost trend-chart tile renders visually squished vs. its 6 siblings, (2) the trend chart has no legend for its dots/mean-line/diamond symbols. VIZ-01/VIZ-02 remain open in REQUIREMENTS.md (ROBU-01 is genuinely satisfied). Gap-closure plans 03-05 (code fix) + 03-06 (fresh human-verify) created 2026-07-15. Next: `/gsd-execute-phase 3 --gaps-only`.
+- [x] **Phase 3: Historical Trend Charts & Edge Cases** - Users can see each of the last ~7 days plotted against its own historical range, and get a graceful message when historical data isn't available (completed 2026-07-15)
+  - ✅ **Gaps closed — re-verified via 03-06 human-verify checkpoint (2026-07-15).** The 03-04 checkpoint originally found two defects: (1) the leftmost trend-chart tile rendered visually squished vs. its 6 siblings, (2) the trend chart had no legend for its dots/mean-line/diamond symbols. Plan 03-05 fixed both; Plan 03-06 re-verified against live data — reviewer confirmed Gap 1 fixed, and approved Gap 2 after one legend-wording round-trip (initial copy rejected as confusing, corrected to reviewer-supplied wording). Final verdict: "Approved." VIZ-01, VIZ-02, and ROBU-01 are all now marked complete in REQUIREMENTS.md.
 
 ## Phase Details
 
@@ -94,7 +94,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Each day's chart shows the underlying historical data points/distribution (not just a single average line), with the average visually emphasized (e.g. brighter/higher-opacity) without hiding the spread
   3. User sees a graceful, understandable message when the selected location has no usable historical data (e.g. ocean, remote areas)
 
-**Plans**: 5/6 plans executed
+**Plans**: 6/6 plans complete
 
 **Wave 1** *(parallel — no shared files)*
 
@@ -112,7 +112,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Gap closure** *(from 03-VERIFICATION.md gaps_found — closes the 2 VIZ-02 legibility defects the 03-04 checkpoint found)*
 
 - [x] 03-05-PLAN.md — Fix leftmost-tile squish (equalize plot area) + add persistent legend for the dot/mean-line/diamond marks + sync 03-UI-SPEC.md (VIZ-01, VIZ-02)
-- [ ] 03-06-PLAN.md — Fresh human-verify checkpoint: re-confirm the leftmost tile matches its siblings and the legend resolves legibility, end-to-end vs. live data (VIZ-01, VIZ-02, ROBU-01)
+- [x] 03-06-PLAN.md — Fresh human-verify checkpoint: re-confirm the leftmost tile matches its siblings and the legend resolves legibility, end-to-end vs. live data (VIZ-01, VIZ-02, ROBU-01)
 
 **UI hint**: yes
 
@@ -125,7 +125,7 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 3/3 | Complete    | 2026-07-14 |
-| 3. Historical Trend Charts & Edge Cases | 5/6 | In Progress|  |
+| 3. Historical Trend Charts & Edge Cases | 6/6 | Complete   | 2026-07-15 |
 
 ## Backlog
 
@@ -139,4 +139,5 @@ Idea: replace (or offer as an alternative to) the trend row's current per-day do
 **Plans:** 0 plans
 
 Plans:
+
 - [ ] TBD (promote with /gsd-review-backlog when ready)
