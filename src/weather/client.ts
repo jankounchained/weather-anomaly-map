@@ -16,9 +16,17 @@ const CURRENT_TIMEOUT_MS = 3000
 const ARCHIVE_TIMEOUT_MS = 8000
 
 /**
- * Fetch today's current temperature for lat/lng from Open-Meteo's forecast
- * endpoint. Throws (does not return null) on a non-2xx response or a
- * malformed/missing current.temperature_2m field (V5 defensive parsing).
+ * Fetch today's current temperature AND the 7 most recent daily means
+ * (past_days=6, forecast_days=1) for lat/lng from Open-Meteo's forecast
+ * endpoint - a single request, D-13/VIZ-01 (RESEARCH.md Pattern 1: sourcing
+ * the 7 actual daily values from the forecast API, not the archive/
+ * reanalysis endpoint, sidesteps the archive's few-day observation lag).
+ * Throws (does not return null) on a non-2xx response, a malformed/missing
+ * current.temperature_2m field, or a malformed daily field - missing,
+ * non-array time/temperature_2m_mean, mismatched array lengths, or an
+ * empty time array (V5 defensive parsing, T-03-01). Individual null values
+ * inside temperature_2m_mean are allowed - a legitimately-null day is
+ * handled downstream by computeTrendDay's unusable-marker path (D-14).
  */
 export async function getCurrentWeather(
   lat: number,
@@ -31,6 +39,9 @@ export async function getCurrentWeather(
     url.searchParams.set('latitude', String(lat))
     url.searchParams.set('longitude', String(lng))
     url.searchParams.set('current', 'temperature_2m')
+    url.searchParams.set('daily', 'temperature_2m_mean')
+    url.searchParams.set('past_days', '6')
+    url.searchParams.set('forecast_days', '1')
     url.searchParams.set('timezone', 'auto')
 
     const res = await fetch(url, { signal: controller.signal })
@@ -45,6 +56,15 @@ export async function getCurrentWeather(
       !Number.isFinite(data.current.temperature_2m)
     ) {
       throw new Error('forecast fetch failed: missing temperature_2m')
+    }
+    if (
+      !data.daily ||
+      !Array.isArray(data.daily.time) ||
+      data.daily.time.length === 0 ||
+      !Array.isArray(data.daily.temperature_2m_mean) ||
+      data.daily.time.length !== data.daily.temperature_2m_mean.length
+    ) {
+      throw new Error('forecast fetch failed: malformed daily series')
     }
 
     return data

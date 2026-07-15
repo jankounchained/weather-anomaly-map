@@ -9,7 +9,7 @@
 // library (CLAUDE.md).
 import { useEffect, useRef, useState } from 'react'
 import { getCurrentWeather, localDateFrom } from './client'
-import type { UseCurrentWeatherResult, WeatherStatus } from './types'
+import type { DailySeries, UseCurrentWeatherResult, WeatherStatus } from './types'
 
 interface ResolvedWeather {
   lat: number
@@ -17,6 +17,7 @@ interface ResolvedWeather {
   tempC: number | null
   localDate: string | null
   units: string | null
+  recentDaily: DailySeries | null
 }
 
 /**
@@ -50,11 +51,24 @@ export function useCurrentWeather(
           tempC: response.current.temperature_2m,
           localDate: localDateFrom(response.current.time),
           units: response.current_units.temperature_2m,
+          recentDaily: response.daily
+            ? {
+                time: response.daily.time,
+                values: response.daily.temperature_2m_mean,
+              }
+            : null,
         })
       })
       .catch(() => {
         if (cancelled || requestIdRef.current !== requestId) return
-        setResolved({ lat, lng, tempC: null, localDate: null, units: null })
+        setResolved({
+          lat,
+          lng,
+          tempC: null,
+          localDate: null,
+          units: null,
+          recentDaily: null,
+        })
       })
 
     return () => {
@@ -63,7 +77,13 @@ export function useCurrentWeather(
   }, [lat, lng])
 
   if (lat === null || lng === null) {
-    return { status: 'idle', tempC: null, localDate: null, units: null }
+    return {
+      status: 'idle',
+      tempC: null,
+      localDate: null,
+      units: null,
+      recentDaily: null,
+    }
   }
   if (resolved && resolved.lat === lat && resolved.lng === lng) {
     return {
@@ -71,9 +91,16 @@ export function useCurrentWeather(
       tempC: resolved.tempC,
       localDate: resolved.localDate,
       units: resolved.units,
+      recentDaily: resolved.recentDaily,
     }
   }
 
   const status: WeatherStatus = 'loading'
-  return { status, tempC: null, localDate: null, units: null }
+  return {
+    status,
+    tempC: null,
+    localDate: null,
+    units: null,
+    recentDaily: null,
+  }
 }

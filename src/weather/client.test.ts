@@ -26,13 +26,27 @@ describe('getCurrentWeather', () => {
     vi.restoreAllMocks()
   })
 
-  it('requests the forecast URL with the exact expected params', async () => {
+  const RECENT_DAILY = {
+    time: [
+      '2026-07-09',
+      '2026-07-10',
+      '2026-07-11',
+      '2026-07-12',
+      '2026-07-13',
+      '2026-07-14',
+      '2026-07-15',
+    ],
+    temperature_2m_mean: [20.8, 21.5, 22.1, 23.2, 24.5, 23.0, 22.3],
+  }
+
+  it('requests the forecast URL with the exact expected params, including the daily/past_days/forecast_days params', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       jsonResponse({
         utc_offset_seconds: 7200,
         timezone: 'Europe/Prague',
         current: { time: '2026-07-14T20:30', temperature_2m: 21.4 },
         current_units: { temperature_2m: '°C' },
+        daily: RECENT_DAILY,
       }),
     )
 
@@ -47,6 +61,9 @@ describe('getCurrentWeather', () => {
     expect(url.searchParams.get('latitude')).toBe('50.0755')
     expect(url.searchParams.get('longitude')).toBe('14.4378')
     expect(url.searchParams.get('current')).toBe('temperature_2m')
+    expect(url.searchParams.get('daily')).toBe('temperature_2m_mean')
+    expect(url.searchParams.get('past_days')).toBe('6')
+    expect(url.searchParams.get('forecast_days')).toBe('1')
     expect(url.searchParams.get('timezone')).toBe('auto')
   })
 
@@ -57,6 +74,7 @@ describe('getCurrentWeather', () => {
         timezone: 'Europe/Prague',
         current: { time: '2026-07-14T20:30', temperature_2m: 21.4 },
         current_units: { temperature_2m: '°C' },
+        daily: RECENT_DAILY,
       }),
     )
 
@@ -64,6 +82,25 @@ describe('getCurrentWeather', () => {
 
     expect(result.current.temperature_2m).toBe(21.4)
     expect(typeof result.current.temperature_2m).toBe('number')
+  })
+
+  it('resolves a 7-entry daily.time + 7-entry temperature_2m_mean on a healthy response', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        utc_offset_seconds: 7200,
+        timezone: 'Europe/Prague',
+        current: { time: '2026-07-15T10:15', temperature_2m: 21.5 },
+        current_units: { temperature_2m: '°C' },
+        daily: RECENT_DAILY,
+      }),
+    )
+
+    const result = await getCurrentWeather(50.0755, 14.4378)
+
+    expect(result.daily?.time).toEqual(RECENT_DAILY.time)
+    expect(result.daily?.temperature_2m_mean).toEqual(
+      RECENT_DAILY.temperature_2m_mean,
+    )
   })
 
   it('throws an Error containing the status on a non-2xx response', async () => {
@@ -79,6 +116,37 @@ describe('getCurrentWeather', () => {
         timezone: 'Europe/Prague',
         current: { time: '2026-07-14T20:30' },
         current_units: {},
+        daily: RECENT_DAILY,
+      }),
+    )
+
+    await expect(getCurrentWeather(50.0755, 14.4378)).rejects.toThrow()
+  })
+
+  it('throws when daily.time and daily.temperature_2m_mean have mismatched lengths (7 vs 6)', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        utc_offset_seconds: 7200,
+        timezone: 'Europe/Prague',
+        current: { time: '2026-07-14T20:30', temperature_2m: 21.4 },
+        current_units: { temperature_2m: '°C' },
+        daily: {
+          time: RECENT_DAILY.time,
+          temperature_2m_mean: RECENT_DAILY.temperature_2m_mean.slice(0, 6),
+        },
+      }),
+    )
+
+    await expect(getCurrentWeather(50.0755, 14.4378)).rejects.toThrow()
+  })
+
+  it('throws when daily is missing entirely', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      jsonResponse({
+        utc_offset_seconds: 7200,
+        timezone: 'Europe/Prague',
+        current: { time: '2026-07-14T20:30', temperature_2m: 21.4 },
+        current_units: { temperature_2m: '°C' },
       }),
     )
 
