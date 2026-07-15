@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Location Picker & Shareable Shell** - Users can drop a pin, see its place name, share the exact view via URL, and reach the app with no login on free hosting (completed 2026-07-14)
 - [x] **Phase 2: Current Conditions & Anomaly Engine** - Users can see today's temperature and a statistically sound, easy-to-interpret anomaly (delta, z-score, verdict) vs. the 30-year norm (completed 2026-07-14)
 - [ ] **Phase 3: Historical Trend Charts & Edge Cases** - Users can see each of the last ~7 days plotted against its own historical range, and get a graceful message when historical data isn't available (gaps found 2026-07-15, not yet complete)
-  - ⚠️ **Gaps found — verified via `03-VERIFICATION.md` (status: gaps_found, 9/11 must-haves).** The 03-04 human-verify checkpoint ran, but the reviewer did NOT approve: (1) the leftmost trend-chart tile renders visually squished vs. its 6 siblings, (2) the trend chart has no legend for its dots/mean-line/diamond symbols. VIZ-01/VIZ-02 remain open in REQUIREMENTS.md (ROBU-01 is genuinely satisfied). Next: `/gsd-plan-phase 3 --gaps` to create gap-closure plans, then `/gsd-execute-phase 3 --gaps-only`.
+  - ⚠️ **Gaps found — verified via `03-VERIFICATION.md` (status: gaps_found, 9/11 must-haves).** The 03-04 human-verify checkpoint ran, but the reviewer did NOT approve: (1) the leftmost trend-chart tile renders visually squished vs. its 6 siblings, (2) the trend chart has no legend for its dots/mean-line/diamond symbols. VIZ-01/VIZ-02 remain open in REQUIREMENTS.md (ROBU-01 is genuinely satisfied). Gap-closure plans 03-05 (code fix) + 03-06 (fresh human-verify) created 2026-07-15. Next: `/gsd-execute-phase 3 --gaps-only`.
 
 ## Phase Details
 
@@ -94,7 +94,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Each day's chart shows the underlying historical data points/distribution (not just a single average line), with the average visually emphasized (e.g. brighter/higher-opacity) without hiding the spread
   3. User sees a graceful, understandable message when the selected location has no usable historical data (e.g. ocean, remote areas)
 
-**Plans**: 4/4 plans complete
+**Plans**: 6 plans (4 executed; 2 gap-closure plans added after 03-04's human-verify checkpoint found 2 legibility defects)
 
 **Wave 1** *(parallel — no shared files)*
 
@@ -107,7 +107,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [x] 03-04-PLAN.md — Human-verify checkpoint: 7-day trend row end-to-end against live data + no-data path (VIZ-01, VIZ-02, ROBU-01)
+- [x] 03-04-PLAN.md — Human-verify checkpoint: 7-day trend row end-to-end against live data + no-data path (VIZ-01, VIZ-02, ROBU-01) — ran, NOT approved (2 legibility defects → gap closure)
+
+**Gap closure** *(from 03-VERIFICATION.md gaps_found — closes the 2 VIZ-02 legibility defects the 03-04 checkpoint found)*
+
+- [ ] 03-05-PLAN.md — Fix leftmost-tile squish (equalize plot area) + add persistent legend for the dot/mean-line/diamond marks + sync 03-UI-SPEC.md (VIZ-01, VIZ-02)
+- [ ] 03-06-PLAN.md — Fresh human-verify checkpoint: re-confirm the leftmost tile matches its siblings and the legend resolves legibility, end-to-end vs. live data (VIZ-01, VIZ-02, ROBU-01)
 
 **UI hint**: yes
 
