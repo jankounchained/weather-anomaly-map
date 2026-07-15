@@ -15,7 +15,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Location Picker & Shareable Shell** - Users can drop a pin, see its place name, share the exact view via URL, and reach the app with no login on free hosting (completed 2026-07-14)
 - [x] **Phase 2: Current Conditions & Anomaly Engine** - Users can see today's temperature and a statistically sound, easy-to-interpret anomaly (delta, z-score, verdict) vs. the 30-year norm (completed 2026-07-14)
-- [ ] **Phase 3: Historical Trend Charts & Edge Cases** - Users can see each of the last ~7 days plotted against its own historical range, and get a graceful message when historical data isn't available
+- [x] **Phase 3: Historical Trend Charts & Edge Cases** - Users can see each of the last ~7 days plotted against its own historical range, and get a graceful message when historical data isn't available (completed 2026-07-15)
+  - ⚠️ **Not a clean pass.** The 03-04 human-verify checkpoint ran (all 4 plan SUMMARYs exist, hence the mechanical checkbox above), but the reviewer did NOT approve: (1) the leftmost trend-chart tile renders visually squished vs. its 6 siblings, (2) the trend chart has no legend for its dots/mean-line/diamond symbols. VIZ-01/VIZ-02/ROBU-01 are not yet moved to Validated in PROJECT.md. See `.planning/phases/03-historical-trend-charts-edge-cases/03-04-SUMMARY.md` and STATE.md's Current Position for the gap-closure plan needed before this phase is truly done.
 
 ## Phase Details
 
@@ -93,7 +94,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Each day's chart shows the underlying historical data points/distribution (not just a single average line), with the average visually emphasized (e.g. brighter/higher-opacity) without hiding the spread
   3. User sees a graceful, understandable message when the selected location has no usable historical data (e.g. ocean, remote areas)
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans complete
 
 **Wave 1** *(parallel — no shared files)*
 
@@ -106,7 +107,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 03-04-PLAN.md — Human-verify checkpoint: 7-day trend row end-to-end against live data + no-data path (VIZ-01, VIZ-02, ROBU-01)
+- [x] 03-04-PLAN.md — Human-verify checkpoint: 7-day trend row end-to-end against live data + no-data path (VIZ-01, VIZ-02, ROBU-01)
 
 **UI hint**: yes
 
@@ -119,4 +120,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Location Picker & Shareable Shell | 4/4 | Complete    | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | 3/3 | Complete    | 2026-07-14 |
-| 3. Historical Trend Charts & Edge Cases | 3/4 | In Progress|  |
+| 3. Historical Trend Charts & Edge Cases | 4/4 | Complete   | 2026-07-15 |
