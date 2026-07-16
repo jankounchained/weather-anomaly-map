@@ -39,7 +39,7 @@ Full detail archived at `.planning/milestones/v1.0-ROADMAP.md`.
   3. The old hand-written CSS is deleted and no component imports it.
   4. `vite build` (production build) and the existing Vitest suite both pass with Tailwind in place.
 
-**Plans**: 2/4 plans executed
+**Plans**: 3/4 plans executed
 
 Plans:
 **Wave 1**
@@ -49,7 +49,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 04-02-PLAN.md — Layout + hero surfaces to utilities: App shell/map-region (Leaflet sizing preserved), LocationPanel, LocationDisplay, AnomalyCard; drop legacy CSS import [Wave 2]
-- [ ] 04-03-PLAN.md — Trend visuals to utilities: TrendRow, TrendDayChart, TrendLegend (inline var(--color-*) SVG props untouched) [Wave 2]
+- [x] 04-03-PLAN.md — Trend visuals to utilities: TrendRow, TrendDayChart, TrendLegend (inline var(--color-*) SVG props untouched) [Wave 2]
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -82,7 +82,7 @@ Plans:
 | 1. Location Picker & Shareable Shell | v1.0 | 4/4 | Complete | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | v1.0 | 3/3 | Complete | 2026-07-14 |
 | 3. Historical Trend Charts & Edge Cases | v1.0 | 6/6 | Complete | 2026-07-15 |
-| 4. Tailwind Foundation Migration | v1.1 | 2/4 | In Progress|  |
+| 4. Tailwind Foundation Migration | v1.1 | 3/4 | In Progress|  |
 | 5. Glass / Atmospheric Redesign | v1.1 | 0/TBD | Not started | - |
 
 ## Backlog
