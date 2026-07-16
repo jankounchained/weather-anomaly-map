@@ -84,6 +84,7 @@ For any location, the user can immediately tell how unusual today's temperature 
 | Shared `hasUsableSampleCount` gate unifies today's-anomaly and per-day trend usability thresholds | Avoids two divergent "enough data?" rules for what is conceptually the same check | ✓ Good — Validated in Phase 3 |
 | Trend tiles share one Y-axis column (TrendYAxisColumn) instead of each tile rendering its own ticks | A real user found the leftmost tile visually squished vs. its siblings during the 03-04 checkpoint; the shared-column fix equalizes all 7 plot areas | ✓ Good — fixed and re-verified in Phase 3 gap closure |
 | Persistent TrendLegend added, worded to reviewer-supplied copy after one round-trip | Initial legend copy was rejected as confusing during human verification; exact wording matters for an at-a-glance chart | ✓ Good — Validated in Phase 3 |
+| Tailwind CSS v4 adopted CSS-first (no `tailwind.config.js`); design tokens ported into an `@theme` block in `index.css`, both hand-written stylesheets removed | Matches the recommended v4 path; keeps a single styling source of truth and generates utilities from the existing tokens without a JS config | ✓ Good — Validated in Phase 4 (STYLE-01..04); visual equivalence to v1.0 confirmed by human walkthrough, Preflight/Leaflet interaction verified |
 
 ## Evolution
 
@@ -103,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-16 — v1.1 milestone (Tailwind Migration + Glass/Atmospheric Redesign) started*
+*Last updated: 2026-07-16 — v1.1 milestone: Phase 4 (Tailwind Foundation Migration) complete; Phase 5 (Glass/Atmospheric Redesign) next*
