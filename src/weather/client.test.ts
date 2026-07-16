@@ -6,7 +6,12 @@ import {
   beforeEach,
   afterEach,
 } from 'vitest'
-import { getCurrentWeather, getHistoricalBaseline, localDateFrom } from './client'
+import {
+  getCurrentWeather,
+  getHistoricalBaseline,
+  localDateFrom,
+  localHourFrom,
+} from './client'
 
 function jsonResponse(body: unknown, ok = true, status = 200) {
   return {
@@ -157,6 +162,24 @@ describe('getCurrentWeather', () => {
 describe('localDateFrom', () => {
   it("splits on 'T', taking the date portion as the pin-local today", () => {
     expect(localDateFrom('2026-07-14T20:30')).toBe('2026-07-14')
+  })
+})
+
+describe('localHourFrom', () => {
+  it("splits on 'T', taking the hour portion as the pin-local hour", () => {
+    expect(localHourFrom('2026-07-16T14:30')).toBe(14)
+  })
+
+  it('parses midnight as 0', () => {
+    expect(localHourFrom('2026-07-16T00:00')).toBe(0)
+  })
+
+  it('parses a single-digit hour correctly', () => {
+    expect(localHourFrom('2026-07-16T09:05')).toBe(9)
+  })
+
+  it("falls back to '00:00' (hour 0) when the time portion is missing", () => {
+    expect(localHourFrom('2026-07-16')).toBe(0)
   })
 })
 

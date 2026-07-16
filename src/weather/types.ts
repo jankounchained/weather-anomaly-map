@@ -43,6 +43,9 @@ export interface UseCurrentWeatherResult {
   status: WeatherStatus
   tempC: number | null
   localDate: string | null
+  /** Pin-local hour-of-day (0-23), parsed from the same current.time as
+   * localDate (D-03). Null until resolved, same nullability convention. */
+  localHour: number | null
   units: string | null
   recentDaily: DailySeries | null
 }

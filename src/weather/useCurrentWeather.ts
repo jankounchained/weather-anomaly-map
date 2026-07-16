@@ -8,7 +8,7 @@
 // from rapid pin drags. Plain useState/useEffect only - no data-fetching
 // library (CLAUDE.md).
 import { useEffect, useRef, useState } from 'react'
-import { getCurrentWeather, localDateFrom } from './client'
+import { getCurrentWeather, localDateFrom, localHourFrom } from './client'
 import type { DailySeries, UseCurrentWeatherResult, WeatherStatus } from './types'
 
 interface ResolvedWeather {
@@ -16,6 +16,7 @@ interface ResolvedWeather {
   lng: number
   tempC: number | null
   localDate: string | null
+  localHour: number | null
   units: string | null
   recentDaily: DailySeries | null
 }
@@ -50,6 +51,7 @@ export function useCurrentWeather(
           lng,
           tempC: response.current.temperature_2m,
           localDate: localDateFrom(response.current.time),
+          localHour: localHourFrom(response.current.time),
           units: response.current_units.temperature_2m,
           recentDaily: response.daily
             ? {
@@ -66,6 +68,7 @@ export function useCurrentWeather(
           lng,
           tempC: null,
           localDate: null,
+          localHour: null,
           units: null,
           recentDaily: null,
         })
@@ -81,6 +84,7 @@ export function useCurrentWeather(
       status: 'idle',
       tempC: null,
       localDate: null,
+      localHour: null,
       units: null,
       recentDaily: null,
     }
@@ -90,6 +94,7 @@ export function useCurrentWeather(
       status: 'resolved',
       tempC: resolved.tempC,
       localDate: resolved.localDate,
+      localHour: resolved.localHour,
       units: resolved.units,
       recentDaily: resolved.recentDaily,
     }
@@ -100,6 +105,7 @@ export function useCurrentWeather(
     status,
     tempC: null,
     localDate: null,
+    localHour: null,
     units: null,
     recentDaily: null,
   }

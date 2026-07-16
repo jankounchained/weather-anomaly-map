@@ -80,6 +80,15 @@ export function localDateFrom(currentTime: string): string {
   return currentTime.split('T')[0]!
 }
 
+/** Location-local hour-of-day (0-23) from Open-Meteo's "YYYY-MM-DDTHH:mm"
+ * current.time (already pin-local via timezone=auto). Sibling to
+ * localDateFrom - same string, different slice (D-03). Falls back to
+ * '00:00' when the time portion is missing. */
+export function localHourFrom(currentTime: string): number {
+  const timePart = currentTime.split('T')[1] ?? '00:00'
+  return Number(timePart.slice(0, 2))
+}
+
 /**
  * Fetch a 30-*complete*-past-calendar-year daily archive series for lat/lng
  * (ANOM-04). Bounds the query to [currentYear-30, currentYear-1], never
