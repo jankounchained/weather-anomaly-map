@@ -68,24 +68,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STYLE-01 | TBD | Pending |
-| STYLE-02 | TBD | Pending |
-| STYLE-03 | TBD | Pending |
-| STYLE-04 | TBD | Pending |
-| DESIGN-01 | TBD | Pending |
-| DESIGN-02 | TBD | Pending |
-| DESIGN-03 | TBD | Pending |
-| DESIGN-04 | TBD | Pending |
-| DESIGN-05 | TBD | Pending |
-| DESIGN-06 | TBD | Pending |
-| PERF-01 | TBD | Pending |
-| PERF-02 | TBD | Pending |
+| STYLE-01 | Phase 4 | Pending |
+| STYLE-02 | Phase 4 | Pending |
+| STYLE-03 | Phase 4 | Pending |
+| STYLE-04 | Phase 4 | Pending |
+| DESIGN-01 | Phase 5 | Pending |
+| DESIGN-02 | Phase 5 | Pending |
+| DESIGN-03 | Phase 5 | Pending |
+| DESIGN-04 | Phase 5 | Pending |
+| DESIGN-05 | Phase 5 | Pending |
+| DESIGN-06 | Phase 5 | Pending |
+| PERF-01 | Phase 5 | Pending |
+| PERF-02 | Phase 5 | Pending |
 
 **Coverage:**
 
 - v1.1 requirements: 12 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 12
+- Mapped to phases: 12 (Phase 4: 4 · Phase 5: 8)
+- Unmapped: 0
 
 ---
-*Requirements defined: 2026-07-16*
+*Requirements defined: 2026-07-16 · Mapped to phases: 2026-07-16*
