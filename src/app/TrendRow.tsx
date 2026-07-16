@@ -34,14 +34,16 @@ export function TrendRow({ days, units }: TrendRowProps) {
   const yDomain = computeSharedYDomain(days)
 
   return (
-    <section className="trend-row">
-      <p className="trend-row__heading">Last 7 Days</p>
-      <div className="trend-row__body">
-        <div className="trend-row__axis">
-          <span className="trend-row__axis-spacer" aria-hidden="true" />
+    <section className="flex flex-col gap-sm">
+      <p className="m-0 text-label font-semibold text-muted uppercase tracking-[0.05em]">
+        Last 7 Days
+      </p>
+      <div className="flex flex-row items-start gap-sm">
+        <div className="flex flex-col flex-none gap-xs">
+          <span className="block h-4" aria-hidden="true" />
           <TrendYAxisColumn yDomain={yDomain} />
         </div>
-        <div className="trend-row__charts">
+        <div className="flex flex-row items-start gap-sm">
           {days.map((day, index) => (
             <TrendDayChart
               key={day.dateStr}
