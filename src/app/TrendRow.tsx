@@ -35,7 +35,7 @@ export function TrendRow({ days, units }: TrendRowProps) {
 
   return (
     <section className="flex flex-col gap-sm">
-      <p className="m-0 text-label font-semibold text-muted uppercase tracking-[0.05em]">
+      <p className="m-0 text-label leading-[1.5] font-semibold text-muted uppercase tracking-[0.05em]">
         Last 7 Days
       </p>
       <div className="flex flex-row items-start gap-sm">

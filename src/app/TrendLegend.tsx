@@ -30,7 +30,7 @@ function TrendLegendItem({ label, swatch }: TrendLegendItemProps) {
       >
         {swatch}
       </svg>
-      <span className="text-label font-label text-muted">{label}</span>
+      <span className="text-label leading-[1.5] font-label text-muted">{label}</span>
     </div>
   )
 }

@@ -125,8 +125,8 @@ export function TrendDayChart({
 }: TrendDayChartProps) {
   const label = formatSlotLabel(day.dateStr, isToday)
   const labelClassName = isToday
-    ? 'm-0 h-4 text-label text-center font-semibold text-accent'
-    : 'm-0 h-4 text-label text-center font-normal text-muted'
+    ? 'm-0 h-4 text-label leading-[1.5] text-center font-semibold text-accent'
+    : 'm-0 h-4 text-label leading-[1.5] text-center font-normal text-muted'
 
   const historicalPoints = useMemo(
     () => (day.usable ? buildHistoricalPoints(day.samples) : []),
@@ -138,7 +138,7 @@ export function TrendDayChart({
       <div className="flex flex-col w-[88px] gap-xs">
         <p className={labelClassName}>{label}</p>
         <div
-          className="w-[88px] h-[120px] flex items-center justify-center text-center p-xs bg-dominant border border-border-subtle rounded-[8px] text-muted text-label box-border"
+          className="w-[88px] h-[120px] flex items-center justify-center text-center p-xs bg-dominant border border-border-subtle rounded-[8px] text-muted text-label leading-[1.5] box-border"
           title="Not enough history for this day"
           aria-label="Not enough history for this day"
         >
