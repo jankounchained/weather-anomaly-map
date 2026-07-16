@@ -74,7 +74,7 @@ export function AnomalyCard({
         </p>
         <button
           type="button"
-          className="h-5 w-5 shrink-0 rounded-full border border-accent bg-transparent p-0 text-accent text-label font-heading leading-none cursor-help"
+          className="h-5 w-5 shrink-0 rounded-full border border-accent bg-transparent p-0 text-accent text-label font-heading leading-none cursor-help [font-family:initial]"
           aria-label="Data quality info"
           title="Based on modeled climate data for this area (~9-25km resolution)"
         >
