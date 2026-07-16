@@ -15,7 +15,7 @@ Requirements for this milestone. Each maps to a roadmap phase.
 - [x] **STYLE-01**: App styling is implemented with Tailwind CSS v4 (via `@tailwindcss/vite`, CSS-first, no config file), replacing the hand-written `index.css` / `App.css`
 - [x] **STYLE-02**: The old hand-written CSS is removed once migrated — no component depends on it
 - [x] **STYLE-03**: The Leaflet map renders correctly alongside Tailwind's Preflight reset — controls, markers, and layout intact
-- [ ] **STYLE-04**: The production build and the existing test suite pass with Tailwind in place
+- [x] **STYLE-04**: The production build and the existing test suite pass with Tailwind in place
 
 ### Visual Design — Glass / Atmospheric
 
@@ -71,7 +71,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STYLE-01 | Phase 4 | Complete |
 | STYLE-02 | Phase 4 | Complete |
 | STYLE-03 | Phase 4 | Complete |
-| STYLE-04 | Phase 4 | Pending |
+| STYLE-04 | Phase 4 | Complete |
 | DESIGN-01 | Phase 5 | Pending |
 | DESIGN-02 | Phase 5 | Pending |
 | DESIGN-03 | Phase 5 | Pending |
