@@ -5,15 +5,15 @@ milestone_name: Tailwind Migration + Glass/Atmospheric Redesign
 current_phase: 04
 current_phase_name: tailwind-foundation-migration
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-07-16T12:56:37.647Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-07-16T13:00:37.918Z"
 last_activity: 2026-07-16
 last_activity_desc: Phase 04 execution started
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 04 (tailwind-foundation-migration) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-07-16 — Phase 04 execution started
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [███░░░░░░░] 25%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 04 P01 | 8min | 3 tasks | 4 files |
+| Phase 04 P02 | 6min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,8 @@ Recent decisions affecting current work:
 - [v1.0] Trend tiles share one Y-axis column (TrendYAxisColumn) + persistent TrendLegend with reviewer-exact copy (Phase 3) — recharts re-theme (DESIGN-05) must not disturb this layout or legend wording.
 - [Phase ?]: Pinned tailwindcss and @tailwindcss/vite to exact 4.3.2 (no caret) per plan requirement
 - [Phase ?]: Ported --space-* tokens to Tailwind's native --spacing-* namespace to generate matching utilities
+- [Phase ?]: Phase 4 Plan 2: map-container Leaflet sizing kept as a utility class ([&_.leaflet-container]:h-full/w-full) rather than scoped CSS in the entry file
+- [Phase ?]: Phase 4 Plan 2: AnomalyCard delta font-size reproduced as Tailwind arbitrary value text-[calc(var(--text-display)*1.7)] rather than a dedicated @theme token
 
 ### Pending Todos
 
@@ -93,8 +96,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-16T12:56:37.640Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-07-16T13:00:37.910Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
