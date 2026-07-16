@@ -125,8 +125,8 @@ export function TrendDayChart({
 }: TrendDayChartProps) {
   const label = formatSlotLabel(day.dateStr, isToday)
   const labelClassName = isToday
-    ? 'trend-day__label trend-day__label--today'
-    : 'trend-day__label'
+    ? 'm-0 h-4 text-label text-center font-semibold text-accent'
+    : 'm-0 h-4 text-label text-center font-normal text-muted'
 
   const historicalPoints = useMemo(
     () => (day.usable ? buildHistoricalPoints(day.samples) : []),
@@ -135,10 +135,10 @@ export function TrendDayChart({
 
   if (!day.usable) {
     return (
-      <div className="trend-day">
+      <div className="flex flex-col w-[88px] gap-xs">
         <p className={labelClassName}>{label}</p>
         <div
-          className="trend-day__placeholder"
+          className="w-[88px] h-[120px] flex items-center justify-center text-center p-xs bg-dominant border border-border-subtle rounded-[8px] text-muted text-label box-border"
           title="Not enough history for this day"
           aria-label="Not enough history for this day"
         >
@@ -157,7 +157,7 @@ export function TrendDayChart({
   )
 
   return (
-    <div className="trend-day">
+    <div className="flex flex-col w-[88px] gap-xs">
       <p className={labelClassName}>{label}</p>
       <ComposedChart width={CHART_WIDTH} height={CHART_HEIGHT}>
         <XAxis type="number" dataKey="x" domain={[0, 1]} hide />
