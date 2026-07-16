@@ -4,7 +4,12 @@ import { useSelectedLocation, isValidUrlSelection } from '../map/useSelectedLoca
 import { useReverseGeocode } from '../geocoding/useReverseGeocode'
 import { useCurrentWeather } from '../weather/useCurrentWeather'
 import { useHistoricalBaseline } from '../weather/useHistoricalBaseline'
-import { computeAnomalyForToday, computeTrendDay } from '../anomaly/anomaly'
+import {
+  computeAnomalyForToday,
+  computeTrendDay,
+  anomalyColor,
+  isDaytime,
+} from '../anomaly/anomaly'
 import { LocationPanel } from './LocationPanel'
 import { AnomalyCard } from './AnomalyCard'
 import { TrendRow } from './TrendRow'
@@ -64,6 +69,13 @@ function App() {
         )
       : null
 
+  // Shared color/day-night signal for the docked panel's atmospheric
+  // backdrop (05-UI-SPEC.md D-01/D-03). `?? 12` defaults localHour to noon
+  // (daytime) while it is null (idle/loading), avoiding a night-wash flash
+  // on every pin drop (Pitfall 5).
+  const anomalyColorValue = anomalyColor(anomaly?.zScore ?? null)
+  const isNight = !isDaytime(current.localHour ?? 12)
+
   const handleSelect = (nextLat: number, nextLng: number) => {
     setLocation(nextLat, nextLng)
     setHasSelection(true)
@@ -86,6 +98,8 @@ function App() {
         name={name}
         lat={lat}
         lng={lng}
+        anomalyColorValue={anomalyColorValue}
+        isNight={isNight}
       >
         <AnomalyCard
           hasSelection={hasSelection}
