@@ -11,6 +11,8 @@ import {
   hasUsableSampleCount,
   computeAnomalyForToday,
   computeTrendDay,
+  anomalyColor,
+  isDaytime,
 } from './anomaly'
 
 describe('mean', () => {
@@ -69,7 +71,7 @@ describe('verdictLabel', () => {
   it('returns the neutral-tone D-04 copy for each tier (ANOM-03)', () => {
     expect(verdictLabel('much-colder')).toBe('Much colder than usual')
     expect(verdictLabel('slightly-colder')).toBe('Slightly colder than usual')
-    expect(verdictLabel('typical')).toBe('Typical for today')
+    expect(verdictLabel('typical')).toBe('Right on the 30-year average')
     expect(verdictLabel('slightly-warmer')).toBe('Slightly warmer than usual')
     expect(verdictLabel('much-warmer')).toBe('Much warmer than usual')
   })
@@ -86,6 +88,37 @@ describe('formatDelta', () => {
 
   it('renders exactly "0" for a zero delta, no sign', () => {
     expect(formatDelta(0)).toBe('0')
+  })
+})
+
+describe('anomalyColor', () => {
+  it('returns the exact cold/normal/hot anchor hex at z=-3/0/+3 (D-02)', () => {
+    expect(anomalyColor(-3)).toBe('#1e3a8a')
+    expect(anomalyColor(0)).toBe('#57534e')
+    expect(anomalyColor(3)).toBe('#9a3412')
+  })
+
+  it('treats null zScore as z=0, same fallback precedent as classifyVerdict (Pitfall 2)', () => {
+    expect(anomalyColor(null)).toBe('#57534e')
+  })
+
+  it('clamps beyond the [-3, 3] range to the anchor value', () => {
+    expect(anomalyColor(-5)).toBe(anomalyColor(-3))
+    expect(anomalyColor(5)).toBe(anomalyColor(3))
+  })
+
+  it('falls strictly between the anchors at the segment midpoints, matching the per-channel two-segment lerp', () => {
+    expect(anomalyColor(-1.5)).toBe('#3b476c')
+    expect(anomalyColor(1.5)).toBe('#794430')
+  })
+})
+
+describe('isDaytime', () => {
+  it('treats the half-open [6, 20) range as daytime (D-03)', () => {
+    expect(isDaytime(5)).toBe(false)
+    expect(isDaytime(6)).toBe(true)
+    expect(isDaytime(19)).toBe(true)
+    expect(isDaytime(20)).toBe(false)
   })
 })
 

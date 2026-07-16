@@ -34,11 +34,13 @@ export function computeAnomaly(
 }
 
 /** Neutral-tone verdict copy per tier (D-03, D-04 - practical daily-check
- * tone, not a climate report or a playful app). */
+ * tone, not a climate report or a playful app). `typical`'s copy frames the
+ * zero/near-normal case explicitly (D-06, D-07) so the hero delta never
+ * reads as a bare, ambiguous "0" - see formatDelta. */
 export const VERDICT_LABEL: Record<VerdictTier, string> = {
   'much-colder': 'Much colder than usual',
   'slightly-colder': 'Slightly colder than usual',
-  typical: 'Typical for today',
+  typical: 'Right on the 30-year average',
   'slightly-warmer': 'Slightly warmer than usual',
   'much-warmer': 'Much warmer than usual',
 }
@@ -66,6 +68,54 @@ export function formatDelta(delta: number): string {
   const rounded = Math.round(delta)
   if (rounded === 0) return '0'
   return rounded > 0 ? `+${rounded}` : `−${Math.abs(rounded)}`
+}
+
+// RGB anchors for the continuous anomaly->color mapping (D-02). Module-
+// private - only anomalyColor below exposes them, mirroring how
+// windowBounds/filterDayOfYearWindow feed computeAnomalyForToday.
+const ANOMALY_COLD = { r: 30, g: 58, b: 138 } // #1e3a8a, z <= -3
+const ANOMALY_NORMAL = { r: 87, g: 83, b: 78 } // #57534e, z = 0
+const ANOMALY_HOT = { r: 154, g: 52, b: 18 } // #9a3412, z >= +3
+
+function lerpChannel(c1: number, c2: number, t: number): number {
+  return Math.round(c1 + (c2 - c1) * t)
+}
+
+function toHex(rgb: { r: number; g: number; b: number }): string {
+  const clamp = (n: number) => Math.max(0, Math.min(255, n))
+  const hex = (n: number) => clamp(n).toString(16).padStart(2, '0')
+  return `#${hex(rgb.r)}${hex(rgb.g)}${hex(rgb.b)}`
+}
+
+/** Continuous z-score -> anomaly-palette color (D-02). Null is treated as
+ * z=0, the same fallback precedent as classifyVerdict's `zScore ?? 0`
+ * (Pitfall 2) - resolves to the exact --color-anomaly-normal anchor. Clamps
+ * to [-3, 3] then does a two-segment piecewise-linear RGB interpolation
+ * through the NORMAL anchor (not a single COLD->HOT lerp, which would mud
+ * through a gray/brown midpoint and miss the exact z=0 anchor). */
+export function anomalyColor(zScore: number | null): string {
+  const z = Math.max(-3, Math.min(3, zScore ?? 0))
+  if (z <= 0) {
+    const t = (z + 3) / 3
+    return toHex({
+      r: lerpChannel(ANOMALY_COLD.r, ANOMALY_NORMAL.r, t),
+      g: lerpChannel(ANOMALY_COLD.g, ANOMALY_NORMAL.g, t),
+      b: lerpChannel(ANOMALY_COLD.b, ANOMALY_NORMAL.b, t),
+    })
+  }
+  const t = z / 3
+  return toHex({
+    r: lerpChannel(ANOMALY_NORMAL.r, ANOMALY_HOT.r, t),
+    g: lerpChannel(ANOMALY_NORMAL.g, ANOMALY_HOT.g, t),
+    b: lerpChannel(ANOMALY_NORMAL.b, ANOMALY_HOT.b, t),
+  })
+}
+
+/** Day/night as an independent axis from anomaly color (D-03) - the
+ * pin-local hour, half-open range [6, 20) counts as daytime. Only modulates
+ * the backdrop gradient's night wash; never the hero text color. */
+export function isDaytime(localHour: number): boolean {
+  return localHour >= 6 && localHour < 20
 }
 
 /** Day-of-year window bounds for one target year (D-01, D-02). Folds
