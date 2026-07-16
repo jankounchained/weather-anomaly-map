@@ -206,19 +206,39 @@ Because `TrendLegend`'s copy describes these three marks by role ("Temperatures 
 
 ## UI Considerations
 
-Applicable state considerations resolved: 6 covered, 3 backstop, 0 unresolved.
+> State-coverage axis, probe-grounded. Surfaces classified: `LocationDisplay` (E1) and `AnomalyCard` (E2) as static-content, `TrendRow` (E3) as list-collection, `Panel backdrop` (E4) as static-content (its no-pin/loading/resolved/night states are specified in [Layout & Composition](#layout--composition-glass-system) and the [Motion & Performance Contract](#motion--performance-contract-perf-01-perf-02-d-10)). Probe reported 24 applicable considerations + 1 unclassified (E4, resolved by classifying it as static-content per user confirmation).
 
-| Category | Element(s) | Status | Resolution / Reason |
-|----------|------------|--------|---------------------|
-| empty | TrendRow (list-collection) | ✅ covered | `TrendRow` returns `null` when `days` is null/empty (Phase 3, unchanged) — no dangling empty glass card renders; the panel simply has one fewer card that render cycle |
-| loading | LocationDisplay, AnomalyCard (static-content) | ✅ covered | Existing spinner+text branches restyled onto the glass card; spinner keeps `--color-accent` ring, unchanged copy |
-| loading | Panel backdrop color while anomaly is unresolved | 🧪 backstop | Backdrop uses `anomalyColor(null)` (the normal anchor) while current/baseline are in flight — needs a visual check that this neutral "waiting" gradient doesn't read as a misleading "normal weather" claim before data resolves, and that the entrance transition into the real color reads smoothly once resolved |
-| error | AnomalyCard error branch (static-content) | 🧪 backstop | Copy is locked/unchanged, but `text-destructive` (#dc2626) now sits on the *neutral-anchor* glass card (not the old flat `bg-secondary`) — needs a contrast check against the new glass surface, not just against the old flat gray |
-| populated | TrendRow at full 7-day happy path (list-collection) | ✅ covered | Existing locked layout, only token values/finish change per the re-theme table above |
-| partial | Per-day "not enough data" tile mixed with usable tiles (list-collection) | ✅ covered | Existing `usable:false` branch (D-14) restyled to the glass-card treatment; placeholder tiles stay neutral (no anomaly-hue coloring — they represent absent data, not a temperature reading) |
-| overflow | Hero delta digit count (static-content) | ✅ covered | `formatDelta`'s whole-number ± format realistically caps at 3 characters including sign; fits the 760px hero card at any `anomalyColor()` value — no truncation risk introduced by this phase |
-| zero-one-many | TrendRow item count (list-collection) | ✅ covered — dismissed | Not applicable: `TrendRow` is a fixed 0-or-7-item collection per the Phase 3 contract; this phase introduces no variable-N collection |
-| long-text | LocationDisplay place-name heading (static-content) | 🧪 backstop | Wrapping/overflow behavior for an unusually long place name is inherited unchanged from Phase 1, but the new fixed-padding, rounded glass card is a new visual container around it — needs a visual check that a long wrapped 2–3 line name still sits well inside the card's padding/radius rather than looking cramped |
+**Resolved: 20 covered · 3 backstop · 4 dismissed · 0 unresolved.**
+
+| Category | Element | Status | Resolution / Reason |
+|----------|---------|--------|---------------------|
+| empty | LocationDisplay (E1) | ✅ covered | "No location selected" heading + "Click anywhere on the map…" body, locked copy, restyled onto the glass card (root of the empty branch) |
+| loading | LocationDisplay (E1) | ✅ covered | Existing reverse-geocode spinner branch restyled onto the glass card; keeps the `--color-accent` ring, unchanged copy |
+| error | LocationDisplay (E1) | ✅ covered | Reverse-geocode failure falls back to raw coordinates (Phase 1 behavior, unchanged) — no new error surface introduced by this phase; the fallback just renders on the restyled glass card |
+| populated | LocationDisplay (E1) | ✅ covered | Resolved place-name heading (20px/600) on the glass card |
+| partial | LocationDisplay (E1) | ⊘ dismissed | Place name is an atomic value — no multi-field partial state exists to render |
+| overflow | LocationDisplay (E1) | ✅ covered | Overflow handled via wrapping — see the long-text backstop below for the visual check |
+| zero-one-many | LocationDisplay (E1) | ⊘ dismissed | Single place name, not a variable-N collection — no singular/plural axis |
+| long-text | LocationDisplay (E1) | 🧪 backstop | An unusually long place name wraps to 2–3 lines inside the new fixed-padding, rounded glass card — needs a visual check it still sits inside the card's padding/radius rather than looking cramped (wrapping itself inherited unchanged from Phase 1) |
+| empty | AnomalyCard (E2) | ✅ covered | "Drop a pin to see today's current conditions.", locked copy, restyled onto the glass card |
+| loading | AnomalyCard (E2) | ✅ covered | Existing spinner branch (current + baseline fetch in flight) restyled onto the glass card; keeps `--color-accent` ring |
+| error | AnomalyCard (E2) | 🧪 backstop | Copy locked/unchanged, but `text-destructive` (#dc2626) now sits on the *neutral-anchor* glass surface (not the old flat `bg-secondary`) — needs a contrast check against the new translucent glass, not just the old flat gray |
+| populated | AnomalyCard (E2) | ✅ covered | Hero delta at 700/48px, color-coded via `anomalyColor(zScore)`; zero-delta renders big "0°C" + "Right on the 30-year average" (DESIGN-06 fix) |
+| partial | AnomalyCard (E2) | ✅ covered | Null `zScore` resolves to the normal anchor via `anomalyColor(null)` (Pitfall 2 fallback precedent) — no undefined/blank hero state |
+| overflow | AnomalyCard (E2) | ✅ covered | `formatDelta`'s whole-number ± format caps at ~3 characters incl. sign; fits the 760px hero card at any `anomalyColor()` value — no truncation risk |
+| zero-one-many | AnomalyCard (E2) | ⊘ dismissed | Single hero value, not a collection |
+| long-text | AnomalyCard (E2) | ⊘ dismissed | Verdict labels are a fixed curated copy set (longest: "Right on the 30-year average") — no unbounded user text |
+| empty | TrendRow (E3) | ✅ covered | `TrendRow` returns `null` when `days` is null/empty (Phase 3, unchanged) — no dangling empty glass card renders |
+| loading | TrendRow (E3) | ✅ covered | Existing loading branch restyled onto the glass card |
+| error | TrendRow (E3) | ✅ covered | Per-day chart failure is inherited from Phase 3; a fully-absent trend collapses to `null` (see empty) — no new error surface this phase |
+| populated | TrendRow (E3) | ✅ covered | Full 7-day happy path — locked layout, only token values/finish change per the re-theme table above |
+| partial | TrendRow (E3) | ✅ covered | Per-day "not enough data" tile mixed with usable tiles (D-14 `usable:false` branch) restyled to the glass treatment; placeholder tiles stay neutral (no anomaly-hue coloring — they represent absent data) |
+| overflow | TrendRow (E3) | ✅ covered | Fixed locked layout with a shared Y-axis domain — no reflow introduced this phase |
+| zero-one-many | TrendRow (E3) | ⊘ dismissed | Fixed 0-or-7-item collection per the Phase 3 contract — no variable-N axis |
+| empty (no-pin) | Panel backdrop (E4) | ✅ covered | Before a pin exists / while loading, the panel stays the flat `--color-secondary` fallback rather than a misleading placeholder gradient (Layout & Composition) |
+| loading | Panel backdrop (E4) | 🧪 backstop | Once `hasSelection` is true but data is in flight, the backdrop uses `anomalyColor(null)` (normal anchor) as a neutral "waiting" mood — needs a visual check it doesn't read as a false "normal weather" claim before data resolves, and that the one-time entrance transition into the real color reads smoothly |
+| populated (resolved) | Panel backdrop (E4) | ✅ covered | Data-driven anomaly-hue gradient via the `--anomaly-color` custom-property bridge (Layout & Composition), interpolated through `@property` registration |
+| night | Panel backdrop (E4) | ✅ covered | `--color-atmosphere-night-wash` overlay applied atop the gradient when `isDaytime(localHour)` is false (D-03) — hero text hue unaffected |
 
 ---
 
