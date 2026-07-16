@@ -10,8 +10,10 @@
   --color-destructive: #dc2626;
 
   /* Trend chart tokens (03-UI-SPEC.md Chart Visual Encoding) */
-  /* translucent accent for the ~30 historical dots per day (D-01) */
-  --color-chart-historical: rgba(37, 99, 235, 0.22);
+  /* translucent, echoes --color-anomaly-normal (D-08, 05-UI-SPEC.md
+     Recharts Re-theme) - ties the historical dot-cloud into the new
+     palette's calm-neutral mood instead of leftover accent-blue */
+  --color-chart-historical: rgba(87, 83, 78, 0.22);
   /* bright mean ReferenceLine (D-03) - reuses accent, no new hue */
   --color-chart-mean: var(--color-accent);
   /* distinct actual-value diamond marker (D-02) - new hue, reserved
@@ -21,6 +23,25 @@
   --color-muted: #4b5563;
   /* placeholder card border only (D-12/D-14 empty state) */
   --color-border-subtle: #e5e7eb;
+
+  /* Anomaly color system (05-UI-SPEC.md "New tokens - Anomaly Color
+     System", D-02) - continuous z-score -> color anchors consumed by
+     anomalyColor() in src/anomaly/anomaly.ts */
+  --color-anomaly-cold: #1e3a8a; /* anchor at z <= -3 (coldest) */
+  --color-anomaly-normal: #57534e; /* anchor at z = 0 (near-normal) */
+  --color-anomaly-hot: #9a3412; /* anchor at z >= +3 (hottest) */
+  /* night-wash overlay applied atop the anomaly gradient when the pin's
+     local time is night (D-03) */
+  --color-atmosphere-night-wash: rgba(10, 8, 20, 0.4);
+
+  /* Glass system tokens (05-UI-SPEC.md "Layout & Composition (Glass
+     System)", D-03/D-04) - subtle & refined translucency for the three
+     panel glass cards */
+  --color-glass-surface: rgba(255, 255, 255, 0.62);
+  --color-glass-border: rgba(255, 255, 255, 0.45);
+  --radius-glass-lg: 16px;
+  --radius-glass-sm: 8px;
+  --shadow-glass: 0 8px 30px rgba(15, 8, 30, 0.14);
 
   /* Spacing scale (UI-SPEC) */
   --spacing-xs: 4px;
@@ -59,6 +80,15 @@
   }
 }
 
+/* Registers --anomaly-color as a typed custom property (PERF-02, D-10) so
+   the entrance transition actually interpolates the color instead of
+   snapping - see 05-UI-SPEC.md Motion & Performance Contract. */
+@property --anomaly-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #57534e;
+}
+
 :root {
   color-scheme: light;
 }
@@ -77,4 +107,25 @@ body {
   line-height: 1.5;
   color: #08060d;
   background: var(--color-dominant);
+}
+
+/* Anomaly-driven gradient backdrop (D-01, D-02, D-03; 05-UI-SPEC.md Layout
+   & Composition). Requires `position: relative` on its root so the
+   .is-night ::before overlay below positions against the panel, not the
+   viewport (Pitfall 2). */
+.panel-backdrop {
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--anomaly-color) 80%, white 20%) 0%,
+    var(--anomaly-color) 55%,
+    color-mix(in srgb, var(--anomaly-color) 75%, black 25%) 100%
+  );
+}
+
+.panel-backdrop.is-night::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-atmosphere-night-wash);
+  pointer-events: none;
 }
