@@ -30,8 +30,8 @@ export function AnomalyCard({
 }: AnomalyCardProps) {
   if (!hasSelection) {
     return (
-      <div className="anomaly-card anomaly-card--empty">
-        <p className="anomaly-card__body">
+      <div className="flex flex-col gap-sm">
+        <p className="m-0 text-body font-body">
           Drop a pin to see today&apos;s current conditions.
         </p>
       </div>
@@ -43,9 +43,12 @@ export function AnomalyCard({
   // before revealing delta + z-score + verdict together.
   if (currentStatus !== 'resolved' || baselineStatus !== 'resolved') {
     return (
-      <div className="anomaly-card anomaly-card--loading" role="status">
-        <span className="anomaly-card__spinner" aria-hidden="true" />
-        <p className="anomaly-card__body">
+      <div className="flex flex-row items-center gap-sm" role="status">
+        <span
+          className="size-4 shrink-0 rounded-full border-2 border-accent border-t-transparent animate-location-spin"
+          aria-hidden="true"
+        />
+        <p className="m-0 text-body font-body">
           Calculating today&apos;s anomaly…
         </p>
       </div>
@@ -54,8 +57,8 @@ export function AnomalyCard({
 
   if (tempC === null || anomaly === null) {
     return (
-      <div className="anomaly-card anomaly-card--error">
-        <p className="anomaly-card__body">
+      <div className="flex flex-col gap-sm">
+        <p className="m-0 text-body font-body text-destructive">
           Couldn&apos;t compute an anomaly here.
         </p>
       </div>
@@ -63,24 +66,24 @@ export function AnomalyCard({
   }
 
   return (
-    <div className="anomaly-card anomaly-card--resolved">
-      <div className="anomaly-card__header">
-        <p className="anomaly-card__temp">
+    <div className="flex flex-col gap-xs">
+      <div className="flex flex-row items-center justify-between gap-sm">
+        <p className="m-0 text-display font-display">
           {Math.round(tempC)}
           {units}
         </p>
         <button
           type="button"
-          className="anomaly-card__info"
+          className="h-5 w-5 shrink-0 rounded-full border border-accent bg-transparent p-0 text-accent text-label font-heading leading-none cursor-help"
           aria-label="Data quality info"
           title="Based on modeled climate data for this area (~9-25km resolution)"
         >
           i
         </button>
       </div>
-      <p className="anomaly-card__delta">{formatDelta(anomaly.delta)}°C</p>
-      <p className="anomaly-card__verdict">{verdictLabel(anomaly.verdictTier)}</p>
-      <p className="anomaly-card__zscore">
+      <p className="m-0 text-[calc(var(--text-display)*1.7)] font-bold leading-[1.1]">{formatDelta(anomaly.delta)}°C</p>
+      <p className="m-0 text-heading font-heading">{verdictLabel(anomaly.verdictTier)}</p>
+      <p className="mt-xs inline-block w-fit text-label font-label text-muted bg-secondary rounded-full py-[2px] px-sm">
         {anomaly.zScore === null
           ? 'z — (too little variance to compute)'
           : `z ${anomaly.zScore.toFixed(1)}`}
