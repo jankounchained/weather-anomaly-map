@@ -10,8 +10,8 @@ export interface LocationPanelProps extends LocationDisplayProps {
 
 export function LocationPanel({ children, ...props }: LocationPanelProps) {
   return (
-    <aside className="location-panel">
-      <div className="location-panel__content">
+    <aside className="flex-[0_0_760px] w-[760px] h-full bg-secondary flex flex-col py-lg px-md box-border overflow-y-auto">
+      <div className="flex flex-col gap-md">
         <LocationDisplay {...props} />
         {children}
       </div>

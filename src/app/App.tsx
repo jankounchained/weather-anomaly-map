@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import './App.css'
 import { MapView } from '../map/MapView'
 import { useSelectedLocation, isValidUrlSelection } from '../map/useSelectedLocation'
 import { useReverseGeocode } from '../geocoding/useReverseGeocode'
@@ -71,8 +70,8 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
-      <div className="map-region">
+    <div className="flex flex-row w-screen h-screen overflow-hidden">
+      <div className="flex-auto min-w-0 h-full bg-dominant [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full">
         <MapView
           lat={lat}
           lng={lng}
