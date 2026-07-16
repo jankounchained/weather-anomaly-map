@@ -36,10 +36,13 @@ Full detail archived at `.planning/milestones/v1.0-ROADMAP.md`.
   2. The Leaflet map — its zoom/attribution controls, tile layer, and draggable pin marker — renders and behaves correctly with Tailwind's Preflight reset active (the Preflight-vs-Leaflet interaction is resolved).
   3. The old hand-written CSS is deleted and no component imports it.
   4. `vite build` (production build) and the existing Vitest suite both pass with Tailwind in place.
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] TBD (defined by `/gsd-plan-phase 4`)
+- [ ] 04-01-PLAN.md — Tailwind v4 foundation: install (behind supply-chain gate), wire @tailwindcss/vite, rewrite index.css as the CSS-first entry (@theme tokens + spinner keyframe) [Wave 1]
+- [ ] 04-02-PLAN.md — Layout + hero surfaces to utilities: App shell/map-region (Leaflet sizing preserved), LocationPanel, LocationDisplay, AnomalyCard; drop legacy CSS import [Wave 2]
+- [ ] 04-03-PLAN.md — Trend visuals to utilities: TrendRow, TrendDayChart, TrendLegend (inline var(--color-*) SVG props untouched) [Wave 2]
+- [ ] 04-04-PLAN.md — Teardown + verification: delete App.css, static/build/test gates, mandatory manual visual-equivalence walkthrough [Wave 3]
 
 ### Phase 5: Glass / Atmospheric Redesign
 **Goal**: On the stable Tailwind base, establish a cohesive glassy/atmospheric design language — a condition/anomaly-driven gradient backdrop, translucent depth surfaces, refined typography, a re-themed trend chart, and a strengthened anomaly-hero focal point — all delivered within the disciplined-glass performance policy. Design intent is captured in a UI-SPEC design contract (`/gsd-ui-phase`) before build so the "noticeably sharper, hero-first" look is agreed up front rather than discovered during implementation.
@@ -64,7 +67,7 @@ Plans:
 | 1. Location Picker & Shareable Shell | v1.0 | 4/4 | Complete | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | v1.0 | 3/3 | Complete | 2026-07-14 |
 | 3. Historical Trend Charts & Edge Cases | v1.0 | 6/6 | Complete | 2026-07-15 |
-| 4. Tailwind Foundation Migration | v1.1 | 0/TBD | Not started | - |
+| 4. Tailwind Foundation Migration | v1.1 | 0/4 | Not started | - |
 | 5. Glass / Atmospheric Redesign | v1.1 | 0/TBD | Not started | - |
 
 ## Backlog
