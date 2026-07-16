@@ -8,6 +8,18 @@ A web dashboard where you drop a pin anywhere on a map and instantly see how ano
 
 For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
 
+## Current Milestone: v1.1 Tailwind Migration + Glass/Atmospheric Redesign
+
+**Goal:** Rebuild the styling layer on Tailwind CSS and elevate the app to a polished, glassy/atmospheric "design-studio" look — without degrading map or app responsiveness. Styling and visual design only; no feature or behavior changes.
+
+**Target features:**
+- Tailwind CSS v4 installed and configured (`@tailwindcss/vite`, CSS-first, no config file), replacing the hand-written CSS in `index.css` + `App.css`
+- A cohesive glassy/atmospheric design language: condition/anomaly-driven CSS gradient backdrop, translucent depth surfaces, refined typography, and a stronger anomaly-hero hierarchy (the delta as the star)
+- Disciplined-glass performance policy honored: real `backdrop-blur` only on static backdrops (never over the live map), faux-frosted translucent surfaces over the map, all motion gated behind `prefers-reduced-motion`, no JS/canvas animation loops
+- Recharts chart colors re-themed to the new palette for visual cohesion; Leaflet + recharts remain fully functional (Preflight-vs-Leaflet interaction resolved)
+
+**Acceptance bar:** Not pixel-identical — an intentional, noticeably sharper look. Map interaction stays smooth; existing tests and production build stay green.
+
 ## Requirements
 
 ### Validated
@@ -91,4 +103,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-15 after v1.0 milestone completion*
+*Last updated: 2026-07-16 — v1.1 milestone (Tailwind Migration + Glass/Atmospheric Redesign) started*
