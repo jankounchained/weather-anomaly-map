@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# GSD research HTTP cache (local, regenerable — not an artifact)
+.planning/research/.cache/
