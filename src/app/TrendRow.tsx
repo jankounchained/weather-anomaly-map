@@ -34,7 +34,7 @@ export function TrendRow({ days, units }: TrendRowProps) {
   const yDomain = computeSharedYDomain(days)
 
   return (
-    <section className="flex flex-col gap-sm">
+    <section className="flex flex-col gap-sm bg-glass-surface border border-glass-border rounded-glass-lg shadow-glass backdrop-blur-lg px-md py-md">
       <p className="m-0 text-label leading-[1.5] font-semibold text-muted uppercase tracking-[0.05em]">
         Last 7 Days
       </p>
