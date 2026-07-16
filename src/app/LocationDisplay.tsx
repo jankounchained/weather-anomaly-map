@@ -24,9 +24,9 @@ export function LocationDisplay({
 }: LocationDisplayProps) {
   if (!hasSelection) {
     return (
-      <div className="location-display location-display--empty">
-        <h2 className="location-display__heading">No location selected</h2>
-        <p className="location-display__body">
+      <div className="flex flex-col gap-sm">
+        <h2 className="m-0 text-heading font-heading">No location selected</h2>
+        <p className="m-0 text-body font-body">
           Click anywhere on the map to drop a pin and see its place name
           here.
         </p>
@@ -37,19 +37,22 @@ export function LocationDisplay({
   if (status !== 'resolved') {
     return (
       <div
-        className="location-display location-display--loading"
+        className="flex flex-row items-center gap-sm"
         role="status"
       >
-        <span className="location-display__spinner" aria-hidden="true" />
-        <p className="location-display__body">Looking up place name…</p>
+        <span
+          className="size-4 shrink-0 rounded-full border-2 border-accent border-t-transparent animate-location-spin"
+          aria-hidden="true"
+        />
+        <p className="m-0 text-body font-body">Looking up place name…</p>
       </div>
     )
   }
 
   if (name) {
     return (
-      <div className="location-display location-display--resolved">
-        <h2 className="location-display__heading">{name}</h2>
+      <div className="flex flex-col gap-sm">
+        <h2 className="m-0 text-heading font-heading">{name}</h2>
       </div>
     )
   }
@@ -57,8 +60,8 @@ export function LocationDisplay({
   // Resolved but no usable name (failure/timeout/no-name-fields) - silent
   // fallback to coordinates, no error banner (D-02).
   return (
-    <div className="location-display location-display--fallback">
-      <p className="location-display__label">{formatCoords(lat, lng)}</p>
+    <div className="flex flex-col gap-sm">
+      <p className="m-0 text-label font-label">{formatCoords(lat, lng)}</p>
     </div>
   )
 }
