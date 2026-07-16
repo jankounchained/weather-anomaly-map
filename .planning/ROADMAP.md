@@ -68,14 +68,14 @@ Plans:
   4. Map pan/zoom stays smooth: real `backdrop-blur` appears only on static backdrops, while surfaces layered over the live map use faux-frosted translucency instead.
   5. With `prefers-reduced-motion` set, all motion is disabled, and no JS/canvas animation loop runs at any point.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 **UI hint**: yes
 
 Plans:
 
 **Wave 1**
 
-- [ ] 05-01-PLAN.md — Foundation: anomaly-palette/glass/backdrop @theme tokens + @property --anomaly-color + .panel-backdrop CSS, pure anomalyColor/isDaytime functions, localHourFrom pin-local hour signal, zero-delta verdict copy fix [Wave 1]
+- [x] 05-01-PLAN.md — Foundation: anomaly-palette/glass/backdrop @theme tokens + @property --anomaly-color + .panel-backdrop CSS, pure anomalyColor/isDaytime functions, localHourFrom pin-local hour signal, zero-delta verdict copy fix [Wave 1]
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -90,7 +90,7 @@ Plans:
 | 2. Current Conditions & Anomaly Engine | v1.0 | 3/3 | Complete | 2026-07-14 |
 | 3. Historical Trend Charts & Edge Cases | v1.0 | 6/6 | Complete | 2026-07-15 |
 | 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete    | 2026-07-16 |
-| 5. Glass / Atmospheric Redesign | v1.1 | 0/3 | Planned | - |
+| 5. Glass / Atmospheric Redesign | v1.1 | 1/3 | In Progress|  |
 
 ## Backlog
 
