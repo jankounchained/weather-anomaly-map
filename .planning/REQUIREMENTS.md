@@ -19,7 +19,7 @@ Requirements for this milestone. Each maps to a roadmap phase.
 
 ### Visual Design — Glass / Atmospheric
 
-- [ ] **DESIGN-01**: The app presents a cohesive glassy/atmospheric visual design — a noticeable, intentional uplift over v1.0 (not pixel-identical)
+- [x] **DESIGN-01**: The app presents a cohesive glassy/atmospheric visual design — a noticeable, intentional uplift over v1.0 (not pixel-identical)
 - [x] **DESIGN-02**: A condition/anomaly-driven CSS gradient backdrop sets the atmospheric mood
 - [x] **DESIGN-03**: Content surfaces (anomaly card, location panel, trend area) use translucent depth/glass treatment with refined typography and spacing
 - [ ] **DESIGN-04**: The anomaly hero (delta) has strengthened visual hierarchy as the app's focal point
@@ -28,7 +28,7 @@ Requirements for this milestone. Each maps to a roadmap phase.
 
 ### Performance Discipline
 
-- [ ] **PERF-01**: Real `backdrop-blur` is applied only to static backdrops, never to surfaces over the live map; map pan/zoom stays smooth
+- [x] **PERF-01**: Real `backdrop-blur` is applied only to static backdrops, never to surfaces over the live map; map pan/zoom stays smooth
 - [x] **PERF-02**: All motion/animation is gated behind `prefers-reduced-motion`; no JS/canvas animation loops
 
 ## Future Requirements
@@ -72,13 +72,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STYLE-02 | Phase 4 | Complete |
 | STYLE-03 | Phase 4 | Complete |
 | STYLE-04 | Phase 4 | Complete |
-| DESIGN-01 | Phase 5 | Pending |
+| DESIGN-01 | Phase 5 | Complete |
 | DESIGN-02 | Phase 5 | Complete |
 | DESIGN-03 | Phase 5 | Complete |
 | DESIGN-04 | Phase 5 | Pending |
 | DESIGN-05 | Phase 5 | Complete |
 | DESIGN-06 | Phase 5 | Complete |
-| PERF-01 | Phase 5 | Pending |
+| PERF-01 | Phase 5 | Complete |
 | PERF-02 | Phase 5 | Complete |
 
 **Coverage:**

@@ -5,15 +5,15 @@ milestone_name: Tailwind Migration + Glass/Atmospheric Redesign
 current_phase: 05
 current_phase_name: glass-atmospheric-redesign
 status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-07-16T18:45:17.746Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-07-16T18:51:21.025Z"
 last_activity: 2026-07-16
 last_activity_desc: Phase 05 execution started
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 50
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 05 (glass-atmospheric-redesign) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-07-16 — Phase 05 execution started
 
-Progress: [███████░░░] 71%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [███████░░░] 71%
 | Phase 04 P03 | 6min | 3 tasks | 3 files |
 | Phase 04 P04 | 4min | 3 tasks | 1 files |
 | Phase 05 P01 | 4min | 3 tasks | 7 files |
+| Phase 05 P02 | 6min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,7 @@ Recent decisions affecting current work:
 - [Phase ?]: No scoped .leaflet-container override or Preflight fix was needed for Phase 4 — the existing utility from plan 02 sufficed, confirming RESEARCH.md's prediction; human walkthrough approved full visual equivalence to v1.0.
 - [Phase ?]: Implemented the anomalyColor RGB two-segment lerp exactly as specified (not OKLCH) to preserve exact-hex unit-test anchors
 - [Phase ?]: localHour defaults to null (not noon) at the data-signal layer; the noon/night-flash-avoidance default is Wave-2's concern in App.tsx (Pitfall 5)
+- [Phase ?]: Phase 5 Plan 2: LocationPanel reads hasSelection non-destructively so it gates the panel-backdrop/inline-var while still spreading unchanged into LocationDisplay
 
 ### Pending Todos
 
@@ -103,8 +105,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-16T18:45:17.737Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-07-16T18:51:21.017Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
