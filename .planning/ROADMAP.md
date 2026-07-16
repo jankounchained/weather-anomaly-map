@@ -68,7 +68,7 @@ Plans:
   4. Map pan/zoom stays smooth: real `backdrop-blur` appears only on static backdrops, while surfaces layered over the live map use faux-frosted translucency instead.
   5. With `prefers-reduced-motion` set, all motion is disabled, and no JS/canvas animation loop runs at any point.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 **UI hint**: yes
 
 Plans:
@@ -80,7 +80,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 05-02-PLAN.md — Backdrop + panel glass: App.tsx color/day-night wiring, LocationPanel static anomaly-gradient backdrop with --anomaly-color bridge + night wash + motion-safe transition, LocationDisplay glass cards [Wave 2]
-- [ ] 05-03-PLAN.md — Hero + chart surfaces: AnomalyCard glass cards + color-coded delta hero + framed zero-delta, TrendRow glass card, TrendDayChart placeholder-tile glass finish (recharts re-theme via token value) [Wave 2]
+- [x] 05-03-PLAN.md — Hero + chart surfaces: AnomalyCard glass cards + color-coded delta hero + framed zero-delta, TrendRow glass card, TrendDayChart placeholder-tile glass finish (recharts re-theme via token value) [Wave 2]
 
 ## Progress
 
@@ -90,7 +90,7 @@ Plans:
 | 2. Current Conditions & Anomaly Engine | v1.0 | 3/3 | Complete | 2026-07-14 |
 | 3. Historical Trend Charts & Edge Cases | v1.0 | 6/6 | Complete | 2026-07-15 |
 | 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete    | 2026-07-16 |
-| 5. Glass / Atmospheric Redesign | v1.1 | 2/3 | In Progress|  |
+| 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | In Progress|  |
 
 ## Backlog
 

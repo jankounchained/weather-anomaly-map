@@ -22,7 +22,7 @@ Requirements for this milestone. Each maps to a roadmap phase.
 - [x] **DESIGN-01**: The app presents a cohesive glassy/atmospheric visual design — a noticeable, intentional uplift over v1.0 (not pixel-identical)
 - [x] **DESIGN-02**: A condition/anomaly-driven CSS gradient backdrop sets the atmospheric mood
 - [x] **DESIGN-03**: Content surfaces (anomaly card, location panel, trend area) use translucent depth/glass treatment with refined typography and spacing
-- [ ] **DESIGN-04**: The anomaly hero (delta) has strengthened visual hierarchy as the app's focal point
+- [x] **DESIGN-04**: The anomaly hero (delta) has strengthened visual hierarchy as the app's focal point
 - [x] **DESIGN-05**: Recharts trend visuals (dot strip, mean line, actual-value marker) are re-themed to match the new palette for visual cohesion
 - [x] **DESIGN-06**: The zero-delta hero case reads clearly (no bare, ambiguous "0") — folds the known v1.0 UX gap into the hero redesign
 
@@ -75,7 +75,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DESIGN-01 | Phase 5 | Complete |
 | DESIGN-02 | Phase 5 | Complete |
 | DESIGN-03 | Phase 5 | Complete |
-| DESIGN-04 | Phase 5 | Pending |
+| DESIGN-04 | Phase 5 | Complete |
 | DESIGN-05 | Phase 5 | Complete |
 | DESIGN-06 | Phase 5 | Complete |
 | PERF-01 | Phase 5 | Complete |
