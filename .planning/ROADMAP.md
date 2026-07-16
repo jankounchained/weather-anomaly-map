@@ -22,7 +22,7 @@ Full detail archived at `.planning/milestones/v1.0-ROADMAP.md`.
 
 **Milestone Goal:** Rebuild the styling layer on Tailwind CSS v4 and elevate the app to a polished, glassy/atmospheric "design-studio" look — without degrading map or app responsiveness. Styling and visual design only; no feature or behavior changes.
 
-- [ ] **Phase 4: Tailwind Foundation Migration** — Swap hand-written CSS to Tailwind v4 with the UI visually unchanged; map, build, and tests stay green
+- [x] **Phase 4: Tailwind Foundation Migration** — Swap hand-written CSS to Tailwind v4 with the UI visually unchanged; map, build, and tests stay green (completed 2026-07-16)
 - [ ] **Phase 5: Glass / Atmospheric Redesign** — Layer the cohesive glassy/atmospheric design language on the Tailwind base — hero-first, re-themed charts, performance-disciplined
 
 ## Phase Details
@@ -82,7 +82,7 @@ Plans:
 | 1. Location Picker & Shareable Shell | v1.0 | 4/4 | Complete | 2026-07-14 |
 | 2. Current Conditions & Anomaly Engine | v1.0 | 3/3 | Complete | 2026-07-14 |
 | 3. Historical Trend Charts & Edge Cases | v1.0 | 6/6 | Complete | 2026-07-15 |
-| 4. Tailwind Foundation Migration | v1.1 | 4/4 | In Progress|  |
+| 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete    | 2026-07-16 |
 | 5. Glass / Atmospheric Redesign | v1.1 | 0/TBD | Not started | - |
 
 ## Backlog
