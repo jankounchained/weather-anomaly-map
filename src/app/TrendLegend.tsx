@@ -20,9 +20,9 @@ interface TrendLegendItemProps {
 
 function TrendLegendItem({ label, swatch }: TrendLegendItemProps) {
   return (
-    <div className="trend-legend__item">
+    <div className="flex flex-row items-center gap-xs">
       <svg
-        className="trend-legend__swatch"
+        className="flex-none w-[14px] h-[14px]"
         width={SWATCH_SIZE}
         height={SWATCH_SIZE}
         viewBox={`0 0 ${SWATCH_SIZE} ${SWATCH_SIZE}`}
@@ -30,14 +30,18 @@ function TrendLegendItem({ label, swatch }: TrendLegendItemProps) {
       >
         {swatch}
       </svg>
-      <span className="trend-legend__label">{label}</span>
+      <span className="text-label font-label text-muted">{label}</span>
     </div>
   )
 }
 
 export function TrendLegend() {
   return (
-    <div className="trend-legend" role="list" aria-label="Trend chart legend">
+    <div
+      className="flex flex-row flex-wrap gap-md"
+      role="list"
+      aria-label="Trend chart legend"
+    >
       <TrendLegendItem
         label="Temperatures on this day in the last 30 years"
         swatch={
