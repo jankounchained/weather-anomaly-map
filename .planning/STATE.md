@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
 status: planning
-last_updated: "2026-07-21T17:38:55.400Z"
+last_updated: "2026-07-21T20:45:00.000Z"
 last_activity: 2026-07-21
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,45 +17,37 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-16)
+See: .planning/PROJECT.md (updated 2026-07-21)
 
 **Core value:** For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
-**Current focus:** Phase 05 — glass-atmospheric-redesign
+**Current focus:** Phase 6 — Panel Restructure & Hierarchy (v1.2)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-07-21 — Milestone v1.2 started
+Phase: 6 of 8 (Panel Restructure & Hierarchy) — first phase of v1.2
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-07-21 — v1.2 roadmap created (3 phases, 10/10 requirements mapped)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 13 (v1.0)
-- Average duration: ~14 min/plan
-- Total execution time: ~3.1 hours
+- Total plans completed: 20 (v1.0: 13, v1.1: 7)
+- Average duration: ~10 min/plan
+- Total execution time: ~4 hours
 
 **By Milestone:**
 
 | Milestone | Phases | Plans | Status |
 |-----------|--------|-------|--------|
 | v1.0 | 1-3 | 13 | Shipped 2026-07-15 |
-| v1.1 | 4-5 | TBD | Planning |
+| v1.1 | 4-5 | 7 | Shipped 2026-07-21 |
+| v1.2 | 6-8 | TBD | Planning |
 
 *Updated after each plan completion*
-**Per-Plan Metrics:**
-
-| Plan | Duration | Tasks | Files |
-|------|----------|-------|-------|
-| Phase 04 P01 | 8min | 3 tasks | 4 files |
-| Phase 04 P02 | 6min | 3 tasks | 4 files |
-| Phase 04 P03 | 6min | 3 tasks | 3 files |
-| Phase 04 P04 | 4min | 3 tasks | 1 files |
-| Phase 05 P01 | 4min | 3 tasks | 7 files |
-| Phase 05 P02 | 6min | 3 tasks | 3 files |
-| Phase 05 P03 | 3min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -64,36 +56,21 @@ Last activity: 2026-07-21 — Milestone v1.2 started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- v1.1 roadmap: 2-phase split (coarse) — Phase 4 Tailwind Foundation Migration (STYLE-01..04, visuals unchanged) then Phase 5 Glass/Atmospheric Redesign (DESIGN-01..06, PERF-01..02). Foundation-first isolates any migration regression from the aesthetic work.
-- v1.1 roadmap: PERF-01/PERF-02 folded into Phase 5 rather than a standalone phase — they are constraints on *how* the glass is built (blur only on static backdrops, motion behind `prefers-reduced-motion`), not a separable deliverable.
-- v1.1 roadmap: Phase 5 flagged for a UI-SPEC design contract (`/gsd-ui-phase`); Phase 4 is intentionally NOT — its contract is "visually equivalent to v1.0," so no design contract applies.
-- [v1.0] Anomaly delta is the hero number, z-score a secondary badge (Phase 2) — Phase 5 hero redesign must preserve this hierarchy while strengthening it.
-- [v1.0] Trend tiles share one Y-axis column (TrendYAxisColumn) + persistent TrendLegend with reviewer-exact copy (Phase 3) — recharts re-theme (DESIGN-05) must not disturb this layout or legend wording.
-- [Phase ?]: Pinned tailwindcss and @tailwindcss/vite to exact 4.3.2 (no caret) per plan requirement
-- [Phase ?]: Ported --space-* tokens to Tailwind's native --spacing-* namespace to generate matching utilities
-- [Phase ?]: Phase 4 Plan 2: map-container Leaflet sizing kept as a utility class ([&_.leaflet-container]:h-full/w-full) rather than scoped CSS in the entry file
-- [Phase ?]: Phase 4 Plan 2: AnomalyCard delta font-size reproduced as Tailwind arbitrary value text-[calc(var(--text-display)*1.7)] rather than a dedicated @theme token
-- [Phase ?]: Phase 4 Plan 3: used Tailwind's default h-4 utility for axis spacer/day-label height rather than a custom @theme spacing token, per plan spec
-- [Phase ?]: No scoped .leaflet-container override or Preflight fix was needed for Phase 4 — the existing utility from plan 02 sufficed, confirming RESEARCH.md's prediction; human walkthrough approved full visual equivalence to v1.0.
-- [Phase ?]: Implemented the anomalyColor RGB two-segment lerp exactly as specified (not OKLCH) to preserve exact-hex unit-test anchors
-- [Phase ?]: localHour defaults to null (not noon) at the data-signal layer; the noon/night-flash-avoidance default is Wave-2's concern in App.tsx (Pitfall 5)
-- [Phase ?]: Phase 5 Plan 2: LocationPanel reads hasSelection non-destructively so it gates the panel-backdrop/inline-var while still spreading unchanged into LocationDisplay
-- [Phase ?]: [quick-260721-dju] Closed 3 Phase-05 UAT polish gaps: leading Δ on AnomalyCard hero delta, zero-width hidden per-tile trend YAxis (centers marks within each 88px tile), and a prefers-reduced-motion-gated CSS transition on the registered --anomaly-color custom property. TrendRow.tsx's optional justify-center safeguard was deliberately not applied (would clip Y-axis tick labels per the plan's own guard).
+- v1.2 roadmap: 3-phase split (coarse), risk-isolated per research — Phase 6 Panel Restructure & Hierarchy (LAYOUT-01..03 + EXPLAIN-01/02) → Phase 7 Methodology Section & Explainers (EXPLAIN-03/04) → Phase 8 Split-Violin Trend View (TREND-01..03).
+- v1.2 roadmap: EXPLAIN-02 (info affordance) grouped with the panel restructure (Phase 6) so the InfoTooltip primitive is built alongside the panels; EXPLAIN-04 (percentile) grouped with the methodology explainers (Phase 7) as an explanatory add-on to the z-score.
+- v1.2 roadmap: Split-violin (Phase 8) sequenced LAST — the only phase with a data-shape change (`computeTrendDay` → recent/prior samples), a hand-rolled Gaussian KDE, and a Recharts custom-shape rewrite. Flagged for a statistics/design spike (bandwidth, per-half n_min gate, width-normalization, legend reviewer round-trip); Phase 6 flagged for a light design spike / UI-SPEC.
+- [v1.0/Phase 2] Anomaly delta is the hero number, z-score a secondary badge — LAYOUT-03 must preserve this dominance after the panel split (Delta ≥ ~1.5-2× Current-conditions scale).
+- [v1.0/Phase 3] Trend tiles share one Y-axis column (TrendYAxisColumn) + a reviewer-exact TrendLegend — TREND-01/03 must preserve the shared scale and re-clear legend copy via a reviewer round-trip.
+- [v1.1/Phase 5] Anomaly color driven by a registered `@property --anomaly-color` RGB lerp on LocationPanel (motion behind `prefers-reduced-motion`) — the new Delta panel must keep this color-driven focal treatment and the disciplined-glass performance policy (no blur over the live map).
 
 ### Pending Todos
 
-None yet.
+None tracked for v1.2 yet.
 
 ### Blockers/Concerns
 
-- Phase 4 planning must resolve the Tailwind Preflight vs. Leaflet CSS interaction (STYLE-03) — the one known real risk in the migration.
-- [v1.0 backlog, non-blocking] Color historical trend dots by decade — future enhancement, not in v1.1 scope (DESIGN-05 re-theme keeps flat-color dots unless promoted).
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260721-dju | Close 3 Phase-05 UAT polish gaps: leading Δ on AnomalyCard hero, center trend chart, smooth anomaly-color transition | 2026-07-21 | 4f18cfc | [260721-dju-close-3-phase-05-uat-polish-gaps-leading](./quick/260721-dju-close-3-phase-05-uat-polish-gaps-leading/) |
+- [Phase 8] Reviewer-locked trend legend describes dot/line/diamond marks the violin replaces — requires an explicit reviewer copy round-trip, not a silent rewrite.
+- [Phase 8] Per-half KDE sample-size floor (n_min ~15-20) unresolved and width-normalization (equal-width vs n-scaled) undecided — pin empirically in the Phase 8 spike before implementation.
 
 ## Deferred Items
 
@@ -101,16 +78,17 @@ Items acknowledged and carried forward:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| Feature | LOC-04 current-location button | Deferred to v2 | v1.0 close |
-| Feature | PLAT-03 mobile-responsive layout | Deferred to v2 | v1.1 scoping |
-| Feature | ANOM-05 "since when" record context | Deferred to v2 | v1.0 close |
+| Trend | TREND-04 climate-shift callout | Deferred | v1.2 scoping |
+| Platform | PLAT-03 mobile-responsive layout | Deferred | v1.1/v1.2 scoping |
+| Location | LOC-04 current-location button | Deferred | v1.0 close |
+| Anomaly | ANOM-05 "since when" record context | Deferred | v1.0 close |
 
 ## Session Continuity
 
-Last session: 2026-07-21T07:58:55.615Z
-Stopped at: Completed quick task 260721-dju (Phase-05 UAT polish gaps)
+Last session: 2026-07-21
+Stopped at: v1.2 ROADMAP.md written + REQUIREMENTS.md traceability mapped (10/10); Phase 6 ready to plan
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Plan Phase 6 with /gsd-plan-phase 6

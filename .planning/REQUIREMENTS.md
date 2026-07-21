@@ -43,13 +43,13 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LAYOUT-01 | — | Pending |
-| LAYOUT-02 | — | Pending |
-| LAYOUT-03 | — | Pending |
-| EXPLAIN-01 | — | Pending |
-| EXPLAIN-02 | — | Pending |
-| EXPLAIN-03 | — | Pending |
-| EXPLAIN-04 | — | Pending |
-| TREND-01 | — | Pending |
-| TREND-02 | — | Pending |
-| TREND-03 | — | Pending |
+| LAYOUT-01 | Phase 6 | Pending |
+| LAYOUT-02 | Phase 6 | Pending |
+| LAYOUT-03 | Phase 6 | Pending |
+| EXPLAIN-01 | Phase 6 | Pending |
+| EXPLAIN-02 | Phase 6 | Pending |
+| EXPLAIN-03 | Phase 7 | Pending |
+| EXPLAIN-04 | Phase 7 | Pending |
+| TREND-01 | Phase 8 | Pending |
+| TREND-02 | Phase 8 | Pending |
+| TREND-03 | Phase 8 | Pending |
