@@ -12,7 +12,22 @@ For any location, the user can immediately tell how unusual today's temperature 
 
 **Shipped:** v1.1 Tailwind Migration + Glass/Atmospheric Redesign (2026-07-21). The dashboard's styling layer now runs entirely on Tailwind CSS v4 (CSS-first, no config file), and the UI wears a cohesive glassy/atmospheric design language: an anomaly-driven gradient backdrop, translucent glass surfaces, a color-coded anomaly-delta hero (now led with a Δ so it never reads as the current temperature), a framed zero-delta case, and a re-themed trend chart — all within a disciplined-glass performance policy (real `backdrop-blur` only on static backdrops, no JS/canvas animation loops, all motion behind `prefers-reduced-motion`). No feature or behavior changed from v1.0.
 
-**Next milestone:** Not yet scoped. Natural candidates from the deferred backlog: mobile-responsive layout (PLAT-03), current-location button (LOC-04), and "since when" record context (ANOM-05) — all deferred to v2. Start with `/gsd-new-milestone`.
+**Next milestone:** v1.2 UI Layout Redesign & Explanatory Legend (in planning) — see Current Milestone below.
+
+## Current Milestone: v1.2 UI Layout Redesign & Explanatory Legend
+
+**Goal:** Make every part of the anomaly view self-explanatory — restructure the resolved view into clearly-headlined panels, add methodology and inline explainers, and replace the trend row with a per-day split-violin visualization.
+
+**Target features:**
+- Four headlined panels: split the current hero into **"Current conditions"** (today's temperature) and **"Delta"** (anomaly delta + z-score), joining **Location** and **History** — each panel carrying a "Last 7 days"-style headline so it is immediately clear what is shown.
+- Per-panel micro-copy / info affordances so the current temperature, the delta, and the z-score are each self-explanatory in place.
+- A collapsible methodology section (collapsed by default) briefly explaining how the anomaly is computed and what the tool is for.
+- Split-violin trend row: replace the 7-day dot-strip tiles with per-day split violins (last-5-years vs prior-25-years distribution halves) to surface climate-shift signal.
+
+**Scope decisions:**
+- Desktop-focused reflow — mobile-responsive layout (PLAT-03) stays deferred to a later milestone.
+- No separate anomaly color-scale legend and no dedicated first-run intro screen; "legend" here means panel headlines + inline explainers. The existing trend legend copy is reviewer-locked.
+- Split-violin keeps the per-day 7-tile small-multiples structure; each tile becomes a split violin.
 
 ## Requirements
 
@@ -108,4 +123,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-21 — v1.1 milestone (Tailwind Migration + Glass/Atmospheric Redesign) shipped; awaiting next milestone*
+*Last updated: 2026-07-21 — v1.2 milestone (UI Layout Redesign & Explanatory Legend) started; defining requirements*
