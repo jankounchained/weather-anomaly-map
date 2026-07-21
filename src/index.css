@@ -122,6 +122,17 @@ body {
   );
 }
 
+/* PERF-02, DESIGN-01: interpolates the registered --anomaly-color custom
+   property itself (not just color/background-color) so the panel gradient
+   and inherited hero color fade in smoothly when a pin resolves, instead of
+   snapping. Gated behind prefers-reduced-motion so reduced-motion users get
+   an instant, animation-free swap - no JS/rAF loop involved. */
+@media (prefers-reduced-motion: no-preference) {
+  .panel-backdrop {
+    transition: --anomaly-color 400ms ease-out;
+  }
+}
+
 .panel-backdrop.is-night::before {
   content: '';
   position: absolute;
