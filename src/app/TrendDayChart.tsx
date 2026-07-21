@@ -166,7 +166,7 @@ export function TrendDayChart({
           dataKey="y"
           domain={yDomain}
           hide={!showYAxis}
-          width={AXIS_WIDTH}
+          width={showYAxis ? AXIS_WIDTH : 0}
           tick={{ fill: 'var(--color-muted)', fontSize: 14 }}
         />
         <Scatter
