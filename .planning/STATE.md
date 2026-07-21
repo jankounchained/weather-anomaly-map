@@ -5,8 +5,8 @@ milestone_name: Tailwind Migration + Glass/Atmospheric Redesign
 current_phase: 05
 current_phase_name: glass-atmospheric-redesign
 status: verifying
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-07-16T18:55:25.629Z"
+stopped_at: Completed quick task 260721-dju (Phase-05 UAT polish gaps)
+last_updated: "2026-07-21T07:59:05.742Z"
 last_activity: 2026-07-16
 last_activity_desc: Phase 05 execution started
 progress:
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 Phase: 05 (glass-atmospheric-redesign) — EXECUTING
 Plan: 3 of 3
 Status: Phase complete — ready for verification
-Last activity: 2026-07-16 — Phase 05 execution started
+Last activity: 2026-07-21 — Completed quick task 260721-dju: closed 3 Phase-05 UAT polish gaps
 
 Progress: [██████████] 100%
 
@@ -84,6 +84,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Implemented the anomalyColor RGB two-segment lerp exactly as specified (not OKLCH) to preserve exact-hex unit-test anchors
 - [Phase ?]: localHour defaults to null (not noon) at the data-signal layer; the noon/night-flash-avoidance default is Wave-2's concern in App.tsx (Pitfall 5)
 - [Phase ?]: Phase 5 Plan 2: LocationPanel reads hasSelection non-destructively so it gates the panel-backdrop/inline-var while still spreading unchanged into LocationDisplay
+- [Phase ?]: [quick-260721-dju] Closed 3 Phase-05 UAT polish gaps: leading Δ on AnomalyCard hero delta, zero-width hidden per-tile trend YAxis (centers marks within each 88px tile), and a prefers-reduced-motion-gated CSS transition on the registered --anomaly-color custom property. TrendRow.tsx's optional justify-center safeguard was deliberately not applied (would clip Y-axis tick labels per the plan's own guard).
 
 ### Pending Todos
 
@@ -93,6 +94,12 @@ None yet.
 
 - Phase 4 planning must resolve the Tailwind Preflight vs. Leaflet CSS interaction (STYLE-03) — the one known real risk in the migration.
 - [v1.0 backlog, non-blocking] Color historical trend dots by decade — future enhancement, not in v1.1 scope (DESIGN-05 re-theme keeps flat-color dots unless promoted).
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260721-dju | Close 3 Phase-05 UAT polish gaps: leading Δ on AnomalyCard hero, center trend chart, smooth anomaly-color transition | 2026-07-21 | 4f18cfc | [260721-dju-close-3-phase-05-uat-polish-gaps-leading](./quick/260721-dju-close-3-phase-05-uat-polish-gaps-leading/) |
 
 ## Deferred Items
 
@@ -106,8 +113,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-16T18:55:25.620Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-07-21T07:58:55.615Z
+Stopped at: Completed quick task 260721-dju (Phase-05 UAT polish gaps)
 Resume file: None
 
 ## Operator Next Steps
