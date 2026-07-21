@@ -1,242 +1,302 @@
 # Pitfalls Research
 
-**Domain:** Weather anomaly dashboard (client-side map + z-score/delta vs 30-year baseline, Open-Meteo API, free hosting, no backend persistence)
-**Researched:** 2026-07-13
-**Confidence:** MEDIUM (Open-Meteo specifics cross-checked against official docs, GitHub issues, and creator statements on HN; statistical/climatology conventions cross-checked against NOAA/NCEI and academic climatology sources; map licensing cross-checked against OSM Foundation policy)
+**Domain:** Adding split-violin trend visualization, panel-restructure, and collapsible explainers to an existing shipped Tailwind-v4 glassy anomaly dashboard (v1.2 milestone)
+**Researched:** 2026-07-21
+**Confidence:** MEDIUM (existing-app constraints are HIGH confidence — sourced directly from `.planning/PROJECT.md`; statistical/accessibility/perf claims are MEDIUM confidence — cross-corroborated web sources, no official Recharts/violin-specific documentation exists because Recharts has no native violin primitive)
 
 ## Critical Pitfalls
 
-### Pitfall 1: Computing the 30-year baseline from single-day-of-year samples (n=30, or worse for Feb 29)
+### Pitfall 1: KDE density implies precision the per-year sample doesn't have
 
 **What goes wrong:**
-Using exactly 30 data points (one per year, for that exact calendar day) to compute mean and standard deviation produces a noisy, unstable baseline. Daily weather is inherently high-variance, so a mean/stddev from 30 samples has wide sampling error — the z-score can swing significantly depending on which 30 years happen to be included, and outlier years (heat waves, cold snaps) disproportionately distort a 30-point stddev. For February 29 specifically, a leap day only occurs every 4 years, so a strict "same calendar day, last 30 years" query yields only ~7-8 samples — an unusably small baseline that will produce wildly unstable z-scores for anyone who checks the dashboard on Feb 29.
+A split-violin needs a kernel density estimate (KDE) per half. With ~15-20+ observations per group, KDE curves usefully approximate a distribution. Below that, the smoothed curve invents shape — bumps, tails, and "modes" — that reflect smoothing noise, not real climate signal. This app's per-day violin halves are thin by construction: the last-5-years half draws only from 5 years' worth of same-day-window observations, and even the prior-25-years half is still a per-calendar-day slice, not the full 30-year population used for the hero anomaly.
 
 **Why it happens:**
-"30-year historical average for that calendar day" sounds like it literally means one query per year for one exact date, which is the naive first implementation. Developers don't realize climatology conventions exist specifically to avoid this problem.
+It's tempting to feed whatever data points exist straight into a generic KDE (e.g. a default-bandwidth `d3.contourDensity`-style helper or a hand-rolled Gaussian kernel) without checking the halves are large enough to smooth honestly. Because Recharts has no built-in violin/KDE component, the KDE math is necessarily hand-written for this project, which is exactly the kind of code that ships without a bandwidth-sanity check.
 
 **How to avoid:**
-Use a day-of-year window, not a single day: pull a window of ±3 to ±7 days around the target calendar day for each of the last 30 years (e.g. ±5 days × 30 years ≈ 330 samples instead of 30). This is standard climatological practice (NOAA/ETCCDI use windows from 5 to 61 days wide depending on application). Document the chosen window size as a deliberate methodology decision, and keep it symmetric so the mean isn't seasonally biased. For Feb 29, do not treat it as its own isolated day — either fold it into the window centered on Feb 28/Mar 1 (NOAA's approach: daily normals for Feb 29 are derived by averaging the Feb 28 and Mar 1 normals rather than computed independently), or use the day-of-year window approach so Feb 29 naturally inherits nearby days' data.
+- Compute and log the effective n for both halves per day-of-year before trusting the curve; if the last-5-years half falls under a fixed floor (e.g. ~15-20 points), do not render a smoothed curve for that half — fall back to a simpler encoding (a dot/rug of the actual observations, or a flat "insufficient sample" band) rather than a fabricated bump.
+- Use a fixed, documented bandwidth rule (e.g. Silverman's rule of thumb recomputed per half) rather than an ad hoc constant, and apply the **same bandwidth rule** to both halves of a given split so shape differences reflect data, not inconsistent smoothing.
+- Overlay the raw observations (small tick marks or low-opacity dots) on top of the smoothed curve so a sparse half visibly reads as sparse instead of looking as confident as the well-sampled half.
 
 **Warning signs:**
-- Z-score for the same location swings by >1σ between adjacent days with similar actual weather.
-- Feb 29 baseline card shows "insufficient data" or a stddev near zero/wildly large.
-- Manual spot-check: baseline mean for day N differs a lot from day N-1 or N+1 baseline mean (should be smooth, not jagged).
+A violin half renders a smooth, symmetric bump for a location/day where the underlying data is 5 or fewer points — visually indistinguishable from a well-sampled half. QA should specifically pull up a low-latitude-data-availability location (or a day near the 5-year boundary) and check the two halves don't look equally confident.
 
 **Phase to address:**
-Anomaly calculation / baseline computation phase (core methodology phase, before any UI work depends on it).
+Split-Violin Trend View phase (this is the highest-novelty, highest-risk item in the milestone — flag for a dedicated design/statistics spike before full implementation, since it's genuinely new math, not restyling existing math).
 
 ---
 
-### Pitfall 2: Population vs. sample standard deviation inconsistency
+### Pitfall 2: Unequal-sample-size violin halves mislead if widths aren't normalized
 
 **What goes wrong:**
-Using the population stddev formula (divide by n) instead of the sample stddev formula (divide by n-1, Bessel's correction) — or mixing the two inconsistently between the baseline computation and the z-score formula — produces a systematically biased z-score. The effect is small for large n but non-trivial for the ~30-330 sample sizes this project will use, and it's the kind of subtle bug that never throws an error, just quietly produces slightly-wrong numbers forever.
+The milestone explicitly compares a last-5-years half against a prior-25-years half — a roughly 5x difference in years, and (depending on whether the existing ±5-day day-of-year window is applied per split) on the order of a 5x difference in raw point count too (e.g. ~11 points vs ~55, or ~55 vs ~275 if the full ±5-day window carries into each half — the exact multiplier depends on implementation, but the imbalance is real either way). If both halves are drawn at the same visual width/area, the viewer subconsciously reads them as equally-supported evidence, when the smaller half is statistically much noisier.
 
 **Why it happens:**
-The historical 30 years of data is a *sample* of the true long-run climate distribution (not the full population), so sample stddev (n-1) is statistically correct — but many code examples and libraries default to population stddev (n), and this distinction is easy to overlook when the standard deviation is a one-line `Math.sqrt(...)` implementation.
+Split-violin implementations (matplotlib/seaborn `split=True`, D3 examples) default to equal-width halves for visual symmetry — that default is fine when comparing similarly-sized groups, but silently wrong when one group is a fifth the size of the other, which is exactly this app's case by design (5 years vs 25 years is the entire point of the feature).
 
 **How to avoid:**
-Explicitly use sample standard deviation (n-1 denominator) for the baseline stddev used in the z-score calculation, since the historical years are a sample. Write a unit test with a known dataset and expected sample-stddev output to lock this in. Document the choice inline in code (not just in a README) since this is the single most likely "looks right but is subtly wrong" bug in the project.
+- Either scale each half's area/width proportionally to its sample size (so the last-5-years half is visibly narrower — mirroring the reduced evidence), or, if equal widths are kept for legibility at this tile size, add an explicit small-sample indicator (e.g. a muted/dashed outline or reduced opacity on the smaller half) so the imbalance is disclosed rather than hidden.
+- Do not let the two choices mix accidentally (e.g. width proportional to n in the code but the design intent assuming equal widths) — decide once, document it in a code comment next to the KDE function, and keep it consistent across all 7 tiles.
+- Cross-check against Pitfall 1: a normalized-width but under-sampled half is still statistically weak — width normalization communicates "this half has less data," it does not fix the underlying instability of a very small-n KDE.
 
 **Warning signs:**
-- Z-scores are consistently slightly higher (population stddev is always ≤ sample stddev) than what a reference calculator (e.g. spreadsheet STDEV.S) produces for the same data.
-- No unit test exists that pins down the exact stddev formula against a hand-computed expected value.
+The two halves of a violin look like mirror images of comparable visual weight despite representing very different amounts of underlying data — a design review should ask "can I tell which half has 5x less data just by looking at it?"
 
 **Phase to address:**
-Anomaly calculation / baseline computation phase — write the stddev test before/alongside the implementation.
+Split-Violin Trend View phase.
 
 ---
 
-### Pitfall 3: Archive API data lag breaks "today's anomaly" and the recent-trend chart
+### Pitfall 3: The shared `hasUsableSampleCount` gate doesn't cover the *split*, only the total
 
 **What goes wrong:**
-Open-Meteo's `/v1/archive` (historical) endpoint has a real, documented lag before "actual" data for a given day becomes available — roughly a 2-day delay for most data, and up to 5-7 days for ERA5-sourced daily updates specifically (confirmed both in Open-Meteo's own docs and in an open GitHub issue where a user hit exactly this problem trying to get "yesterday's" data). This means: (1) you cannot compute today's anomaly using the archive endpoint alone, because today's actual observation isn't in the archive yet, and (2) the "recent days trend" chart, if built naively against the archive endpoint, will show missing or stale data for the last several days — precisely the days users care about most.
+The existing gate answers "is there enough historical data at all to show something for this day?" — a single threshold on the combined 30-year population. Splitting that population into a last-5-years half and a prior-25-years half introduces a new failure mode the old gate was never designed for: a location could pass the combined-count gate (e.g. it has 22 years of station data, comfortably over the existing threshold) while one half of the split — say "prior 25 years" — has far fewer usable years than the label implies, or the "last 5 years" half straddles a station-relocation gap and has almost no points. The combined count can look fine while a half is nearly empty.
 
 **Why it happens:**
-It's natural to assume "historical/archive API = has all data up to now." The two-endpoint split (forecast API for now, archive API for the past) isn't obvious until you hit a gap where neither endpoint cleanly gives you "yesterday's actual measured temperature."
+Reusing a gate that was validated and battle-tested (Phase 3) feels safe, and the milestone context explicitly calls it out as "a shared `hasUsableSampleCount` gate covers this" — but that gate's semantics (total sample count) don't automatically decompose into two sub-gates just because the visualization now has two halves.
 
 **How to avoid:**
-Use a hybrid data strategy: use the **forecast API** (`/v1/forecast`) with its `current=` parameter and `past_days=` parameter for today and the last several days (this is the freshest available data, effectively an actuals-quality forecast model output for near-term days), and use the **archive API** (`/v1/archive`) only for the 30-year historical baseline (which by definition only needs data far enough in the past that the lag is irrelevant). Do not attempt to source "today" from the archive endpoint. Be explicit in the UI/data layer about which endpoint fed which number, and if the trend chart's most recent 1-2 days come from the forecast model rather than confirmed archive data, treat that distinction as a data-quality note rather than hiding it.
+- Add a **per-half** minimum-count check (reusing the same threshold constant/logic, just applied twice — once to each half's point count) in addition to the existing combined-total gate. A day/location must pass both: enough total data to be shown at all, AND enough data in *each* half to render that half meaningfully.
+- Decide up front what happens when only one half fails (e.g. render the well-sampled half normally and show a muted "not enough recent data" indicator for the failing half, rather than dropping the whole tile) — this is a real, likely scenario (newer weather stations, or locations where 30-year archive coverage only recently became dense) and should be a designed state, not an edge case discovered in UAT.
+- Write this as an explicit unit test alongside the existing `hasUsableSampleCount` tests, since it's the kind of gap that looks like "we already handle this" until a real sparse-history location is tested.
 
 **Warning signs:**
-- Requesting the archive endpoint for "yesterday" or "today" returns null/missing values or a 400-range error for the most recent 2-7 days.
-- Trend chart has a visible gap or flatline for the most recent days when built purely off `/v1/archive`.
+A location known to have sparse/patchy history (per Phase 3's "no usable historical data" locations, or ones near that boundary) renders a split-violin tile where one half is visibly built from 1-2 points but no "insufficient data" treatment kicks in.
 
 **Phase to address:**
-Data-fetching/integration phase — this must be decided before the trend-chart and today's-anomaly features are built, since it determines which endpoint each feature calls.
+Split-Violin Trend View phase — this should be the first sub-task (define the per-half gate) before any rendering work starts, since it changes what "renderable" means for the whole feature.
 
 ---
 
-### Pitfall 4: Reanalysis grid data does not represent hyperlocal conditions (misleading precision at a pin-dropped location)
+### Pitfall 4: Reviewer-locked trend legend copy becomes orphaned by new violin marks
 
 **What goes wrong:**
-Open-Meteo's historical archive data comes from ERA5/ERA5-Land/ECMWF IFS **reanalysis models** (gridded, 9km-25km resolution), not from actual weather stations. This means: dropping a pin on a specific street, mountain slope, valley, or small island gives you the value from a coarse grid cell that may average over quite different microclimates (elevation changes, urban heat island, coastline effects). The z-score/delta will look exact and authoritative ("+2.3σ", "6.1°C hotter") but is really an estimate for a several-kilometer area, which can be meaningfully wrong for locations with sharp local climate gradients.
+The current legend explains three marks that are specific to the dot-strip tile design: a translucent 30-year dot strip, a bright mean reference line, and an actual-value diamond marker. A split-violin is a structurally different mark (a smoothed density shape, not dots), so at least some of that locked copy will describe visual elements that no longer exist on screen once violins replace dot-strips — while the constraint says the copy is reviewer-locked and must not change.
 
 **Why it happens:**
-The API returns a single precise-looking number for exact lat/lng coordinates, which invites false confidence. There is no per-request quality/coverage flag from Open-Meteo to signal "this pin is in a data-sparse or high-variance-terrain grid cell."
+"Reviewer-locked" naturally reads as "leave this untouched," which is the safe assumption for copy describing marks that *do* carry over (e.g. if the split-violin overlay still shows a mean reference line and an actual-value marker on top of the density shape) — but it's easy to either (a) silently rewrite the locked copy to fit the new chart, breaking the lock, or (b) leave stale copy describing a dot strip that's no longer drawn, confusing users.
 
 **How to avoid:**
-Do not present the z-score/delta as ground-truth precision. Use rounded, appropriately-hedged framing ("about 2° warmer than usual" rather than "2.347° warmer"), and consider a lightweight disclosure (e.g. a small info tooltip: "based on modeled climate data for this area, ~9-25km resolution") rather than pretending station-level accuracy. This is a copy/UX decision more than an engineering one, but it should be planned intentionally rather than left implicit.
+- Before touching the trend row, explicitly enumerate which of the three locked-copy marks (dot strip / mean line / actual-value diamond) survive as an overlay on the new split-violin and which are fully superseded by the violin shape itself. Likely candidates: the mean-reference-line and actual-value-diamond concepts probably still make sense as an overlay on the violin (today's reading vs. each half's mean); the "translucent dot strip" concept is what the violin visually replaces.
+- Treat any genuinely new visual element (the split-violin shape itself, the 5-year-vs-25-year split) as **new legend copy that needs its own reviewer round-trip**, additive to (not a rewrite of) the locked text — don't silently expand scope of the lock, and don't silently violate it either. Surface this explicitly to the user/reviewer as a scoped question rather than deciding unilaterally.
+- If the whole legend must change shape, that's a deliberate escalation (a "the locked copy no longer applies, here's the proposed replacement" conversation), not something to resolve mid-implementation.
 
 **Warning signs:**
-- UI displays z-score/delta with more than 1 decimal place of apparent precision.
-- No UI affordance anywhere explains that data is model-based, not from a station at that exact point.
+Legend text still reads "dot strip" or similar after dot-strip tiles are gone, or the legend was rewritten without a reviewer pass, silently breaking the lock the milestone explicitly calls out.
 
 **Phase to address:**
-UI/results-display phase — decide precision/rounding and disclosure copy alongside the visual design of the anomaly card.
+Split-Violin Trend View phase — resolve before writing any new legend copy; flag as a phase-specific research/reviewer-consult item, not a standard implementation task.
 
 ---
 
-### Pitfall 5: Timezone mismatch between "today" as the user means it and "today" as the API returns it
+### Pitfall 5: Splitting the hero into 4 equal-weight panels dilutes the delta-as-hero hierarchy
 
 **What goes wrong:**
-"Today's" weather anomaly is inherently location-relative — a pin in Tokyo and a pin in Los Angeles do not share the same "today" in UTC. If the app queries Open-Meteo without setting `timezone=auto` (or hardcodes UTC, or uses the *browser's* timezone regardless of pin location), the "today" displayed can be off by a day for locations far from the visiting user, or the day boundary used for the historical day-of-year lookup can silently mismatch the day boundary used for "today's" current reading — producing a baseline that's subtly comparing the wrong calendar day.
+The entire existing visual hierarchy — anomaly-driven gradient color, the Δ glyph, larger type scale, framed zero-delta case — was built around **one** combined hero panel where the delta had nowhere to compete for attention. Restructuring into four headlined panels (Location / Current conditions / Delta / History) each with its own "Last 7 days"-style headline is, by construction, an equalizing move: headlines create a visual rhythm across panels that (if uniform) tells the eye "these four things are peers," directly undermining the "delta must stay the visual hero" constraint.
 
 **Why it happens:**
-It's easy to default to the browser's local timezone (`Intl.DateTimeFormat().resolvedOptions().timeZone` or `new Date()`) since that's the ambient value available client-side, without realizing "today" needs to be relative to the *pin's* location, not the *viewer's* location.
+Giving every panel a headline for clarity (the stated goal — "self-explanatory at a glance") is good UX practice in isolation, but a naive implementation applies the same card treatment, same headline type scale, and same content-to-chrome ratio to all four panels, because that's the path of least resistance for a grid/flex layout. Nothing in "add headlines" inherently preserves "but one of these four must still dominate."
 
 **How to avoid:**
-Always pass `timezone=auto` on Open-Meteo requests so the API resolves and returns data using the local timezone of the queried lat/lng (this is Open-Meteo's documented default-recommended behavior and returns timestamps starting at 00:00 local time for that location). Derive "today" (for both current-conditions and day-of-year baseline lookups) from the pin's local date, not the browser's local date. Keep this consistent across every request tied to the same pin so the current-conditions day and the baseline day-of-year always agree.
+- Explicitly design an *unequal* grid: give the Delta panel more physical size (larger card, larger number type scale) and keep sole ownership of the anomaly-color gradient and Δ-glyph treatment established in v1.1 — the other three panels should use a visually quieter, uncolored glass treatment.
+- Make the Delta panel's headline typographically subordinate to its own value (small/muted headline label, large glowing delta number) — don't let "Delta" as a headline word compete in size with the "Δ6°C" value beneath it.
+- Before implementation, do a quick low-fi layout pass (even a throwaway sketch) that answers "if I squint at this layout, does my eye land on the delta number first?" — this is a design-review gate, not just a code review gate.
+- Concretely: define a persistent size/emphasis ratio target (e.g. Delta panel headline number ≥ 1.5-2x the type scale of the Current-conditions temperature) as an acceptance criterion, not just a vibe check.
 
 **Warning signs:**
-- Checking a pin near the international date line or in a very different timezone from the developer's own shows "today" off by one day, or a delta that looks wrong.
-- Any code path uses `new Date()` / browser locale to compute the target day-of-year instead of a value derived from the API's location-local response.
+In a build preview, a user's eye is drawn equally (or worse, first) to "Current conditions" or "History" instead of "Delta" — this is exactly the kind of regression that's obvious in a screenshot review but easy to miss when reviewing code/props in isolation.
 
 **Phase to address:**
-Data-fetching/integration phase, verified again during location-picker/UI phase with test pins in far timezones (e.g. Pacific islands, Eastern Russia).
+Panel Restructure & Hierarchy phase — should have an explicit UI-review/UAT checkpoint specifically testing this before moving on, since it's the constraint most likely to silently regress.
 
 ---
 
-### Pitfall 6: Treating Open-Meteo's free tier as unlimited, and hitting shared-IP rate limiting from serverless/edge functions
+### Pitfall 6: Four independent glass panels read as disconnected boxes instead of one view
 
 **What goes wrong:**
-Open-Meteo's free non-commercial tier is capped at roughly 10,000 calls/day, 5,000/hour, 600/minute, with rate limiting applied **per IP address** and no uptime SLA. If the architecture routes all requests through a shared backend/serverless function (e.g. a single Vercel or Cloudflare function endpoint that proxies every user's request), all users share that function's egress IP — meaning the app's *aggregate* traffic across all visitors counts against a single rate-limit bucket, and a traffic spike (or bulk automated preloading, e.g. prefetching 30 years × several days of data per pin-drop) can exhaust it for everyone. Additionally, a request spanning many variables or a long date range counts as multiple API calls under Open-Meteo's own accounting, so a "fetch 30 years in one big request" pattern can burn through the daily quota fast if done per-location on every visit without caching.
+Splitting one hero into four separately-headlined panels risks losing the sense that they're one cohesive "here's everything about this location and moment" view. If each panel gets its own full glass treatment (border, shadow, independent background blur/tint), the eye sees "a dashboard of widgets" rather than a single narrative — undermining both usability (harder to scan) and the atmospheric design language the v1.1 redesign established.
 
 **Why it happens:**
-Free-tier limits feel generous until you multiply per-visit request volume (current + ~30 years of daily archive data for one pin, potentially fetched fresh on every page load) across concurrent users. Developers often route third-party API calls through their own backend "to be safe" without realizing that concentrates rather than distributes the rate-limit exposure.
+The most mechanically simple implementation of "split into headlined panels" is a straightforward CSS grid of N independent card components, each reusing the same "glass card" utility class — which is exactly what produces the disconnected-boxes look, because nothing in that approach preserves cross-panel visual relationships (shared backdrop, consistent spacing rhythm, implied reading order).
 
 **How to avoid:**
-Prefer calling Open-Meteo **directly from the browser** (it supports CORS and needs no API key, so this is both simpler and avoids the shared-IP problem — each visitor's request comes from their own IP). Cache the 30-year baseline aggressively client-side (e.g. `localStorage` keyed by rounded lat/lng + day-of-year) since the baseline for a given location/day barely changes day-to-day — recomputing it on every visit is wasteful. If a thin backend/edge proxy is later added (e.g. for response caching), add a shared cache layer (KV/CDN cache) in front of it rather than a pure pass-through, so repeated requests for the same location don't each count against the shared quota.
+- Keep the anomaly-driven gradient backdrop (already established, sits *behind* all panels) as the connective visual tissue — panels should read as translucent windows onto one shared atmosphere, not four separately-colored cards.
+- Establish a single consistent spacing/alignment grid and border-radius/shadow language across all four panels so they read as a family, and consider grouping Location+History as visually adjacent/secondary while Current+Delta form the primary reading pair (matching the stated "split the current hero into Current conditions and Delta" framing).
+- Use panel *order and proximity* to imply a reading narrative (e.g. Location → Delta → Current → History, or whatever matches how a user actually processes "where, how unusual, what's it doing now, and what's normal") rather than a purely mechanical 2x2 grid with no intentional order.
+- Avoid giving every panel its own independent glass surface if a shared outer glass container with internal dividers/headline separators can achieve the same clarity with more cohesion — evaluate both before committing to full separation.
 
 **Warning signs:**
-- Open-Meteo returns HTTP 429 during testing with more than a couple of simultaneous browser tabs/sessions.
-- Every pin-drop triggers ~30+ fresh network requests (one per historical year) with no caching, even for a location just viewed moments ago.
+Screenshot review shows visual "seams" — four cards each competing for border/shadow attention with no obvious visual path connecting them; a first-time viewer describes the layout as "a grid of stats" rather than "a single readout."
 
 **Phase to address:**
-Data-fetching/integration and architecture phase — decide client-direct-call architecture and caching strategy before building the fetch layer; revisit at hosting/deployment phase.
+Panel Restructure & Hierarchy phase.
 
 ---
 
-### Pitfall 7: Map tile provider used without required attribution or in violation of usage policy
+### Pitfall 7: Collapsible methodology and inline tooltips built without real keyboard/ARIA support
 
 **What goes wrong:**
-Free map tile providers (most commonly OpenStreetMap tiles via Leaflet) require visible attribution ("© OpenStreetMap contributors") displayed on the map itself, not just in a footer or about page — hiding it behind a toggle or off-screen violates the license. Separately, OpenStreetMap's own tile server (`tile.openstreetmap.org`) has a usage policy that prohibits bulk/offline prefetching and can silently rate-limit or block an app that generates too much tile traffic without notice, which is a real risk for a public shareable-URL app that could see bursty traffic.
+Collapsible disclosures and inline info affordances (tooltips/popovers explaining the current temperature, delta, and z-score in place) are exactly the kind of UI element that's easy to make "look right" visually while being unusable via keyboard or screen reader — e.g. a `<div>` with an `onClick` toggling a CSS class (no `aria-expanded`, no keyboard activation), or a tooltip that only appears on `:hover` (invisible to keyboard-only and touch users).
 
 **Why it happens:**
-Attribution feels like a formality developers add once and forget; the tile usage policy isn't visible until you've already integrated the "obvious" default tile URL used in every Leaflet tutorial.
+Custom disclosure/tooltip components are quick to hand-roll with a div+onClick+useState, and that quick version visually passes a sighted click-through demo, so the accessibility gap often isn't caught until a dedicated a11y pass — which this milestone doesn't explicitly schedule unless called out.
 
 **How to avoid:**
-Keep the Leaflet default attribution control visible and unmodified (don't hide/collapse it). For production traffic beyond hobby-scale, use a tile provider with a clear free tier meant for production use (e.g. CARTO's free tier, Stadia Maps free tier, MapTiler free tier, or Mapbox's free tier which also requires their own attribution) rather than the bare OSM tile server, and confirm the chosen provider's attribution and rate-limit terms before shipping. Since this app is a public shareable-URL dashboard (not a private hobby prototype), assume it needs a tile provider whose free tier explicitly permits that usage pattern.
+- Prefer the native `<details>`/`<summary>` element for the collapsible methodology section — it gets keyboard operation, `aria-expanded`-equivalent semantics, and screen-reader announcement for free, and can still be fully restyled with Tailwind. Only reach for a custom ARIA disclosure (`button` + `aria-expanded` + `aria-controls` + a controlled region) if `<details>`'s default styling/animation limitations become a real blocker.
+- For inline info affordances (the "self-explanatory in place" micro-copy triggers), implement them as focusable elements (a `<button>`, not a hover-only span) so the info is reachable via Tab and dismissible/toggleable via Enter/Space/Escape — not hover-only, since hover has no keyboard or touch equivalent.
+- Every disclosure trigger needs a visible focus indicator (don't let a Tailwind reset strip `:focus-visible` styling) — this is a common and easy-to-miss regression when restyling interactive elements during a broader visual pass.
+- Verify with an actual keyboard-only pass (Tab through the whole panel set, operate every disclosure/tooltip with only keyboard) as part of this phase's verification, not just a visual/mouse-driven check.
 
 **Warning signs:**
-- Attribution control is removed, hidden, or styled to be invisible.
-- Map tiles intermittently fail to load with no visible cause during a traffic spike — classic sign of triggering a tile provider's rate limit.
+Tabbing through the page skips over the methodology trigger or info icons entirely, or lands on them but Enter/Space does nothing; VoiceOver/NVDA announces nothing meaningful when a disclosure opens (no "expanded"/"collapsed" state announced).
 
 **Phase to address:**
-Map/location-picker UI phase — choose and configure the tile provider (with attribution) as part of initial map setup, not as an afterthought.
+Methodology & Explainers phase.
 
 ---
+
+### Pitfall 8: Collapsing methodology accidentally buries information the app's core value depends on
+
+**What goes wrong:**
+The core value promise is "immediately tell how unusual today's temperature is... at a glance." If the collapsible methodology section becomes a dumping ground for anything that feels like "explanation" — including the plain-language interpretation of *this specific reading* (e.g. what makes today's delta unusual) rather than purely the general "how we compute this" methodology — the app regresses on its own core value by hiding the answer behind a click.
+
+**Why it happens:**
+"Methodology" and "why is today's reading what it is" can blur together during implementation, especially once a collapsible section exists and it's tempting to move any explanatory text into it to declutter the always-visible view — the milestone's stated design already separates these two (always-visible per-panel micro-copy vs. collapsed-by-default general methodology), but that separation has to be actively maintained, not just assumed.
+
+**How to avoid:**
+- Draw an explicit content-ownership line before writing copy: the collapsible methodology owns *general, reading-independent* explanation ("we compare today to a 30-year day-of-year baseline using a z-score and a delta") — it should read identically regardless of what today's number is. Anything that changes based on today's specific reading (is it unusual, by how much, in which direction) belongs in the always-visible per-panel micro-copy, never behind the collapse.
+- Default-collapsed is correct for methodology (matches the stated design), but verify no already-shipped "at a glance" content (the plain-language verdict validated in Phase 2) is inadvertently moved into the new collapsible section during the refactor — this is a regression risk specifically because refactoring touches the same layout region that content already lives in.
+
+**Warning signs:**
+A first-time user has to expand "Methodology" to answer "is today unusual" — if that happens, always-visible content has been miscategorized as methodology.
+
+**Phase to address:**
+Methodology & Explainers phase.
+
+---
+
+### Pitfall 9: New disclosure/tooltip motion, or new chart-entrance motion, quietly bypasses the reduced-motion policy
+
+**What goes wrong:**
+The disciplined-glass performance policy requires ALL motion to sit behind `prefers-reduced-motion`, with no JS/canvas animation loops. Two new surfaces are prime candidates to violate this unintentionally: (1) an expand/collapse transition for the methodology disclosure implemented as a JS-measured `scrollHeight` animation (a very common accordion pattern) which typically runs via `requestAnimationFrame` or a JS-driven CSS transition that isn't gated by a media query check in script; and (2) an "entrance" flourish for the new split-violin tiles (e.g. animating the density curve drawing in), which — given 7 tiles rendering simultaneously — is exactly the kind of "just one small polish animation" that can silently reintroduce a JS animation loop the v1.1 policy was written to prevent.
+
+**Why it happens:**
+CSS-only solutions for animating to `height: auto` are non-trivial (browsers can't natively transition to an intrinsic auto height), which historically pushes developers toward JS-measured-height or JS-driven approaches — precisely the pattern the existing policy prohibits. Chart libraries (Recharts) also ship default enter animations that are easy to leave switched on without registering that they should be gated.
+
+**How to avoid:**
+- Use the CSS `grid-template-rows: 0fr → 1fr` transition trick (an inner wrapper with `overflow: hidden` inside a grid whose row track is animated) for the methodology disclosure — this is a pure-CSS solution requiring no JS measurement or rAF loop, and is straightforward to wrap in `@media (prefers-reduced-motion: no-preference)` with an instant-toggle fallback otherwise.
+- Explicitly audit and disable/gate Recharts' built-in animation props (`isAnimationActive`, animation duration/easing on `Area`/`Line`/custom shapes) for the new split-violin tiles, matching how existing trend-tile animation (if any) is already gated — do not accept chart-library animation defaults as "free" just because they didn't require writing new code.
+- Any JS that *does* need to check the preference (rare, given the above) must check `window.matchMedia('(prefers-reduced-motion: reduce)').matches` directly rather than assuming a CSS-only media query covers it — CSS media queries don't gate JS-triggered behavior.
+- Re-run the existing v1.1 reduced-motion verification pass against the new UI surfaces specifically (methodology disclosure, inline tooltips, violin tile mount/update) rather than assuming it only needs re-checking where code changed structurally.
+
+**Warning signs:**
+Toggling the OS-level "reduce motion" setting and reloading still shows an animated expand/collapse or an animated violin-draw-in effect; browser performance profiling shows a rAF loop active while a disclosure is open/closed or while violins first render.
+
+**Phase to address:**
+Methodology & Explainers phase (disclosure motion) and Split-Violin Trend View phase (chart-entrance motion) — both should re-run the same reduced-motion verification checklist established in v1.1's Phase 5.
+
+---
+
+### Pitfall 10: Layout reflow silently reintroduces real backdrop-blur near the live map, or breaks Leaflet's size assumptions
+
+**What goes wrong:**
+Two distinct risks bundle under "reflow breaks the glass-perf policy": (a) a new/resized panel grid changes which DOM elements sit adjacent to or wrap the Leaflet map container, and if a shared "glass card" utility class (real `backdrop-blur`) gets applied to a panel that now overlaps or sits very close to the live map viewport — or worse, to a shared ancestor wrapping both the map and the panels — the expensive case the v1.1 policy was specifically designed to avoid (blur recompute during map panning) gets silently reintroduced. (b) Leaflet does not automatically detect when its container element is resized by surrounding layout changes — a well-documented react-leaflet gotcha — so restructuring the grid around the map (four panels instead of one hero) risks leaving the map mis-sized or showing gray/missing tiles until `map.invalidateSize()` is explicitly called after the new layout settles.
+
+**Why it happens:**
+(a) happens because Tailwind utility classes are easy to reuse across a redesign without re-auditing which DOM elements they now land on — "same glass-card class as before" doesn't guarantee "same relationship to the map" once the grid changes shape. (b) happens because Leaflet's sizing model assumes explicit resize notification; it's a known, frequently-filed react-leaflet issue precisely because container-resize-without-map-resize-event is such an easy thing to trigger via a CSS/layout change and easy to forget because the map "worked before" the reflow.
+
+**How to avoid:**
+- Before merging the new layout, explicitly re-verify (not just re-run automated tests, but a visual pass) that no element carrying real `backdrop-blur` sits directly above, adjacent-with-overlap, or as an ancestor of the Leaflet map container — the map region should carry no glass/blur class "by construction," per the existing (already-validated) v1.1 policy, and that invariant needs re-confirming after the DOM tree changes shape, not assumed to still hold.
+- Add a `map.invalidateSize()` call (via the `useMap()` hook from react-leaflet, in a `useEffect` keyed to the layout/container-size change, or a `ResizeObserver` on the map's container) triggered whenever the new panel grid causes the map's allotted space to change — this is standard, well-documented practice for any react-leaflet app whose surrounding layout is not static.
+- Treat this as a required regression check specifically because it passed before the reflow (map region was untouched) and there's no reason to assume it automatically still holds after — call it out explicitly in phase verification rather than relying on "the map still looked fine in my quick check," since gray-tile bugs are often only visible on non-cached/slow tile loads or window resizes.
+
+**Warning signs:**
+The map shows gray/blank tiles until the browser window is manually resized; a performance profile shows blur recompute/paint cost while panning the map after the reflow, where it previously didn't.
+
+**Phase to address:**
+Panel Restructure & Hierarchy phase (since this is the phase that changes the DOM/grid structure around the map) — should include an explicit map-sizing and glass-scope regression check in its verification step, not deferred to a later integration pass.
 
 ## Technical Debt Patterns
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|-----------------|------------------|
-| Single-day (n=30) baseline instead of day-of-year window | Simpler query/loop, ships faster | Noisy, unstable z-scores; Feb 29 nearly unusable | Never — this directly undermines the core value prop ("accurate anomaly score") |
-| Fetching all 30 years fresh on every pin-drop, no caching | No cache invalidation logic to write | Burns Open-Meteo daily quota fast, slow UX per pin-drop | Only acceptable for the very first prototype/demo; must add caching before sharing the URL publicly |
-| Hardcoding population stddev (n) because "it's close enough" | One less thing to decide | Systematically biased z-score that never surfaces as an obvious bug | Never — cheap to do correctly from the start |
-| Routing Open-Meteo calls through a custom backend proxy "for cleanliness" | Feels more "proper" architecture | Concentrates rate-limit exposure onto one shared IP; adds cold-start/hosting complexity for zero benefit given Open-Meteo is keyless+CORS-enabled | Acceptable only if you need server-side response caching (KV) to reduce total call volume — otherwise skip it |
-| Skipping timezone=auto and using browser locale for "today" | Slightly less API-response parsing | Wrong "today" for locations far from the viewer's own timezone | Never |
+|----------|-------------------|-----------------|-----------------|
+| Equal-width violin halves without a small-sample indicator | Faster to build, visually simpler | Misleads users comparing 5-year vs 25-year evidence quality (Pitfall 2) | Only as an explicit, documented interim state if width-normalization is deferred to a fast-follow — never as the final shipped behavior |
+| Reusing the combined `hasUsableSampleCount` gate without adding a per-half check | Saves a small amount of logic/test work | Silent "confident-looking" violin halves built from near-zero data (Pitfall 3) | Never — this is cheap to add and the risk (misleading a user about data confidence) directly undermines the app's core value |
+| Hover-only tooltips for inline explainers | Quickest to implement, looks fine in a mouse-driven demo | Fully inaccessible to keyboard/touch users (Pitfall 7) | Never for the shipped feature — acceptable only as a throwaway prototype, not for anything merged |
+| JS `scrollHeight`-measured accordion animation | Well-known pattern, lots of copy-paste examples online | Reintroduces exactly the JS-driven-animation pattern the disciplined-glass policy exists to prevent (Pitfall 9) | Never — the CSS grid-rows trick achieves the same visual result with no policy violation |
 
 ## Integration Gotchas
 
 | Integration | Common Mistake | Correct Approach |
-|-------------|-----------------|-------------------|
-| Open-Meteo archive API | Assuming it has data through "today" | Use forecast API's `current=`/`past_days=` for today/recent days; archive API only for the far-past 30-year baseline |
-| Open-Meteo forecast/archive timezone | Defaulting to UTC or browser timezone | Pass `timezone=auto` on every request so "today" resolves to the pin's local calendar day |
-| Open-Meteo rate limiting | Proxying all user traffic through one backend function/IP | Call directly from the browser (CORS-enabled, keyless) so each user's IP is rate-limited independently |
-| Open-Meteo climate endpoint (`/v1/climate`) | Mistaking it for a "30-year normals" endpoint | It returns climate-model projections (1950-2050), not observed normals — build the baseline yourself from `/v1/archive` across ~30 years |
-| Map tile provider (OSM/Leaflet) | Using bare `tile.openstreetmap.org` for a public production app without checking usage policy | Use a provider whose free tier explicitly supports production/public traffic, keep attribution visible |
+|--------------|------------------|-------------------|
+| react-leaflet + surrounding layout reflow | Assuming Leaflet auto-detects container resize when panels around it change | Call `map.invalidateSize()` (via `useMap()` in a `useEffect`/`ResizeObserver`) whenever the map's allotted layout space changes |
+| Recharts + custom violin shape | Treating Recharts' default per-series animation as harmless because it "comes for free" from the library | Explicitly set `isAnimationActive={false}` (or gate via reduced-motion check) on the new violin shapes/series, matching existing chart-animation policy |
+| Tailwind v4 utility reuse across a redesign | Reapplying the same `glass-card`-style utility class to new panels without checking their new DOM position relative to the map | Re-audit every element carrying real `backdrop-blur` after any layout change that alters the DOM tree around the map container |
+| `<details>`/`<summary>` + custom Tailwind styling | Assuming native disclosure elements can't be restyled, so reaching for a fully custom ARIA widget by default | Style native `<details>`/`<summary>` with Tailwind first (free keyboard/ARIA semantics); only build a custom disclosure if a specific animation/visual need can't be met natively |
 
 ## Performance Traps
 
 | Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|-----------------|
-| Fetching 30 individual archive requests (one per year) per pin-drop, sequentially | Pin-drop feels slow (multi-second spinner) | Batch into as few requests as possible (Open-Meteo archive endpoint accepts a date range in one call, so a single ~30-year date-range request per location is usually possible rather than 30 separate calls); cache result client-side keyed by rounded location + day-of-year | Noticeable even at low traffic — this is a UX problem from day one, not a scale problem |
-| Re-computing the full 30-year baseline on every page load for the same location | Wasted Open-Meteo quota, slower repeat visits | Cache baseline in `localStorage`/`sessionStorage` (or a lightweight edge KV if a backend is added) since a location's climatological baseline doesn't change meaningfully day to day | Breaks Open-Meteo's daily quota once traffic exceeds roughly a few hundred fresh pin-drops/day without caching |
-| High-precision pin coordinates (many decimal places) used as cache key | Cache never hits because every pin is "unique" even for near-identical spots | Round lat/lng to ~2 decimal places (~1km) for cache-key purposes, matching the grid resolution of the underlying reanalysis data anyway | Becomes relevant as soon as caching is introduced |
-
-## Security Mistakes
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| N/A — Open-Meteo is keyless, so there is no API key to leak in client-side code | — | Confirmed: no server-side secret handling is needed for the core weather data flow; if a map tile provider requiring an API key is chosen (e.g. Mapbox), that key would need standard client-key restriction (domain-restricted key) — not applicable to keyless OSM-tile setups |
-| Treating `localStorage`-persisted "last location" as sensitive | Low risk, but worth noting | It's just lat/lng with no PII; no special handling needed beyond normal client-storage hygiene |
+|------|----------|------------|----------------|
+| 7 simultaneous violin KDE computations recomputed on every render (not memoized) | Trend row feels sluggish on pin move, especially on slower devices | Memoize each tile's KDE output (data + bandwidth as dependency) — matches the existing per-tile chart approach used for dot-strip tiles | Noticeable once violin math (even lightweight) runs synchronously on every parent re-render triggered by unrelated state (e.g. panel hover) |
+| Backdrop-blur silently reapplied over/near the map after reflow | Map panning stutters where it didn't before v1.2 | Explicit glass-scope audit after any DOM-structure change near the map (Pitfall 10) | Immediately on any device without hardware-accelerated blur compositing; may look fine in dev but degrade on lower-end hardware |
+| Chart-library default animations left enabled across 7 new tiles at once | Trend row feels janky or CPU-spikes on initial mount, independent of the reduced-motion policy violation itself | Disable per-series animation explicitly on all new violin series (see Integration Gotchas) | Most visible on initial page load with all 7 tiles mounting simultaneously |
 
 ## UX Pitfalls
 
 | Pitfall | User Impact | Better Approach |
-|---------|-------------|-------------------|
-| Showing z-score/delta with false precision (many decimals) without any data-quality context | User over-trusts a modeled estimate as if it were a precise station reading | Round sensibly, add a lightweight "modeled climate data, ~9-25km resolution" disclosure |
-| Silently showing a degraded/incomplete trend chart when recent-day data isn't available yet (archive lag) | User sees a confusing gap or flat line near "today" with no explanation | Explicitly label the last 1-2 days of the trend as "recent (forecast-model based)" vs. earlier days as "recorded", or show a placeholder/loading state rather than a silent gap |
-| No indication of which data source (station-quality vs. reanalysis-grid) underlies the number | User in a data-sparse region (ocean, remote mountains) gets no signal that accuracy may be lower there | Consider a simple visual/text cue when the pin is far from a populated area (optional/differentiator, not MVP-blocking) |
-| Comparing z-score in one temperature unit while the delta uses another silently | User does mental math wrong, loses trust when numbers don't reconcile | Keep unit (°C, per the project's constraint) consistent everywhere on screen; if °F is ever added as a display toggle, convert both z-score inputs and delta from the same canonical unit, never mix |
+|---------|--------------|-------------------|
+| Delta panel visually equal-weight with the other three | User no longer instantly finds "how unusual is today" — the app's stated core value | Deliberately asymmetric panel sizing/color-ownership keeping Delta dominant (Pitfall 5) |
+| Violin halves rendered with equal visual confidence despite unequal sample sizes | User over-trusts a thin 5-year sample as much as the 25-year one | Normalize width by n and/or add a small-sample visual cue (Pitfall 2) |
+| Methodology collapse absorbs "is today unusual" content along with general methodology | At-a-glance interpretability regresses; user must click to learn what should be immediately visible | Keep reading-specific interpretation always-visible; methodology stays reading-independent (Pitfall 8) |
+| Legend text describes marks no longer on screen | User is confused about what the new violin shape means, or distrusts the legend entirely | Explicitly reconcile locked copy against the new marks before shipping (Pitfall 4) |
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Baseline computation:** Looks done once it returns *a* number — verify it uses a day-of-year window (not single-day n=30) and sample stddev (n-1), with a unit test against a hand-computed expected value.
-- [ ] **Feb 29 handling:** Looks done if it doesn't crash — verify it doesn't silently show a near-meaningless stddev from ~7-8 samples; confirm the window/fallback approach was actually applied to this date.
-- [ ] **"Today's" anomaly:** Looks done if any number renders — verify it's sourced from the forecast API's current conditions (not a stale/missing archive-API value for a day that isn't in the archive yet).
-- [ ] **Recent trend chart:** Looks done if a line renders — verify the most recent 1-2 days aren't silently null/zero/duplicated-previous-value due to the archive lag, and that this data-source distinction is either handled gracefully or disclosed.
-- [ ] **Location picker / map:** Looks done once a pin can be dropped — verify attribution is visible and correctly configured, and that timezone resolution (`timezone=auto`) is wired through to both current-conditions and baseline queries for that exact pin.
-- [ ] **Caching:** Looks done once the app "works" in solo testing — verify repeat pin-drops of the same/nearby location don't refetch the full 30-year baseline every time, since this is invisible until multiple users or repeat visits happen.
+- [ ] **Split-violin tiles render:** Often missing a per-half sample-size check — verify a known sparse-history location/day shows a visibly different (not equally confident) treatment for its thin half.
+- [ ] **Four headlined panels render:** Often missing the intentional size/color asymmetry — verify via a quick screenshot squint-test that the Delta panel is still the first thing the eye lands on.
+- [ ] **Methodology collapse/expand works with a mouse:** Often missing full keyboard operability — verify Tab reaches the trigger, Enter/Space toggles it, and a screen reader announces the new state.
+- [ ] **Reduced-motion setting respected for the new violin/disclosure animations:** Often verified only by reading the code (assuming a media query exists) rather than actually toggling the OS-level setting and re-checking the rendered behavior.
+- [ ] **Map still pans smoothly and shows correct tiles after the reflow:** Often only checked once at initial load — verify by resizing the window / triggering the new layout's responsive breakpoints and confirming no gray-tile flash and no blur-over-map stutter.
+- [ ] **Reviewer-locked trend legend still accurate:** Often assumed unchanged because "we didn't edit that file" — verify the copy still matches the marks actually on screen after dot-strips become violins.
 
 ## Recovery Strategies
 
 | Pitfall | Recovery Cost | Recovery Steps |
-|---------|----------------|------------------|
-| Discovering the population-vs-sample stddev bug after launch | LOW | Swap the formula, add the regression test, redeploy — no data migration needed since nothing is persisted server-side |
-| Discovering single-day (n=30) baseline is too noisy after launch | MEDIUM | Change the baseline query to a day-of-year window, re-verify unit tests/spot-checks; no persisted data to migrate since baseline is recomputed/cached client-side |
-| Hitting Open-Meteo rate limits in production due to backend-proxy architecture | MEDIUM | Switch fetch calls to client-direct (CORS-enabled, no key needed) and add client-side caching; may require reworking the data-fetching layer but no backend infrastructure to tear down since there's no persistence |
-| Attribution/tile-policy violation flagged or tiles get blocked | LOW-MEDIUM | Swap tile provider (e.g. move from bare OSM to CARTO/Stadia/MapTiler free tier) and restore visible attribution; contained to the map component |
+|---------|-----------------|------------------|
+| Unnormalized violin widths shipped | LOW-MEDIUM | Add a post-hoc width-scaling factor (by sample n) or a small-sample visual cue to existing tiles — CSS/render-prop change, no data-model change needed |
+| Delta panel loses hero status | LOW | Adjust type-scale/sizing/color-ownership tokens — this is a CSS/layout-only fix, not a data or logic change |
+| Reduced-motion violation shipped (JS-driven disclosure/chart animation) | LOW-MEDIUM | Swap the JS-measured-height accordion for the CSS grid-rows trick; add `isAnimationActive={false}` to chart series; re-run the reduced-motion verification pass |
+| Map gray-tile / mis-sized after reflow | LOW | Add the missing `map.invalidateSize()` call in a `useEffect`/`ResizeObserver` keyed to layout changes |
+| Per-half sample gate missing (thin violin half looks confident) | MEDIUM | Add the per-half check to the existing gate function plus unit tests; requires re-touching any location/day already shipped with the bug to confirm the fix renders correctly |
+| Legend copy orphaned by new marks | MEDIUM | Requires a reviewer round-trip (same process that produced the original locked copy) — not a unilateral fix, budget calendar time for this |
 
 ## Pitfall-to-Phase Mapping
 
 | Pitfall | Prevention Phase | Verification |
-|---------|-------------------|----------------|
-| Single-day baseline / Feb 29 small-sample issue | Anomaly calculation / baseline methodology phase | Unit test: baseline mean/stddev computed from a day-of-year window across 30 years; explicit test case for Feb 29 |
-| Population vs. sample stddev | Anomaly calculation / baseline methodology phase | Unit test against a hand-computed sample-stddev reference value |
-| Archive API lag breaking "today"/trend | Data-fetching/integration phase | Manual check: request archive API for yesterday's date and confirm expected missing/stale behavior is handled by falling back to forecast API `past_days` |
-| Reanalysis grid precision vs. hyperlocal expectation | UI/results-display phase | Design review: confirm rounding + disclosure copy present before shipping the anomaly card |
-| Timezone mismatch for "today" | Data-fetching/integration phase | Manual test: drop pins in at least two far-apart timezones (e.g. UTC+13 and UTC-10) and confirm "today" and baseline day-of-year agree with the pin's local date |
-| Rate limiting via shared-IP backend proxy | Architecture / data-fetching phase | Architecture decision recorded: client-direct calls to Open-Meteo, no proxy-by-default; load-test with multiple concurrent simulated pin-drops if feasible |
-| Map attribution / tile policy | Map/location-picker UI phase | Visual check: attribution visible and unmodified in default map view; tile provider's free-tier terms confirmed to cover public production traffic |
-| No baseline caching (repeated fetch waste) | Architecture / data-fetching phase | Confirm `localStorage`/cache-key strategy implemented before considering the fetch layer done |
+|---------|--------------------|-----------------|
+| KDE misleads on tiny per-half samples (P1) | Split-Violin Trend View | Design/statistics spike output reviewed before full implementation; unit tests on bandwidth/fallback logic |
+| Unequal-n violin widths not normalized (P2) | Split-Violin Trend View | Visual review comparing a 5-year-vs-25-year tile against a design acceptance criterion for width/confidence disclosure |
+| Shared gate doesn't cover per-half sparsity (P3) | Split-Violin Trend View | New unit tests for per-half gate; manual check against a known sparse-history location |
+| Locked legend copy orphaned by new marks (P4) | Split-Violin Trend View | Explicit reviewer round-trip sign-off before merge, mirroring the original legend-copy approval process |
+| Delta loses hero status in 4-panel split (P5) | Panel Restructure & Hierarchy | Screenshot/UAT checkpoint specifically testing "where does the eye land first" |
+| Panels read as disconnected boxes (P6) | Panel Restructure & Hierarchy | Same UAT checkpoint as P5, extended to "does this read as one view or four widgets" |
+| Disclosure/tooltip missing keyboard/ARIA support (P7) | Methodology & Explainers | Keyboard-only pass (Tab + Enter/Space + Escape) and screen-reader spot check |
+| Methodology collapse buries at-a-glance content (P8) | Methodology & Explainers | Content-ownership review: confirm reading-specific verdict text stays always-visible |
+| New motion bypasses reduced-motion policy (P9) | Methodology & Explainers + Split-Violin Trend View | Re-run v1.1's reduced-motion verification checklist against all new UI surfaces |
+| Reflow reintroduces blur-near-map or breaks Leaflet sizing (P10) | Panel Restructure & Hierarchy | Explicit glass-scope audit + map-resize regression check as part of phase verification, not deferred |
 
 ## Sources
 
-- [Historical Weather API | Open-Meteo.com](https://open-meteo.com/en/docs/historical-weather-api) — archive endpoint structure, daily aggregation, data lag notes
-- [Climate API | Open-Meteo.com](https://open-meteo.com/en/docs/climate-api) — confirms `/v1/climate` is projections (1950-2050), not observed normals
-- [Weather Forecast API | Open-Meteo.com](https://open-meteo.com/en/docs) — `current=`, `past_days=`, `timezone=auto` behavior
-- [Clarification on past_days Data and Accessing Recent Historical Weather · Issue #1480](https://github.com/open-meteo/open-meteo/issues/1480) — confirms `past_days` returns forecast-model data, not confirmed observations, and archive API lag is a real, hit-by-users problem
-- [Normals and records · Issue #361](https://github.com/open-meteo/open-meteo/issues/361) — confirms no dedicated climate-normals endpoint exists
-- [💰 Pricing | Open-Meteo.com](https://open-meteo.com/en/pricing) and [Hacker News — creator comment on rate limits](https://news.ycombinator.com/item?id=46591888) — 10,000/day, 5,000/hour, 600/minute rate limits, non-commercial terms
-- [API use on shared server and daily limit · Discussion #853](https://github.com/open-meteo/open-meteo/discussions/853) — IP-based rate limiting problem for shared/serverless hosting
-- [Hang On, What's Not Normal About February 29? | NOAA/NCEI](https://www.ncei.noaa.gov/news/hang-on-whats-not-normal-about-February-29) — official explanation of the Feb 29 small-sample problem and NOAA's daily-normals workaround
-- [Daily Normals 1991-2020 documentation | NOAA/NCEI](https://www.ncei.noaa.gov/pub/data/cdo/documentation/normals-daily-1991-2020_documentation.pdf) — day-of-year window methodology for climatological normals
-- [ERA-Interim Daily Climatology | ECMWF](https://confluence.ecmwf.int/download/attachments/24316422/daily_climatology_description.pdf) and [Climatological normal — Wikipedia](https://en.wikipedia.org/wiki/Climatological_normal) — window-width conventions (5-61 days) for climatological baselines
-- [Tile usage policy - OpenStreetMap Wiki](https://wiki.openstreetmap.org/wiki/Tile_usage_policy) and [Tile Usage Policy | OSM Foundation](https://operations.osmfoundation.org/policies/tiles/) — attribution requirements, prefetch/bulk-download prohibition, blocking risk
-- General cross-check on ERA5 reanalysis vs. station-data accuracy/resolution limitations (academic literature on ERA5 coastal/offshore performance)
+- `.planning/PROJECT.md` (Current Milestone v1.2, Anomaly methodology, Key Decisions, disciplined-glass performance policy) — HIGH confidence, primary source of all existing-app constraints
+- Violin plot small-sample and bandwidth pitfalls — cross-corroborated web search (Domo violin-plot guide, matplotlib/seaborn documentation ecosystem) — MEDIUM confidence
+- Split-violin unequal-sample-size width normalization — cross-corroborated web search (CRAN `vioplot` split-violin vignette, seaborn split-violin documentation ecosystem, Atlassian/Mode violin-plot guides) — MEDIUM confidence
+- WAI-ARIA disclosure/accordion pattern — cross-corroborated web search (W3C WAI-ARIA Authoring Practices, NZ Government Web Accessibility Guide, 216digital accessible-accordion guide) — MEDIUM confidence
+- `prefers-reduced-motion` best practices for disclosures/animation — cross-corroborated web search (MDN, CSS-Tricks, multiple accessible-animation guides) — MEDIUM confidence
+- Leaflet/react-leaflet container-resize and `invalidateSize()` behavior — cross-corroborated web search (multiple `PaulLeCam/react-leaflet` GitHub issues describing the same gray-tile symptom and fix) — MEDIUM confidence (well-documented, recurring community-reported issue; no single canonical official doc page found in this pass)
+- CSS `grid-template-rows` height-auto animation trick for accordions — cross-corroborated web search (Stefan Judis, Keith J. Grant, multiple CSS-trick writeups) — MEDIUM confidence
 
 ---
-*Pitfalls research for: Weather anomaly dashboard (Open-Meteo, client-side, free-tier hosting)*
-*Researched: 2026-07-13*
+*Pitfalls research for: Weather Anomaly Dashboard v1.2 (UI Layout Redesign & Explanatory Legend)*
+*Researched: 2026-07-21*

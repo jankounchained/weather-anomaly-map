@@ -1,288 +1,284 @@
 # Architecture Research
 
-**Domain:** Client-facing weather-anomaly dashboard (static frontend + free public weather API)
-**Researched:** 2026-07-13
-**Confidence:** MEDIUM (Open-Meteo endpoint/param details cross-verified across official docs pages + independent third-party sources; no single HIGH-tier curated doc provider was available this run)
+**Domain:** v1.2 integration architecture — restructuring an existing React SPA's resolved view into four headlined panels + methodology disclosure + per-day split-violin trend chart
+**Researched:** 2026-07-21
+**Confidence:** HIGH (based on direct inspection of `src/`, not general domain conventions)
 
-## Standard Architecture
+## Current Architecture (as-built, verified against src/)
 
-### System Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         BROWSER (client)                             │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌───────────────┐  ┌────────────────┐  ┌─────────────────────┐     │
-│  │  Map + Pin     │  │  Current       │  │  Anomaly Engine      │     │
-│  │  Picker        │→ │  Conditions    │→ │  (z-score, delta,    │     │
-│  │  (lat/lng)     │  │  Card          │  │   trend chart)        │     │
-│  └───────┬───────┘  └────────┬───────┘  └──────────┬───────────┘     │
-│          │                   │                      │                 │
-│          ▼                   ▼                      ▼                 │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │              Open-Meteo API Client (fetch wrapper)            │    │
-│  │  - forecast endpoint (current + past_days)                    │    │
-│  │  - archive endpoint  (30-yr daily baseline)                   │    │
-│  └───────────────────────────┬────────────────────────────────┘    │
-│                               │                                       │
-│  ┌────────────────────────────▼───────────────────────────────┐    │
-│  │  Local Cache (localStorage / IndexedDB)                     │    │
-│  │  key: lat_rounded,lng_rounded,dayOfYear → {mean, stddev, n} │    │
-│  └───────────────────────────────────────────────────────────┘    │
-└──────────────────────────────┬────────────────────────────────────┘
-                                │ HTTPS (CORS-enabled, no key)
-                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                          OPEN-METEO API                               │
-│  /v1/forecast   → current conditions + recent past_days (model-based) │
-│  /v1/archive    → ERA5/ERA5-Land reanalysis, daily aggregates,        │
-│                    1940/1950–present (5–7 day lag from "today")       │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│           OPTIONAL (v2+, only if usage/cost demands it):              │
-│           Edge Function + Edge KV as a shared baseline cache          │
-│           (Cloudflare Worker + Workers KV, or Vercel Edge + KV)       │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-**Core architectural call for v1: no backend at all.** Open-Meteo is CORS-enabled and keyless (confirmed across multiple independent integration guides — browser `fetch()` calls succeed directly, no proxy needed), and both endpoints this project needs (`/v1/forecast`, `/v1/archive`) return data shaped for direct client consumption. Combined with the "no accounts, no server-side persistence" constraint, this points to a **static single-page app** deployable to any free static host (Vercel/Netlify/Cloudflare Pages/GitHub Pages) with zero server code for v1.
-
-### Component Responsibilities
-
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| Map + Pin Picker | Lets user click/drag to choose lat/lng; owns "selected location" state; syncs to URL for shareability | Leaflet or MapLibre GL + a lightweight state store (React state/Zustand/Svelte store) |
-| Open-Meteo API Client | Single module owning all fetch calls, param construction, and response parsing; the only thing that knows Open-Meteo's URL shapes | Thin `fetch()` wrapper, one function per endpoint (`getCurrent`, `getRecentDaily`, `getHistoricalRange`) |
-| Anomaly Engine | Pure functions: given a 30-yr daily series + today's/recent value(s), compute mean, stddev, z-score, delta | Plain TS/JS module, no framework dependency — easily unit-testable |
-| Current Conditions Card | Renders today's live reading + anomaly (z-score, delta) | Presentational component, reads from a single "location weather" view-model |
-| Trend Chart | Renders last N days of anomaly (delta or z-score per day) | Chart library (e.g. Recharts/uPlot/Chart.js) fed by array of `{date, value, baselineMean, baselineStddev}` |
-| Local Cache | Avoids re-fetching the 30-yr baseline for a location/day the user (or the app) already computed recently | `localStorage`/`IndexedDB`, keyed by rounded lat/lng + day-of-year, with a long TTL (baseline changes ~yearly) |
-| (Optional v2) Edge Cache Proxy | Sits between all users of the deployed app and Open-Meteo; caches *computed baseline stats* (not raw series) so N users hitting the same city don't each pull a fresh 30-year archive response | Cloudflare Worker (or Vercel/Netlify Edge Function) + KV store, `stale-while-revalidate` style |
-
-## Recommended Project Structure
+### Component Tree
 
 ```
-src/
-├── map/                    # Map + pin picker component, URL sync for lat/lng
-│   ├── MapView.tsx
-│   └── useLocationParam.ts # reads/writes ?lat=&lng= in URL for shareable links
-├── weather/                 # All Open-Meteo integration lives here — one boundary
-│   ├── client.ts            # fetch wrappers: getCurrent(), getRecentDaily(), getHistoricalRange()
-│   ├── anomaly.ts            # pure stats functions: mean, stddev, zScore, delta
-│   ├── cache.ts               # localStorage/IndexedDB read-through cache
-│   └── types.ts                # shared shapes: DailyPoint, BaselineStats, AnomalyResult
-├── dashboard/                 # UI composition
-│   ├── CurrentConditionsCard.tsx
-│   ├── AnomalySummary.tsx      # z-score + delta display
-│   ├── TrendChart.tsx
-│   └── HistoricalRangeChart.tsx # today vs distribution
-├── app/                        # routing/shell, loading & error states
-└── lib/                         # date/day-of-year helpers, formatting
+App.tsx
+ ├─ MapView                                  (unchanged by v1.2)
+ └─ LocationPanel  (<aside>, owns --anomaly-color CSS var + isNight wash)
+     └─ children stack (flex flex-col gap-md):
+         ├─ LocationDisplay   (4-branch: no-selection / loading / resolved-name / resolved-coords-fallback)
+         ├─ AnomalyCard       (4-branch: no-selection / loading / error / resolved)
+         │     resolved branch renders, TOP-TO-BOTTOM, THREE conceptually
+         │     distinct things in one card:
+         │       1. current temp (text-display) + "i" data-quality info button
+         │       2. Δ delta hero (text-display*1.7, --anomaly-color, motion-safe transition)
+         │       3. verdict label + z-score pill
+         └─ TrendRow
+               ├─ "Last 7 Days" eyebrow headline   ← the ONE existing headline pattern in the app
+               ├─ TrendYAxisColumn (shared Y axis, rendered once)
+               ├─ TrendDayChart × 7 (each: label + Recharts ComposedChart;
+               │     dot-strip Scatter (30yr samples, jittered x) +
+               │     mean ReferenceLine + diamond actual-value Scatter)
+               └─ TrendLegend (3 static swatches: dot / line / diamond)
 ```
 
-### Structure Rationale
-
-- **`weather/` is the single integration boundary.** Every other module talks to Open-Meteo *through* `weather/client.ts` — this is what makes the "optional edge cache later" migration cheap: swap the internals of `client.ts` to call your own edge function instead of Open-Meteo directly, and nothing else in the app changes.
-- **`anomaly.ts` is deliberately pure and dependency-free.** Z-score/delta/mean/stddev math has no business touching `fetch` or DOM — keeping it pure makes it trivially unit-testable and reusable if a backend is added later (same math can run server-side without a rewrite).
-- **`cache.ts` wraps, doesn't replace, `client.ts`.** Cache-then-fetch is a decorator around the raw API calls, not baked into component code — components ask for data and don't know/care whether it came from cache or network.
-
-## Architectural Patterns
-
-### Pattern 1: One wide historical call, filter client-side (not 30 yearly calls)
-
-**What:** For the 30-year baseline, issue **one** `/v1/archive` request spanning `start_date = today − 30y` to `end_date = today (or a few days back)`, requesting only `daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min` (not hourly). Then filter the returned daily array client-side to the target calendar day (optionally ± a few days window across all years, e.g. day-of-year ± 3, to get a larger, smoother sample — meteorological normals commonly use a window like this) and compute mean/stddev over that filtered set.
-
-**When to use:** Always, for the baseline. This is the efficient call pattern the question specifically asked about.
-
-**Trade-offs:** One archive call returns ~30 years × 365 days of daily records (~11,000 rows) as compact parallel arrays (`time: [...]`, `temperature_2m_mean: [...]`, etc.) — roughly a few hundred KB uncompressed, well under 100KB gzipped (fetch/browsers negotiate gzip automatically). This is far cheaper than 30 separate one-year requests (30 round-trips, 30× the request overhead, harder to reason about rate limits) and *dramatically* cheaper than requesting hourly data for the range (24× the row count for no benefit, since `temperature_2m_mean` is already a supported daily aggregate).
-
-**Example:**
-```typescript
-// weather/client.ts
-async function getHistoricalRange(lat: number, lng: number, endDate: string) {
-  const start = subtractYears(endDate, 30);
-  const url = new URL('https://archive-api.open-meteo.com/v1/archive');
-  url.searchParams.set('latitude', String(lat));
-  url.searchParams.set('longitude', String(lng));
-  url.searchParams.set('start_date', start);
-  url.searchParams.set('end_date', endDate);
-  url.searchParams.set('daily', 'temperature_2m_mean,temperature_2m_max,temperature_2m_min');
-  url.searchParams.set('timezone', 'auto'); // location-local calendar days matter for "today"
-  const res = await fetch(url);
-  return res.json(); // { daily: { time: [...], temperature_2m_mean: [...], ... } }
-}
-```
-
-### Pattern 2: Two endpoints, not one — forecast for "now," archive for "normal"
-
-**What:** Use `/v1/forecast` (with `current=temperature_2m,...`) for today's live reading, and `/v1/forecast?past_days=N&daily=...` for the recent-days trend series. Use `/v1/archive` *only* for the 30-year baseline. Do not try to get "today" from the archive endpoint.
-
-**When to use:** Always — this is a correctness requirement, not just an optimization.
-
-**Trade-offs:** The archive/reanalysis dataset (ERA5) has a ~5–7 day processing lag, so it cannot answer "what's the weather right now." The forecast endpoint's `past_days` data is itself blended from past model runs (not raw station observations), so it's a reasonable proxy for "recent actual conditions" but isn't perfectly identical to what the eventual reanalysis will say — acceptable for a "is today unusual" consumer app, not for scientific-grade backfill.
-
-**Example:**
-```typescript
-async function getCurrentAndRecent(lat: number, lng: number) {
-  const url = new URL('https://api.open-meteo.com/v1/forecast');
-  url.searchParams.set('latitude', String(lat));
-  url.searchParams.set('longitude', String(lng));
-  url.searchParams.set('current', 'temperature_2m');
-  url.searchParams.set('daily', 'temperature_2m_mean,temperature_2m_max,temperature_2m_min');
-  url.searchParams.set('past_days', '10'); // covers the "recent trend" window
-  url.searchParams.set('timezone', 'auto');
-  return (await fetch(url)).json();
-}
-```
-
-### Pattern 3: Read-through client cache keyed on (rounded location, day-of-year)
-
-**What:** Before calling `/v1/archive`, check a local cache keyed by `{latRounded},{lngRounded},{dayOfYear}` (round lat/lng to ~2 decimal places, which roughly matches Open-Meteo's own model grid resolution of ~9–25km, so extra precision buys no accuracy anyway). Cache the *computed* `{mean, stddev, n}` — not the raw 30-year series — with a long TTL (e.g. 7–30 days; the baseline realistically only shifts once a year when a new year's data rolls in).
-
-**When to use:** Always for the baseline; skip for current conditions and recent trend (those must stay fresh, short/no cache).
-
-**Trade-offs:** `localStorage`/`IndexedDB` are per-browser, so this only helps *repeat visits from the same user/device* (fits the stated "recurring check of one go-to location" usage pattern well). It does nothing to reduce redundant Open-Meteo calls *across different users* hitting the same location — that's what the optional edge-cache pattern below is for.
-
-## Data Flow
-
-### Request Flow (pin drop → full dashboard)
+### Data Flow (as-built)
 
 ```
-User drops pin (lat, lng)
-    ↓
-URL updated (?lat=..&lng=..) — makes the view shareable, no state needed elsewhere
-    ↓
-┌─────────────────────────┬─────────────────────────────┬───────────────────────────┐
-│ getCurrent(lat,lng)      │ getRecentDaily(lat,lng)      │ getHistoricalRange(lat,lng)│
-│ → /v1/forecast?current=  │ → /v1/forecast?past_days=N   │ → cache check first,       │
-│                           │   &daily=temp_mean,max,min   │   else /v1/archive         │
-│                           │                               │   (30y daily range)        │
-└──────────┬───────────────┴───────────────┬───────────────┴─────────────┬─────────────┘
-           ▼                               ▼                             ▼
-   today's live temp              array of last N days'          filter to target day(s)
-                                    daily mean/max/min             of year across 30 years
-                                            │                             │
-                                            ▼                             ▼
-                                   for each recent day,           compute mean, stddev
-                                   look up (or interpolate)        per calendar day
-                                   that day-of-year's baseline
-                                            │                             │
-                                            └──────────────┬──────────────┘
-                                                            ▼
-                                                    Anomaly Engine
-                                            z = (today − mean) / stddev
-                                            delta = today − mean
-                                                            ▼
-                                     Current Conditions Card / Anomaly Summary
-                                     Trend Chart (anomaly per recent day)
-                                     Historical Range Chart (today vs distribution)
+useSelectedLocation(lat,lng) ─┬─→ useReverseGeocode(lat,lng)      → LocationDisplay
+                               ├─→ useCurrentWeather(lat,lng)      → tempC, recentDaily (7-day forecast-API series)
+                               └─→ useHistoricalBaseline(lat,lng,  → daily: DailySeries { time[], values[] }
+                                     'temperature_2m_mean')             (FULL 30-complete-year archive series,
+                                                                          every element individually dated)
+
+App.tsx combines both resolved hooks (D-09 gate) →
+  computeAnomalyForToday(baseline.daily, current.localDate, current.tempC) → anomaly {delta, zScore, verdictTier}
+  computeTrendDay(baseline.daily, dateStr, actualTemp) × 7                 → TrendDayResult[]
+
+Both computeAnomalyForToday and computeTrendDay funnel through the SAME
+filterDayOfYearWindow(daily, month, day, startYear, endYear, halfWidthDays=5)
+which FLATTENS matching dates across ALL requested years into one
+`number[]` — per-sample year/date is discarded at this step.
 ```
 
-### State Management
+**Critical fact for this milestone:** `useHistoricalBaseline`'s `DailySeries` already carries the full-resolution archive (`time: string[]` with real `YYYY-MM-DD` dates, one entry per day across all ~30 years) — nothing about the *fetch* layer is a bottleneck. The flattening (and loss of per-sample year) happens one layer up, in `filterDayOfYearWindow`/`computeTrendDay` inside `anomaly.ts`. This distinction drives the violin data-shape answer below.
+
+## New Architecture (v1.2 target)
+
+### Component Tree (target)
 
 ```
-Selected location (lat, lng)   ←→   URL query params (source of truth, shareable)
-        │
-        ▼ (triggers re-fetch on change)
-Weather data (current / recent / baseline)   — local component/query-cache state
-        │
-        ▼ (derived, not stored)
-Anomaly results (z-score, delta, trend series) — computed on the fly from the above,
-                                                   never persisted
+App.tsx                                      (unchanged: still owns the 3 hooks + the two compute calls)
+ └─ LocationPanel  (<aside>, still owns --anomaly-color + isNight; layout reflows to a panel grid)
+     ├─ PanelHeadline / PanelShell (NEW, shared)  — generalizes TrendRow's existing
+     │     "Last 7 Days" eyebrow-label pattern into one reusable wrapper so all
+     │     four panels get consistent headline + glass-surface chrome without
+     │     re-copy-pasting the `bg-glass-surface border ... rounded-glass-lg
+     │     shadow-glass backdrop-blur-lg` class soup a 5th time.
+     │
+     ├─ LocationDisplay        (MODIFIED — gains a "Location" eyebrow via PanelShell;
+     │                           4-branch logic unchanged)
+     │
+     ├─ CurrentConditionsCard  (NEW — extracted from AnomalyCard's resolved branch,
+     │                           part 1: today's temp + existing "i" info button.
+     │                           "Current conditions" eyebrow headline.)
+     │
+     ├─ DeltaCard              (NEW — extracted from AnomalyCard's resolved branch,
+     │                           parts 2+3: Δ hero + verdict + z-score pill.
+     │                           "Delta" eyebrow headline. THIS is where the
+     │                           hero visual hierarchy must be preserved — see
+     │                           "Preserving hero hierarchy" below.)
+     │
+     ├─ MethodologySection     (NEW — collapsible, collapsed by default;
+     │                           native <details>/<summary> preferred over a
+     │                           hand-rolled disclosure, see Patterns below)
+     │
+     └─ TrendRow               (MODIFIED — "Last 7 Days" eyebrow becomes the
+           │                     "History" panel's headline, now delegates to
+           │                     the shared PanelShell instead of its own
+           │                     bespoke <section> markup; internal composition
+           │                     otherwise unchanged)
+           ├─ TrendYAxisColumn  (UNCHANGED — still one shared Y-axis column;
+           │                     yDomain math in trend.ts needs a small update,
+           │                     see Data Flow below, but the component itself
+           │                     doesn't change)
+           ├─ TrendDayChart × 7 (MODIFIED — internals rewritten: dot-strip
+           │                     Scatter + single mean ReferenceLine replaced
+           │                     by a mirrored split-violin custom shape, built
+           │                     from two KDE curves. Props stay similar in
+           │                     spirit (day, yDomain, units, isToday,
+           │                     showYAxis) but `day.samples` becomes two
+           │                     sub-period sample arrays — see Data Flow.)
+           └─ TrendLegend       (MODIFIED — swatches/copy must describe the two
+                                  violin halves instead of dot/line/diamond;
+                                  this is a content decision to flag for
+                                  planning, not an architecture decision — see
+                                  Open Questions.)
+
+DELETED: AnomalyCard.tsx (split into CurrentConditionsCard + DeltaCard)
 ```
 
-No global app state library is required for v1 — this is a small, mostly-derived data pipeline. A data-fetching library (TanStack Query / SWR) is a good fit even without a backend: it gives request de-duplication, in-memory caching, and loading/error states for free, on top of the localStorage layer for the baseline.
+### New vs Modified — quick reference
 
-### Key Data Flows
+| Component | Status | Change |
+|---|---|---|
+| `App.tsx` | Modified (minor) | Same 3 hooks, same 2 compute calls; renders the new panel set instead of `<AnomalyCard>`; passes MethodologySection static copy |
+| `LocationPanel.tsx` | Modified | Layout reflows from a flat stack to a panel grid that preserves Delta-as-hero (see below); still the sole owner of `--anomaly-color`/`isNight` |
+| `PanelShell` / `PanelHeadline` | **New** | Shared eyebrow-headline + glass-card chrome, generalized from `TrendRow`'s existing "Last 7 Days" label pattern |
+| `InfoAffordance` (button) | **New** (extracted) | Generalizes the existing inline `AnomalyCard` "i" button (title/aria-label tooltip) into one reusable component — now needed on 2-3 panels, not 1 |
+| `LocationDisplay.tsx` | Modified (light) | Adopts `PanelShell` headline wrapper; 4-branch logic untouched |
+| `AnomalyCard.tsx` | **Deleted** | Logic distributed into `CurrentConditionsCard` + `DeltaCard` |
+| `CurrentConditionsCard.tsx` | **New** | Today's temp + info button; reuses the SAME combined current+baseline loading/error gate `AnomalyCard` used (D-09) |
+| `DeltaCard.tsx` | **New** | Δ hero + verdict + z-score pill; same D-09 gate; owns the large hero typography |
+| `MethodologySection.tsx` | **New** | Collapsible, collapsed by default, static copy — no data dependency |
+| `TrendRow.tsx` | Modified (light) | Delegates its outer chrome to `PanelShell`; internal composition (axis column + 7 tiles + legend) unchanged |
+| `TrendDayChart.tsx` | Modified (major) | Rendering swapped from dot-strip Scatter to split-violin custom shape |
+| `TrendYAxisColumn` | Unchanged | Still a bare shared Y-axis; only the *domain* calculation it's fed changes |
+| `TrendLegend.tsx` | Modified (content) | New swatches/copy describing violin halves |
+| `src/app/trend.ts` | Modified (major) | Gains violin geometry helpers; `computeSharedYDomain` needs to flatten two sub-period arrays instead of one |
+| `src/anomaly/anomaly.ts` | Modified (major) | Gains a recent/prior sample-partitioning function; `computeTrendDay`'s return shape changes |
+| `src/anomaly/types.ts` | Modified | `TrendDayResult`'s `usable: true` variant gains `recentSamples`/`priorSamples` (see Data Flow) |
+| **New pure module** (e.g. `src/anomaly/kde.ts`) | **New** | Hand-rolled Gaussian KDE — pure math, no component/chart knowledge |
 
-1. **Location → current conditions:** lat/lng → single `/v1/forecast` call with `current=` param → direct render, no computation needed. Simplest flow, good first vertical slice.
-2. **Location → 30-year baseline:** lat/lng + target date → cache lookup (miss → one wide `/v1/archive` call spanning 30 years, filtered/aggregated client-side to the target calendar day ± window) → `{mean, stddev, n}` → combined with today's reading → z-score + delta. This is the core value flow and the one most worth getting right early.
-3. **Location → recent trend:** lat/lng → `/v1/forecast?past_days=N` for actual recent daily values, **plus** the same baseline machinery from flow #2 applied per day-of-year in that window (either reuse one archive call covering a slightly wider window of calendar days, or reuse the cached per-day baseline from flow #2 if the trend window overlaps today) → array of per-day anomalies → trend chart. Depends on both flow #1's fetch pattern and flow #2's baseline math.
+## Panel Restructuring: Preserving Delta-as-Hero Across the Split
 
-## Caching Strategy
+The current single `AnomalyCard` gets its hero effect for free from typography alone (the Δ line is `text-display * 1.7`, sitting directly below the current-temp line, inside one card). Splitting into two sibling panels removes that automatic "biggest number in the card" effect — hierarchy now has to be established at the **layout** level, not just the type-scale level.
 
-| Layer | What's cached | Where | TTL | Solves |
-|-------|---------------|-------|-----|--------|
-| Browser cache (v1, ship this) | Computed baseline `{mean, stddev, n}` per (rounded lat/lng, day-of-year) | `localStorage`/`IndexedDB` | Long (days–weeks) — baseline is stable | Repeat visits by the same user to the same/nearby location don't re-fetch 30 years of data |
-| In-memory request cache (v1, ship this) | All three fetches, deduped per render cycle | TanStack Query/SWR cache | Minutes for current/recent, longer for baseline | Avoids duplicate in-flight requests when multiple components need the same data |
-| HTTP cache headers (free, no extra infra) | Raw Open-Meteo responses | Browser HTTP cache, respects Open-Meteo's own `Cache-Control`/CDN headers | Server-controlled | Free win with zero app code — Open-Meteo already runs its own CDN-cached read path |
-| Edge KV cache (v2, only if needed) | Computed baseline stats, shared across *all* users of the deployed app | Cloudflare Workers KV (free tier: 100k reads/day, 1k writes/day, 1GB storage) or Vercel Edge Config/KV, fronted by a Worker/Edge Function | Weeks | Cross-user redundancy: if the app gets real traffic and many different users check the same handful of popular cities, an edge cache means only the *first* user per (location, day) pays the 30-year archive round-trip; also shrinks payload sent to the client from ~100s of KB (raw series) to a few hundred bytes (just the stats) |
+Recommended approach (a `LocationPanel` layout concern, not a new component behavior):
 
-**Recommendation:** Ship v1 with only the browser-side caching (rows 1–3 in the table) — it requires no backend, satisfies the free-hosting/no-persistence constraints trivially, and is more than sufficient for the stated usage pattern (a single user's recurring + ad-hoc lookups). Add the edge KV layer (row 4) only if/when real usage shows either (a) Open-Meteo's shared rate limit becoming a concern, or (b) enough shared/popular locations that server-side caching would meaningfully cut redundant large payloads. Because `weather/client.ts` is the sole integration boundary (see Recommended Project Structure), this upgrade is a localized change, not a rewrite.
+- Arrange the panel grid asymmetrically, not as four equal tiles:
+  - **Top row (compact, "meta" tier):** Location + Current Conditions, side by side, standard panel sizing (same as today's `LocationDisplay`/pre-split card sizing).
+  - **Hero row:** Delta panel, full-width (or clearly larger), keeping its existing oversized `text-display*1.7` Δ number, the `--anomaly-color` text color, and the Δ glyph — i.e., carry every existing hero-affirming visual choice (see PROJECT.md Key Decisions: "Hero delta led with a Δ glyph") over unchanged into `DeltaCard`, just now as its own panel rather than a sub-section.
+  - **Bottom row:** History (TrendRow), full-width, as today.
+- The panel-level `--anomaly-color` wash on the whole `<aside>` backdrop still ties all four panels together as "about this one anomaly," so hero-ness isn't lost even though Delta is now a sibling — the shared backdrop plus the oversized/colored Delta panel together preserve the hierarchy that used to live inside one card.
+- Do **not** try to preserve hierarchy by shrinking `CurrentConditionsCard`'s font below its current size — its current-temp number should stay legible; hierarchy comes from **panel size/placement**, not from making the secondary panel illegible.
 
-## Scaling Considerations
+This is a layout decision for `LocationPanel.tsx` (and possibly a light CSS grid `grid-template-areas`), not a new data flow — no hook or compute-layer change is implied by the panel split itself.
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| Single user / demo (this project's actual scale) | Fully static SPA, client-only fetch + localStorage cache. Zero backend. |
-| Modest shared traffic (a few hundred users/day) | Still fine client-only; Open-Meteo's 10k/day, 5k/hour, 600/min free limits are shared across all your app's users collectively (no per-user key), so watch aggregate volume if traffic grows — each pin-drop costs 2–3 Open-Meteo calls. |
-| Heavier shared traffic / many users hitting the same popular cities | Introduce the optional edge KV cache proxy described above so repeat lookups for the same location/day are served from your own edge cache instead of re-hitting Open-Meteo, keeping the app comfortably inside the free non-commercial rate limits. |
+## Methodology Section & Info Affordances: Mount Points
 
-### Scaling Priorities
+- **Info affordances** (per-panel micro-copy): each lives *inside* the panel it explains — this is already the established pattern (`AnomalyCard`'s existing "i" button lives inside the card it annotates, wired to a native `title`/`aria-label`, no tooltip library). Extend the same inline-button pattern to `CurrentConditionsCard` (data-quality copy, already exists — carries over verbatim) and `DeltaCard` (new copy explaining delta vs. z-score). No new mount point needed — this is purely "more of the same pattern, in more places."
+- **Methodology section**: this is page-level, not panel-level — it explains the whole anomaly computation, not one stat. Mount it as the **last child** in `LocationPanel`'s children stack, below `TrendRow`/History — i.e., a closing disclosure at the foot of the panel column, consistent with "collapsed by default" (it shouldn't compete with or push down the four headlined panels on first paint). It has **no data dependency** — static copy only — so it can be built and tested in complete isolation from the hooks/compute layer, and doesn't block or get blocked by anything else in this milestone.
+- Prefer a native `<details>`/`<summary>` element for the collapsible behavior over a hand-rolled `useState` toggle + conditional render: it's free accessibility (keyboard toggle, screen-reader state, no JS state to wire), matches the project's existing "hand-roll only what needs custom behavior" ethos, and Tailwind can style `<summary>`'s marker via `[&::-webkit-details-marker]` / `list-none` utilities without a dependency.
 
-1. **First bottleneck:** Open-Meteo's *shared, keyless* rate limit (600 calls/minute across all your app's simultaneous users) — not a browser or hosting limit. The mitigation is the edge KV cache proxy, not "more servers."
-2. **Second bottleneck (unlikely at this project's stated scale):** Archive response payload size if the baseline window or number of variables requested grows significantly — mitigated by only requesting `daily` aggregates (never `hourly`) and only the variables actually needed (temperature only, per v1 scope).
+## Split-Violin: Where KDE/Geometry Computation Lives
 
-## Anti-Patterns
+The project already has an established two-layer separation for chart logic, and the violin work should extend it rather than invent a third pattern:
 
-### Anti-Pattern 1: Fetching hourly data for the 30-year range
+| Layer | Existing example | New responsibility for violins |
+|---|---|---|
+| **Pure statistics** — `src/anomaly/anomaly.ts` (+ new `src/anomaly/kde.ts`) | `mean`, `sampleStdDev`, `computeAnomaly`, `filterDayOfYearWindow` | A **hand-rolled Gaussian KDE** function (`estimateDensity(samples, evalPoints, bandwidth)` or similar) — pure math, no knowledge of pixels/SVG/Recharts. Also a new **sample-partitioning** step (recent-5yr vs prior-25yr), see below. |
+| **Chart geometry** — `src/app/trend.ts` | `jitterX`, `buildHistoricalPoints`, `computeSharedYDomain`, `formatSlotLabel` | A new `buildViolinPaths(recentDensity, priorDensity, yDomain, chartWidth)`-style helper that turns two density curves into mirrored SVG polygon/path coordinates ready for Recharts' custom-shape prop — the exact same "raw stats in, pixel-ready shape out" contract `buildHistoricalPoints` already fulfills for the dot-strip today. |
+| **Rendering** — `TrendDayChart.tsx` | `historicalDotShape`, `makeActualShape` (custom Recharts `shape` functions) | A new `violinShape`/`splitViolinShape` custom shape function that receives already-computed path data and renders `<polygon>`/`<path>` — mirrors the existing pattern exactly; **no KDE math or partitioning logic belongs in this file.** |
 
-**What people do:** Request `hourly=temperature_2m` across a 30-year date range to "have all the raw data" for computing daily means themselves.
-**Why it's wrong:** 30 years of hourly data is ~24× the row count of daily data for no benefit — Open-Meteo's archive API already exposes `temperature_2m_mean/max/min` as first-class daily aggregation parameters, computed server-side.
-**Do this instead:** Request `daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min` directly (Pattern 1 above).
+**Do not add a violin-plot or KDE npm dependency.** This mirrors the project's existing "hand-roll, don't add a dependency" stance (already applied to `mean`/`sampleStdDev` instead of `simple-statistics`, per CLAUDE.md/STACK.md) and Recharts has no built-in violin chart type — a custom SVG shape fed by hand-rolled KDE is the natural, lowest-risk extension of a pattern that's already proven twice in this codebase (`historicalDotShape`, `makeActualShape`).
 
-### Anti-Pattern 2: Making 30 separate one-year (or one-day-per-year) API calls to build the baseline
+### Data-Shape Assessment: Is a Change Needed?
 
-**What people do:** Loop over each of the last 30 years, calling `/v1/archive` once per year (or once per exact calendar date) to "just get that one day."
-**Why it's wrong:** 30 round-trips instead of 1, hits per-minute rate limits faster, harder error handling (partial failures across 30 requests), and no meaningful payload savings versus one wide range call.
-**Do this instead:** One `/v1/archive` call spanning the full 30-year range, filtered/aggregated client-side (Pattern 1).
+**Two different layers, two different answers:**
 
-### Anti-Pattern 3: Using the archive/reanalysis endpoint for "today"
+- **The data-*fetching* layer (`useHistoricalBaseline`, `client.ts`, `DailySeries`) needs NO change.** The archive endpoint already returns, and the hook already exposes, the complete un-flattened 30-year daily series with real per-day date strings in `daily.time` — every sample's year is recoverable today, with zero new fetches. This matches CLAUDE.md's own note that "the Open-Meteo archive endpoint already returns the full daily series used for the 30-year baseline."
 
-**What people do:** Try to get today's live reading from `/v1/archive` since "it's the historical data source."
-**Why it's wrong:** ERA5 reanalysis data used by the archive endpoint has a ~5–7 day processing lag; "today" simply isn't in that dataset yet.
-**Do this instead:** Use `/v1/forecast`'s `current` parameter for live conditions, and `past_days` for the recent-trend window (Pattern 2).
+- **The pure-math layer (`anomaly.ts`/`types.ts`) DOES need a shape change**, specifically:
+  - `filterDayOfYearWindow(daily, month, day, startYear, endYear, halfWidthDays)` itself needs **no signature change** — it already accepts an arbitrary `[startYear, endYear]` sub-range and can be called twice (once for `[endYear-4, endYear]`, once for `[startYear, endYear-5]`) to get the two sub-period sample arrays. This is the cheapest possible path — reuse, don't rewrite, the existing windowing function.
+  - `computeTrendDay`'s return shape **does need to change**: today it collapses everything into one flat `samples: number[]`. It needs to instead produce two arrays — e.g. `recentSamples: number[]` (last 5 years) and `priorSamples: number[]` (prior 25 years) — while the existing `hasUsableSampleCount` gate should still evaluate against the *combined* sample count (today's usability threshold shouldn't get stricter just because the display changed).
+  - `TrendDayResult` (`types.ts`)'s `usable: true` variant needs the same shape change: `samples: number[]` → `recentSamples: number[]; priorSamples: number[]` (keep `mean`/`actual` as-is for the overall 30-yr reference, or add per-half means if the violin wants a peak/median tick per half — a planning-time call, not an architecture blocker).
+  - Downstream, `computeSharedYDomain` (`trend.ts`) currently does `day.usable ? [...day.samples, day.actual, day.mean] : []` — this needs to flatten `[...day.recentSamples, ...day.priorSamples, day.actual, day.mean]` instead. Small, mechanical, but a required ripple.
 
-### Anti-Pattern 4: Building a backend/database before it's needed
+**Bottom line for planning:** this is a real, contained data-shape change confined entirely to the pure-math layer (`anomaly.ts`, `types.ts`) plus one line in `trend.ts` — it does not require touching `useHistoricalBaseline`, `useCurrentWeather`, or any network/client code, and does not require a second API fetch. The existing 30-year archive fetch is already sufficient; only how it's *sliced* changes.
 
-**What people do:** Reach for a Node/Express server, a database to "store" locations or cached results, and a hosting platform that runs a persistent server, because "a real app needs a backend."
-**Why it's wrong:** Violates the project's own constraints (no accounts, no server-side persistence, free-tier-friendly) and adds hosting cost/complexity for zero benefit at this project's scale — Open-Meteo is CORS-enabled and keyless specifically so client-only apps like this one don't need a proxy.
-**Do this instead:** Static SPA for v1; add a *stateless* edge function + KV cache only later, and only as a caching optimization, not a data store.
+## Data Flow (target)
+
+```
+useHistoricalBaseline(lat,lng,'temperature_2m_mean') → daily: DailySeries  (UNCHANGED)
+                                                            │
+                              ┌─────────────────────────────┴─────────────────────────────┐
+                              │                                                             │
+                  computeAnomalyForToday(daily, ...)                          computeTrendDay(daily, dateStr, actual) × 7
+                  (UNCHANGED — still one flat 30yr window       (MODIFIED — internally calls filterDayOfYearWindow
+                   via filterDayOfYearWindow, for the Delta       TWICE per day: once for [endYear-4,endYear]
+                   panel's single z-score/delta)                 → recentSamples, once for [startYear,endYear-5]
+                              │                                   → priorSamples; still gates on combined
+                              │                                   hasUsableSampleCount)
+                              ▼                                             ▼
+                       DeltaCard                              TrendDayResult{ recentSamples, priorSamples, mean, actual }
+                                                                             │
+                                                          estimateDensity(recentSamples) / estimateDensity(priorSamples)
+                                                                     (NEW — src/anomaly/kde.ts)
+                                                                             │
+                                                          buildViolinPaths(recentDensity, priorDensity, yDomain, width)
+                                                                     (NEW — src/app/trend.ts)
+                                                                             │
+                                                                    TrendDayChart's violinShape
+                                                                     (MODIFIED — src/app/TrendDayChart.tsx)
+```
+
+## Patterns to Follow
+
+### Pattern 1: Shared eyebrow-headline wrapper, generalized from an existing pattern
+
+**What:** `TrendRow` already has exactly the "Last 7 days"-style headline this milestone wants everywhere else (`<p className="...uppercase tracking-[0.05em]">Last 7 Days</p>`). Extract it into a small shared `PanelShell`/`PanelHeadline` component (headline text + glass-card chrome classes) rather than copy-pasting the Tailwind class string into 4 different files.
+**When to use:** Any of the four resolved-view panels (Location, Current Conditions, Delta, History).
+**Trade-offs:** One more small component to maintain, but removes ~4x duplication of the same `bg-glass-surface border border-glass-border rounded-glass-lg shadow-glass backdrop-blur-lg` class chain, and guarantees visual consistency automatically instead of by convention.
+
+### Pattern 2: Statistics / geometry / rendering three-layer separation
+
+**What:** Pure stats (`anomaly/`) → pixel-ready geometry (`app/trend.ts`) → SVG rendering (`app/TrendDayChart.tsx`'s custom `shape` functions). Already established for the dot-strip; extend it for violins rather than computing KDE inline inside the component.
+**When to use:** Any new chart-geometry work in this codebase.
+**Trade-offs:** Slightly more indirection than "just compute it in the component," but keeps the math independently unit-testable with Vitest (matching the project's existing `anomaly.test.ts`/`trend.test.ts` split) without needing a DOM/jsdom render.
+
+### Pattern 3: Shared usability gate stays shared
+
+**What:** `hasUsableSampleCount` is deliberately the ONE place the "enough history?" threshold is defined, used by both today's-anomaly and every trend day (D-10 in the existing codebase). When adding recent/prior sub-sampling, keep evaluating usability against the **combined** sample count, not two independent (and now stricter) per-half thresholds — a day shouldn't newly become "not enough data" just because it was reorganized into two buckets.
+**When to use:** `computeTrendDay`'s modified return logic.
+**Trade-offs:** None — this is a straightforward continuation of an existing, already-validated decision (D-09/D-10), not a new trade-off.
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Computing KDE inside `TrendDayChart.tsx`
+
+**What people do:** Reach for `useMemo` inside the component and compute the density curve right where it's rendered, since "it's just for this chart anyway."
+**Why it's wrong:** Breaks the project's own established stats/geometry/render separation, makes the KDE math untestable without mounting a component (the project's existing `trend.test.ts` tests pure functions directly, no render needed), and couples statistical correctness to a file whose current header comment explicitly says "no auto-sizing container... jsdom has no ResizeObserver" — i.e., this file is already carrying rendering-environment constraints and shouldn't also carry math correctness risk.
+**Do this instead:** KDE math in `src/anomaly/kde.ts` (or extending `anomaly.ts`), unit-tested with Vitest exactly like `sampleStdDev`/`computeAnomaly` are today.
+
+### Anti-Pattern 2: Re-deriving "enough data" per sub-period
+
+**What people do:** Since the violin needs two sample arrays, gate each one (`recentSamples.length >= threshold`, `priorSamples.length >= threshold`) independently.
+**Why it's wrong:** Silently makes more days show "not enough data" than today (5 years' worth of daily samples in a ±5-day window is a much smaller pool than 30 years' worth), regressing a validated requirement (the existing 7-day trend row's usability gate, Validated in Phase 3) without anyone deciding to change that bar.
+**Do this instead:** Keep one combined `hasUsableSampleCount(recentSamples.length + priorSamples.length, totalYears)` gate for "is this day usable at all," matching the existing D-09/D-10 shared-gate decision; the KDE per half can still render on the visualization even if one half is thin, since a KDE degrades gracefully with fewer points (wider effective bandwidth) whereas the current dot-strip has no such graceful-degradation path.
+
+### Anti-Pattern 3: Building the four-panel split and the violin rewrite as one big change
+
+**What people do:** Since both touch "the resolved view," combine them into a single phase/PR for efficiency.
+**Why it's wrong:** They are architecturally independent subtrees (`LocationDisplay`/`CurrentConditionsCard`/`DeltaCard`/`MethodologySection` vs. `TrendRow`/`TrendDayChart`/`trend.ts`/`anomaly.ts`) with very different risk profiles — the panel split is a layout/extraction exercise with no data-shape change, while the violin work has a genuine data-shape change plus new math plus a rendering rewrite. Bundling them makes it hard to isolate which change caused a regression, and forces reviewers to evaluate a visual redesign and new chart math in the same pass.
+**Do this instead:** Sequence them as separate phases (see Build Order below).
 
 ## Integration Points
-
-### External Services
-
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Open-Meteo `/v1/forecast` | Direct browser `fetch()`, CORS-enabled, no key | Use for current conditions (`current=`) and recent-days trend (`past_days=` + `daily=`) |
-| Open-Meteo `/v1/archive` | Direct browser `fetch()`, CORS-enabled, no key | Use for the 30-year baseline only; one wide-range call per location, filtered client-side |
-| Open-Meteo `/v1/climate` (Climate API) | Not used | This is a climate-*projection* API (1950–2050 model output across 7 GCMs), not a normals/averages service — do not use it for the baseline despite the naming similarity |
-| Map tiles (for the pin picker) | Standard slippy-map tile provider (e.g. OpenStreetMap via Leaflet/MapLibre) | Separate concern from weather data; pick any free tile source with usage terms compatible with a public app |
-| Static hosting | Vercel/Netlify/Cloudflare Pages/GitHub Pages free tier | No backend needed for v1; all are equivalent for a pure static SPA |
-| (v2, optional) Cloudflare Workers + Workers KV | Edge function fronting Open-Meteo, caching computed baseline stats | Free tier: 100k reads/day, 1k writes/day, 1GB storage — comfortably covers this project's scale even under real growth |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
-|----------|---------------|-------|
-| Map/Pin Picker ↔ Weather layer | Location state (lat/lng) flows one-way, via URL params as source of truth | Selecting a pin is the only trigger for new data fetches |
-| Weather Client ↔ Anomaly Engine | Weather Client returns raw parsed API data; Anomaly Engine consumes it and returns pure computed results | Keep the boundary strict so anomaly math stays framework/network-free and unit-testable |
-| Anomaly Engine ↔ UI components | One-way, read-only view-models | UI never talks to Open-Meteo directly — always goes through `weather/client.ts` |
-| Local Cache ↔ Weather Client | Cache is a decorator/read-through layer in front of the archive call only | Current/recent calls stay uncached (or very short TTL) since freshness matters there |
+|---|---|---|
+| `App.tsx` ↔ new panel components | Props only (same shape as today's `AnomalyCard` props, split across `CurrentConditionsCard`/`DeltaCard`) | `App.tsx`'s hook/compute logic is untouched by the panel split — only which components it renders changes |
+| `LocationPanel.tsx` ↔ `--anomaly-color` | CSS custom property, unchanged | Still the single bridge point; `DeltaCard`'s hero text continues to read `var(--anomaly-color)` directly, exactly as `AnomalyCard` does today |
+| `anomaly.ts` ↔ `trend.ts` | Pure function calls, return-shape change | `computeTrendDay`'s new return shape (`recentSamples`/`priorSamples`) is the one contract change that ripples into `trend.ts` and `TrendDayChart.tsx` |
+| `trend.ts` ↔ `TrendDayChart.tsx` | Pure geometry data → custom Recharts `shape` prop | Same contract shape as today's `buildHistoricalPoints` → `historicalDotShape`, just carrying violin path data instead of jittered dot coordinates |
+
+## Recommended Build Order
+
+Given the dependency analysis above, sequence as three phases:
+
+1. **Panel restructuring** (Location / Current Conditions / Delta / History split + hero-hierarchy layout + info affordances)
+   - Lowest technical risk: no data-shape change, no new math, mechanical extraction of `AnomalyCard`'s existing branches into two components plus a new shared headline wrapper.
+   - Establishes the shared `PanelShell`/`PanelHeadline`/`InfoAffordance` primitives that the History panel (Phase 3) and Methodology section (Phase 2) both then adopt, so building this first avoids two later phases each inventing their own headline treatment.
+
+2. **Methodology section**
+   - Fully independent of Phases 1 and 3 (static copy, no data dependency) — could technically run in parallel with either, but sequencing it right after Phase 1 lets it reuse the collapsible/disclosure visual language established there, and keeps it out of the highest-risk phase (3).
+
+3. **Split-violin trend**
+   - Highest technical risk and the only phase with a real data-shape change (`computeTrendDay`/`TrendDayResult`) plus new pure math (KDE) plus a rendering rewrite (`TrendDayChart`). Sequencing it last means it lands on top of an already-settled panel shell (`TrendRow` just adopts `PanelShell` from Phase 1) rather than the panel work and the violin work touching overlapping files in the same window.
+   - Internally, build bottom-up: (a) `anomaly/kde.ts` density function + partitioning helper, unit-tested in isolation; (b) `trend.ts`'s `buildViolinPaths` geometry helper, unit-tested against known density inputs; (c) `TrendDayChart.tsx`'s new `violinShape` renderer; (d) `TrendLegend.tsx` content update last, once the actual visual marks it needs to describe exist.
+
+## Open Questions for Planning (not architecture blockers)
+
+- **TrendLegend copy:** PROJECT.md's v1.2 scope decisions note "the existing trend legend copy is reviewer-locked" — but the dot/line/diamond marks the current legend describes are exactly what the split-violin replaces. This is a content/product decision (what the new legend should say), not an architecture question; flag it for the phase that builds the violin so the new copy goes through the same reviewer round-trip the original legend copy did (per Key Decisions history).
+- **Per-half reference marks:** whether the violin needs a mean/median tick per half (recent vs. prior) in addition to the existing single 30-yr `mean` field, or whether the overall mean alone remains the reference line — affects `TrendDayResult`'s exact final field list but not the layer placement decided above.
 
 ## Sources
 
-- [Historical Weather API — Open-Meteo](https://open-meteo.com/en/docs/historical-weather-api) — official docs, daily parameter list (`temperature_2m_mean/max/min`), `/v1/archive` required params, ERA5/ERA5-Land coverage dates
-- [Climate API — Open-Meteo](https://open-meteo.com/en/docs/climate-api) — official docs, confirms this is a climate-*projection* API (1950–2050), not a normals/averages service
-- [Docs — Open-Meteo](https://open-meteo.com/en/docs) — official docs, `/v1/forecast` `current` param list, API-key-only-for-commercial note
-- [Pricing — Open-Meteo](https://open-meteo.com/en/pricing) — free-tier rate limits (10k/day, 5k/hour, 600/min)
-- [GitHub — open-meteo/open-meteo](https://github.com/open-meteo/open-meteo) — non-commercial free-use framing
-- [GitHub Issue #1480 — Clarification on past_days Data](https://github.com/open-meteo/open-meteo/issues/1480) — `past_days` returns past *forecast* runs, not raw observations; archive/reanalysis lag ~2–7 days depending on source
-- [Cloudflare Workers KV docs](https://developers.cloudflare.com/kv/) — free-tier limits and edge-caching pattern for expensive upstream API responses
-- Cross-verified via multiple independent third-party integration guides confirming Open-Meteo's CORS support for direct browser `fetch()` usage (no single canonical "CORS policy" page exists on Open-Meteo's own docs, so this is corroborated via community usage patterns rather than an explicit official statement)
+- Direct inspection of `.planning/PROJECT.md` (Current Milestone v1.2 requirements, Anomaly methodology, Trend view, Key Decisions) — HIGH confidence, ground truth for this project
+- Direct inspection of `src/app/App.tsx`, `LocationPanel.tsx`, `AnomalyCard.tsx`, `LocationDisplay.tsx`, `TrendRow.tsx`, `TrendDayChart.tsx`, `TrendLegend.tsx`, `trend.ts`, `trend.test.ts` — HIGH confidence, current component tree and rendering logic
+- Direct inspection of `src/anomaly/anomaly.ts`, `src/anomaly/types.ts` — HIGH confidence, confirms `filterDayOfYearWindow`'s flattening behavior and the exact data-shape gap for recent/prior partitioning
+- Direct inspection of `src/weather/useHistoricalBaseline.ts`, `client.ts`, `types.ts` — HIGH confidence, confirms the archive fetch already returns the full-resolution dated series (no fetch-layer change needed)
+- `package.json` — HIGH confidence, confirms no existing KDE/violin/statistics dependency, consistent with the project's "hand-roll, don't add a dependency" convention (CLAUDE.md)
 
 ---
-*Architecture research for: Weather Anomaly Dashboard (Open-Meteo, client-heavy static app)*
-*Researched: 2026-07-13*
+*Architecture research for: Weather Anomaly Dashboard v1.2 (UI Layout Redesign & Explanatory Legend)*
+*Researched: 2026-07-21*
