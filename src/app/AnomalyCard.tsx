@@ -87,7 +87,9 @@ export function AnomalyCard({
       <p
         style={{ color: 'var(--anomaly-color)' }}
         className="m-0 text-[calc(var(--text-display)*1.7)] font-bold leading-[1.1] motion-safe:transition-colors motion-safe:duration-300 motion-safe:ease-out"
+        aria-label={`Anomaly delta versus 30-year average: ${formatDelta(anomaly.delta)} degrees Celsius`}
       >
+        <span className="opacity-70">Δ</span>
         {formatDelta(anomaly.delta)}°C
       </p>
       <p className="m-0 text-heading font-heading">{verdictLabel(anomaly.verdictTier)}</p>
