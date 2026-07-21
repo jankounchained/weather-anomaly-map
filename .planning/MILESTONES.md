@@ -1,5 +1,29 @@
 # Milestones
 
+## v1.1 Tailwind Migration + Glass/Atmospheric Redesign (Shipped: 2026-07-21)
+
+**Phases completed:** 2 phases, 7 plans, 21 tasks
+**Delivered:** Restyled the dashboard onto Tailwind CSS v4 (CSS-first) and layered a cohesive glassy/atmospheric design language — anomaly-driven gradient backdrop, translucent glass surfaces, a color-coded anomaly-delta hero, and a re-themed trend chart — all within a disciplined-glass performance policy, with no feature or behavior changes.
+**Requirements:** 12/12 complete — STYLE-01..04, DESIGN-01..06, PERF-01..02
+**Timeline:** 2026-07-16 → 2026-07-21 · 18 files changed (+647 / −478)
+**Closeout:** override_closeout — see Known verification overrides below.
+
+**Key accomplishments:**
+
+- Installed Tailwind CSS v4 (tailwindcss@4.3.2 + @tailwindcss/vite@4.3.2) behind an approved supply-chain checkpoint, wired the Vite plugin, and rewrote src/index.css as the CSS-first Tailwind entry with all design tokens ported into @theme.
+- App shell, map region, LocationPanel, LocationDisplay (4 branches), and AnomalyCard (4 branches) rewritten from BEM classes to Tailwind v4 utilities, with the Leaflet map-container sizing preserved via an arbitrary-variant descendant selector.
+- Legacy App.css deleted, static/build/test gates all green, and human-confirmed visual equivalence of the Leaflet map and every component state vs v1.0 closes out the Tailwind v4 foundation migration
+- Continuous z-score-to-color RGB-lerp function, day/night axis, pin-local hour data signal, framed zero-delta copy, and the full glass/anomaly CSS token + `@property` + `.panel-backdrop` foundation that Wave-2 composition plans consume.
+- App-level anomaly color/day-night signal threaded into a CSS custom-property bridge on the docked LocationPanel (static gradient backdrop, night wash, motion-safe entrance transition), with LocationDisplay's four state branches restyled onto the shared translucent glass card — real backdrop-blur confined entirely to the panel, map region untouched.
+- AnomalyCard hero glass cards with a color-coded delta focal point + framed zero-delta, TrendRow glass card, and TrendDayChart placeholder re-themed onto the glass tokens — completing the hero-first, cohesive glass system across all surfaces.
+- Post-UAT polish (quick task 260721-dju): leading Δ on the hero delta (disambiguates it from current temperature), zero-width hidden per-tile trend YAxis to center each tile's marks, and a `prefers-reduced-motion`-gated transition on the `--anomaly-color` custom property to smooth the color entrance.
+
+### Known verification overrides
+
+- **Phase 5 (Glass / Atmospheric Redesign)** was verified via the conversational UAT path (`05-UAT.md`: 19/19 checkpoints passed, all 3 surfaced polish gaps fixed and re-confirmed in-app by the user) rather than a formal gsd-verifier `VERIFICATION.md`. All 8 of its requirements (DESIGN-01..06, PERF-01..02) are marked complete in the traceability table. No `v1.1-MILESTONE-AUDIT.md` was produced. Accepted as an override closeout at the user's direction on 2026-07-21.
+
+---
+
 ## v1.0 Weather Anomaly Dashboard MVP (Shipped: 2026-07-15)
 
 **Phases completed:** 3 phases, 13 plans, 28 tasks
