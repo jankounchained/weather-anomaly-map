@@ -14,6 +14,8 @@ import {
   anomalyColor,
   isDaytime,
   isAnomalyReady,
+  computePercentileRank,
+  percentileLabel,
 } from './anomaly'
 
 describe('mean', () => {
@@ -75,6 +77,44 @@ describe('verdictLabel', () => {
     expect(verdictLabel('typical')).toBe('Right on the 30-year average')
     expect(verdictLabel('slightly-warmer')).toBe('Slightly warmer than usual')
     expect(verdictLabel('much-warmer')).toBe('Much warmer than usual')
+  })
+})
+
+describe('computePercentileRank', () => {
+  it('ranks a value strictly below all samples near the bottom, clamped to 1 (PD-03)', () => {
+    expect(computePercentileRank(0, [10, 11, 12, 13])).toBe(1)
+  })
+
+  it('ranks a value strictly above all samples near the top, clamped to 99 (PD-03)', () => {
+    expect(computePercentileRank(100, [10, 11, 12, 13])).toBe(99)
+  })
+
+  it('applies the Hazen/midrank tie convention for an exact match (PD-02)', () => {
+    // today=10 matches exactly one of four samples: below=0, ties=1 -> (0+0.5)/4=12.5% -> round to 13
+    expect(computePercentileRank(10, [10, 20, 30, 40])).toBe(13)
+  })
+
+  it('reads ~50 for a value at the sample median (no ties)', () => {
+    expect(computePercentileRank(25, [10, 20, 30, 40])).toBe(50)
+  })
+})
+
+describe('percentileLabel', () => {
+  it('returns null (suppressed) when percentile is null (PD-04)', () => {
+    expect(percentileLabel(null)).toBeNull()
+  })
+
+  it('uses warmer framing above the 55 band boundary (PD-07)', () => {
+    expect(percentileLabel(56)).toBe('Warmer than 56% of years for this date.')
+  })
+
+  it('uses colder framing below the 45 band boundary (PD-07)', () => {
+    expect(percentileLabel(44)).toBe('Colder than 56% of years for this date.')
+  })
+
+  it('reads "around the middle" at both inclusive band boundaries (45 and 55)', () => {
+    expect(percentileLabel(45)).toBe('Around the middle for this date.')
+    expect(percentileLabel(55)).toBe('Around the middle for this date.')
   })
 })
 
@@ -190,6 +230,11 @@ describe('computeAnomalyForToday', () => {
     expect(result).not.toBeNull()
     expect(result!.delta).toBeCloseTo(25 - mean([18, 19, 20, 19, 20, 21]), 5)
     expect(result!.verdictTier).toBeDefined()
+    // PD-05: non-null zScore -> percentile is an integer clamped to [1, 99].
+    expect(result!.zScore).not.toBeNull()
+    expect(Number.isInteger(result!.percentile)).toBe(true)
+    expect(result!.percentile).toBeGreaterThanOrEqual(1)
+    expect(result!.percentile).toBeLessThanOrEqual(99)
   })
 
   it('returns zScore null with verdictTier "typical" for a degenerate (all-equal) baseline (Pitfall 2)', () => {
@@ -202,6 +247,8 @@ describe('computeAnomalyForToday', () => {
     expect(result).not.toBeNull()
     expect(result!.zScore).toBeNull()
     expect(result!.verdictTier).toBe('typical')
+    // PD-04: zScore null -> percentile is suppressed (null), not computed.
+    expect(result!.percentile).toBeNull()
   })
 
   it('returns null when the window yields fewer samples than half of the represented years', () => {

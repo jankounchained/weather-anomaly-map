@@ -62,6 +62,32 @@ export function verdictLabel(tier: VerdictTier): string {
   return VERDICT_LABEL[tier]
 }
 
+/** PD-01/PD-02/PD-05: empirical (Hazen/midrank) percentile rank of `today`
+ * within the SAME window `samples` computeAnomaly used - so today's
+ * percentile and today's z-score can never drift apart on which samples
+ * they rank against. Callers MUST only invoke this when the caller's own
+ * zScore is non-null (PD-04) - a zero-variance/all-tied sample set makes
+ * "below + ties/2" degenerate to a meaningless 50, so this function does
+ * NOT re-derive its own degeneracy check; it reuses computeAnomaly's
+ * existing signal instead (one shared definition, no duplicated guard). */
+export function computePercentileRank(today: number, samples: number[]): number {
+  const below = samples.filter((s) => s < today).length
+  const ties = samples.filter((s) => s === today).length
+  const raw = ((below + ties / 2) / samples.length) * 100
+  return Math.max(1, Math.min(99, Math.round(raw)))
+}
+
+/** PD-07: plain-language framing, symmetric +/-5-point median band per
+ * 07-UI-SPEC.md's Copywriting Contract. Returns null (render nothing) when
+ * `percentile` itself is null - PD-04 suppression, propagated one level up
+ * from computeAnomalyForToday. */
+export function percentileLabel(percentile: number | null): string | null {
+  if (percentile === null) return null
+  if (percentile > 55) return `Warmer than ${percentile}% of years for this date.`
+  if (percentile < 45) return `Colder than ${100 - percentile}% of years for this date.`
+  return 'Around the middle for this date.'
+}
+
 /** Whole-number °C delta with an explicit sign (D-06) - avoids implying
  * station-level decimal precision from what is actually modeled/reanalysis
  * data (Pitfall 4). */
@@ -243,6 +269,7 @@ export interface AnomalyForToday {
   delta: number
   zScore: number | null
   verdictTier: VerdictTier
+  percentile: number | null
 }
 
 /** Computes today's anomaly against the +/-5-day day-of-year baseline
@@ -265,7 +292,8 @@ export function computeAnomalyForToday(
 
   const { delta, zScore } = computeAnomaly(todayTemp, samples)
   const verdictTier = classifyVerdict(zScore ?? 0)
-  return { delta, zScore, verdictTier }
+  const percentile = zScore === null ? null : computePercentileRank(todayTemp, samples)
+  return { delta, zScore, verdictTier, percentile }
 }
 
 /** Computes one day's trend-chart input against the +/-5-day day-of-year
