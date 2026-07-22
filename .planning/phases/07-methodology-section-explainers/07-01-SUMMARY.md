@@ -135,3 +135,13 @@ None - no external service configuration required.
 ---
 *Phase: 07-methodology-section-explainers*
 *Completed: 2026-07-22*
+
+## Self-Check: PASSED
+
+- FOUND: src/anomaly/anomaly.ts
+- FOUND: src/anomaly/anomaly.test.ts
+- FOUND: src/app/DeltaPanel.tsx
+- FOUND: src/app/DeltaPanel.test.tsx
+- FOUND: .planning/phases/07-methodology-section-explainers/07-01-SUMMARY.md
+- FOUND commit: 9cb6673
+- FOUND commit: c5ff09a
