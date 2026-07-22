@@ -171,20 +171,23 @@ Legend layout (`flex flex-row flex-wrap gap-md`, `role="list"`) is unchanged; th
 
 ## UI Considerations
 
-Applicable state considerations resolved: 7 covered, 1 backstop, 0 unresolved.
+UI-probe verified (7 elements → 29 shape-rooted considerations): **19 covered, 1 backstop, 0 unresolved**, plus 9 probe-proposed categories dismissed as out-of-scope (see note). The probe confirmed the researcher-authored coverage below — no new gaps surfaced.
 
 | Category | Element(s) | Status | Resolution / Reason |
 |----------|------------|--------|---------------------|
 | populated (happy path) | Per-day tile, both halves ≥ n_min | ✅ covered | Dual-curve render is the default path — spike-verified real per-half sizes are always ≈55 (recent) / ≈275 (prior), both well above `n_min=20`; ERA5 has no data deserts. Geometry fully specified above. |
-| populated / partial | Per-day tile, ONE half < n_min | ✅ covered | Thin half degrades to rug (PD-01); healthy half still draws its curve. Geometry, tokens, and accessible title specified above. Spike-confirmed this is a rare defensive path, not the common case — design still fully resolved so it never looks broken if it fires. |
-| populated / partial | Per-day tile, BOTH halves < n_min | ✅ covered | Dual rug (PD-02); shared Y-axis still comparable across days. Same rug styling both sides — reads as "no curve today," not an error. |
+| partial | Per-day tile, ONE half < n_min | ✅ covered | Thin half degrades to rug (PD-01); healthy half still draws its curve. Geometry, tokens, and accessible title specified above. Spike-confirmed this is a rare defensive path, not the common case — design still fully resolved so it never looks broken if it fires. |
+| partial | Per-day tile, BOTH halves < n_min | ✅ covered | Dual rug (PD-02); shared Y-axis still comparable across days. Same rug styling both sides — reads as "no curve today," not an error. |
 | empty (per-tile) | Per-day tile, zero samples (true data desert) | ✅ covered | Existing bordered "Not enough data" placeholder, verbatim copy/styling, governed by the unchanged `hasUsableSampleCount` gate (PD-03) — untouched by this phase. |
-| overflow | Violin curve vs. tile frame | ✅ covered | Curve grid clamped to each half's own sample min/max (not the full padded domain) plus an 8px edge gutter (`maxHalfWidth`) — tail never touches the tile border. See Violin Geometry & Marks Contract. |
-| long-text | Mean-tick / diamond / rug native `<title>` tooltips | ✅ covered | All tooltip strings are short, bounded, single-line native SVG `<title>` text with fixed format patterns (no dynamic long strings, no user-authored content this phase). |
-| zero-one-many | 7-tile row structure | ✅ covered | Unchanged from Phase 6 — always exactly 7 fixed daily slots; only each tile's internal marks change this phase. |
-| populated | Legend (`TrendLegend`) | 🧪 backstop | Draft copy provided above (5 items) is functionally complete, but PD-10 explicitly requires a reviewer copy round-trip before the wording is final — exact strings are NOT locked by this UI-SPEC. At verify time, treat legend copy as needing explicit reviewer sign-off evidence, not a silent pass. |
+| overflow | Violin curve, mean ticks, actual diamond, placeholder, Y-axis — all vs. their frame | ✅ covered | Curve grid clamped to each half's own sample min/max (not the full padded domain) plus an 8px edge gutter (`maxHalfWidth`) — tail never touches the tile border. Mean tick (29px), diamond (5px), and axis (`AXIS_WIDTH=40px`) are all fixed-size marks that cannot overflow. See Violin Geometry & Marks Contract. |
+| long-text | Mean-tick / diamond / placeholder native `<title>` tooltips + Y-axis tick labels | ✅ covered | All strings are short, bounded, single-line native SVG `<title>` text or numeric axis labels with fixed format patterns (no dynamic long strings, no user-authored content this phase). |
+| zero-one-many | 7-tile row + within-tile sample count | ✅ covered | Row is always exactly 7 fixed daily slots (unchanged Phase 6). Within a tile, sample count resolves to curve (many) / rug dots (few) / placeholder (zero) — no singular/plural copy variance anywhere. |
+| populated | 7-tile row structure | ✅ covered | Each of the 7 tiles renders its marks; row layout + shared Y-axis unchanged from Phase 6, directly comparable across days. |
+| populated (copy) | Legend (`TrendLegend`) | 🧪 backstop | Draft copy provided above (5 items) is functionally complete, but PD-10 explicitly requires a reviewer copy round-trip before the wording is final — exact strings are NOT locked by this UI-SPEC. **Statement:** the 5-item legend renders with swatches matching the surviving marks. **Verification:** backstop — at verify time, treat legend copy as needing explicit reviewer sign-off evidence, not a silent pass. |
 
-Panel-level states (no-selection / loading / whole-row error / empty-array) are **unchanged carry-overs from `06-UI-SPEC.md`** — already covered there, not re-litigated here (Phase 6 PD-08: those four branches are STABLE; only the populated chart-internals block changes in Phase 8).
+**Dismissed as out-of-scope (probe-proposed, not applicable this phase):**
+- **loading / error / whole-row empty on the chart internals** (per-day tile, 7-tile row) — these are panel-level states owned by `TrendRow`'s four top-level branches (no-selection / loading / whole-row error / empty-array), which are **STABLE carry-overs from `06-UI-SPEC.md`** (Phase 6 PD-08). This phase only rebuilds the populated chart-internals block; those branches are not re-litigated here.
+- **empty / loading / error / partial on the legend** — the legend is a static, fixed 5-item list rendered synchronously with the chart; it has no async load, no data-driven emptiness, and never renders a partial subset, so those states cannot occur.
 
 ---
 
@@ -198,11 +201,11 @@ Panel-level states (no-selection / loading / whole-row error / empty-array) are 
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED — 6/6 dimensions passed (gsd-ui-checker). One item carried as backstop: legend copy (PD-10) requires a reviewer copy round-trip before final; verify time must show explicit reviewer sign-off, not a silent pass.
