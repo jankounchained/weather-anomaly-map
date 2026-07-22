@@ -4,9 +4,9 @@ milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
 current_phase: 6
 current_phase_name: Panel Restructure & Hierarchy
-status: planning
+status: executing
 stopped_at: Phase 6 context gathered
-last_updated: "2026-07-22T08:52:28.772Z"
+last_updated: "2026-07-22T09:38:58.408Z"
 last_activity: 2026-07-21
 last_activity_desc: v1.2 roadmap created (3 phases, 10/10 requirements mapped)
 progress:
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-21)
 
 Phase: 6 of 8 (Panel Restructure & Hierarchy) — first phase of v1.2
 Plan: — (not yet planned)
-Status: Ready to plan
+Status: Ready to execute
 Last activity: 2026-07-21 — v1.2 roadmap created (3 phases, 10/10 requirements mapped)
 
 Progress: [░░░░░░░░░░] 0%
@@ -75,6 +75,7 @@ None tracked for v1.2 yet.
 
 - [Phase 8] Reviewer-locked trend legend describes dot/line/diamond marks the violin replaces — requires an explicit reviewer copy round-trip, not a silent rewrite.
 - [Phase 8] Per-half KDE sample-size floor (n_min ~15-20) unresolved and width-normalization (equal-width vs n-scaled) undecided — pin empirically in the Phase 8 spike before implementation.
+- [Phase 6] Decision-coverage plan gate overridden at planning (false positive): `06-CONTEXT.md` uses `PD-NN` decision ids (deliberate — avoids colliding with the codebase's own `D-NN` ids), but the gate parser only recognizes `D-NN`, so it reported 0/0. The plan-checker independently verified all of PD-01..PD-10 are cited across the plans, so no decision was actually dropped. Phases 7 & 8 reuse the `PD-` convention and will trip the same gate.
 
 ## Deferred Items
 
