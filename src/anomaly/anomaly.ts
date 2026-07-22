@@ -167,6 +167,42 @@ export function filterDayOfYearWindow(
   return result
 }
 
+/** Shared year-range/windowed-sample computation (IN-02): parses
+ * targetMonth/targetDay from `dateStr`, derives years/startYear/endYear
+ * from `daily.time`, and calls filterDayOfYearWindow - the ONE shared
+ * definition of this setup so computeAnomalyForToday and computeTrendDay
+ * can never drift apart on it, mirroring hasUsableSampleCount's own
+ * "ONE shared definition" treatment (D-10). Returns null when `daily.time`
+ * has no parseable years - callers can no-op the same way computeAnomaly
+ * ForToday's early `years.length === 0` return did previously. */
+export function computeWindowSamples(
+  daily: { time: string[]; values: (number | null)[] },
+  dateStr: string,
+  halfWidthDays = 5,
+): { samples: number[]; totalYears: number } | null {
+  const parts = dateStr.split('-')
+  const targetMonth = Number(parts[1])
+  const targetDay = Number(parts[2])
+
+  const years = daily.time
+    .map((t) => Number(t.slice(0, 4)))
+    .filter((y) => Number.isFinite(y))
+  if (years.length === 0) return null
+  const startYear = Math.min(...years)
+  const endYear = Math.max(...years)
+
+  const samples = filterDayOfYearWindow(
+    daily,
+    targetMonth,
+    targetDay,
+    startYear,
+    endYear,
+    halfWidthDays,
+  )
+
+  return { samples, totalYears: endYear - startYear + 1 }
+}
+
 /** Single "usable history" gate (D-09/D-10): operationalizes D-09's "at
  * least half of the ~30 years must have real values" as a sample-count
  * floor. ERA5 archive coverage is effectively all-or-nothing per location
@@ -222,26 +258,10 @@ export function computeAnomalyForToday(
   todayTemp: number,
   halfWidthDays = 5,
 ): AnomalyForToday | null {
-  const parts = localDate.split('-')
-  const targetMonth = Number(parts[1])
-  const targetDay = Number(parts[2])
-
-  const years = daily.time
-    .map((t) => Number(t.slice(0, 4)))
-    .filter((y) => Number.isFinite(y))
-  if (years.length === 0) return null
-  const startYear = Math.min(...years)
-  const endYear = Math.max(...years)
-
-  const samples = filterDayOfYearWindow(
-    daily,
-    targetMonth,
-    targetDay,
-    startYear,
-    endYear,
-    halfWidthDays,
-  )
-  if (!hasUsableSampleCount(samples, endYear - startYear + 1)) return null
+  const window = computeWindowSamples(daily, localDate, halfWidthDays)
+  if (window === null) return null
+  const { samples, totalYears } = window
+  if (!hasUsableSampleCount(samples, totalYears)) return null
 
   const { delta, zScore } = computeAnomaly(todayTemp, samples)
   const verdictTier = classifyVerdict(zScore ?? 0)
@@ -264,30 +284,14 @@ export function computeTrendDay(
   actualTemp: number | null,
   halfWidthDays = 5,
 ): TrendDayResult {
-  const parts = dateStr.split('-')
-  const targetMonth = Number(parts[1])
-  const targetDay = Number(parts[2])
-
-  const years = daily.time
-    .map((t) => Number(t.slice(0, 4)))
-    .filter((y) => Number.isFinite(y))
-  if (years.length === 0) return { dateStr, usable: false }
-  const startYear = Math.min(...years)
-  const endYear = Math.max(...years)
-
-  const samples = filterDayOfYearWindow(
-    daily,
-    targetMonth,
-    targetDay,
-    startYear,
-    endYear,
-    halfWidthDays,
-  )
+  const window = computeWindowSamples(daily, dateStr, halfWidthDays)
+  if (window === null) return { dateStr, usable: false }
+  const { samples, totalYears } = window
 
   if (
     actualTemp === null ||
     !Number.isFinite(actualTemp) ||
-    !hasUsableSampleCount(samples, endYear - startYear + 1)
+    !hasUsableSampleCount(samples, totalYears)
   ) {
     return { dateStr, usable: false }
   }
