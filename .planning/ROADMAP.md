@@ -65,6 +65,10 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 
 - [x] 06-03-PLAN.md — Split the hero into Current Conditions + Delta panels, rewire App, retire AnomalyCard (Wave 3)
 
+**Gap closure** *(post-UAT)*
+
+- [ ] 06-04-PLAN.md — Fix G-06-11: portal the InfoTooltip popover to document.body with fixed edge-aware positioning so it renders above the panels and within frame (Wave 1)
+
 **UI hint**: yes
 **Research flag**: Light design spike / UI-SPEC candidate — a low-fi layout mock confirming the eye lands on Delta first (acceptance: Delta scale ≥ ~1.5-2× the Current-conditions scale). Establishes the shared `PanelShell`/`PanelHeadline`/`InfoTooltip` primitives reused by Phases 7 and 8.
 
