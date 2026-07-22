@@ -4,17 +4,17 @@ milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
 current_phase: 07
 current_phase_name: methodology-section-explainers
-status: executing
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-07-22T18:00:31.596Z"
+status: verifying
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-07-22T18:13:02.969Z"
 last_activity: 2026-07-22
 last_activity_desc: Phase 07 execution started
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
-  percent: 33
+  completed_plans: 6
+  percent: 67
 ---
 
 # Project State
@@ -30,10 +30,10 @@ See: .planning/PROJECT.md (updated 2026-07-21)
 
 Phase: 07 (methodology-section-explainers) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-22 — Phase 07 execution started
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 83%
 | Phase 06 P03 | 12min | 3 tasks | 6 files |
 | Phase 06 P04 | 6min | 2 tasks | 4 files |
 | Phase 07 P01 | 22min | 2 tasks | 4 files |
+| Phase 07 P02 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase ?]: InfoTooltip popover portaled to document.body with fixed edge-aware positioning, with a shared popoverRef containment check across outside-click/blur/hover, fixing G-06-11 (Current Conditions popover painting behind Delta panel, Delta popover clipped off-frame)
 - [Phase ?]: computePercentileRank reuses the existing zScore===null degeneracy signal instead of re-deriving its own variance guard (PD-04, one shared definition)
 - [Phase ?]: Percentile line rendered as a plain <p> matching micro-copy style (no chip/pill wrapper), positioned between verdict and z-score chip (PD-06)
+- [Phase ?]: MethodologyPanel copies PanelHeadline's exact class string directly onto <summary> rather than nesting the component (invalid markup inside <summary>, RESEARCH Pitfall 2)
+- [Phase ?]: No expand/collapse height animation for the methodology disclosure; only the chevron rotation is gated behind prefers-reduced-motion (locked UI-SPEC simplicity choice)
 
 ### Pending Todos
 
@@ -107,8 +110,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-22T18:00:31.275Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-07-22T18:13:02.291Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

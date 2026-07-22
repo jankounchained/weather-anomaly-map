@@ -16,7 +16,7 @@
 
 - [x] **EXPLAIN-01**: User sees short inline micro-copy on each panel stating in plain language what its number means (current temperature, delta, z-score).
 - [x] **EXPLAIN-02**: User can reveal an in-place explanation of the delta, the z-score, and the current-temperature reading via an accessible info affordance (info icon / tooltip usable by mouse and keyboard).
-- [ ] **EXPLAIN-03**: User can expand a collapsed-by-default methodology section that briefly explains how the anomaly is computed (30-year baseline, day-of-year window, z-score, delta) and what the tool is for.
+- [x] **EXPLAIN-03**: User can expand a collapsed-by-default methodology section that briefly explains how the anomaly is computed (30-year baseline, day-of-year window, z-score, delta) and what the tool is for.
 - [x] **EXPLAIN-04**: User sees a plain-language percentile framing (e.g. "warmer than 98% of years for this date") presented alongside the z-score.
 
 ### Trend (TREND)
@@ -48,7 +48,7 @@
 | LAYOUT-03 | Phase 6 | Complete |
 | EXPLAIN-01 | Phase 6 | Complete |
 | EXPLAIN-02 | Phase 6 | Complete |
-| EXPLAIN-03 | Phase 7 | Pending |
+| EXPLAIN-03 | Phase 7 | Complete |
 | EXPLAIN-04 | Phase 7 | Complete |
 | TREND-01 | Phase 8 | Pending |
 | TREND-02 | Phase 8 | Pending |
