@@ -3,6 +3,7 @@
 // ("hand-roll, don't add a dependency") and STACK.md - no simple-statistics
 // or other math dependency, in the same spirit as src/lib/coords.ts.
 import type { AnomalyResult, TrendDayResult, VerdictTier } from './types'
+import type { WeatherStatus } from '../weather/types'
 
 /** Arithmetic mean of a sample (feeds delta/z-score - ANOM-01, ANOM-02). */
 export function mean(values: number[]): number {
@@ -182,6 +183,20 @@ export function hasUsableSampleCount(
   totalYears: number,
 ): boolean {
   return samples.length >= Math.ceil(totalYears / 2)
+}
+
+/** Single "anomaly ready to reveal" gate (D-09/PD-10): the ONE canonical
+ * form of the combined loading gate - both the current-conditions fetch AND
+ * the 30-year baseline fetch must be 'resolved' before any temperature or
+ * anomaly value is revealed (no partial reveal). Both CurrentConditionsPanel
+ * and DeltaPanel (Wave 2/3) and App.tsx call through here instead of
+ * re-deriving the `=== 'resolved'` comparison inline, so the two split
+ * panels cannot drift apart on the gate (PD-10 planner mitigation). */
+export function isAnomalyReady(
+  currentStatus: WeatherStatus,
+  baselineStatus: WeatherStatus,
+): boolean {
+  return currentStatus === 'resolved' && baselineStatus === 'resolved'
 }
 
 /** Computes today's anomaly against the +/-5-day day-of-year baseline
