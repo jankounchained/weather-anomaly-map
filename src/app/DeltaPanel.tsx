@@ -22,6 +22,7 @@ import {
 import type { WeatherStatus } from '../weather/types'
 import { InfoTooltip } from './InfoTooltip'
 import { PanelHeadline } from './PanelHeadline'
+import { PanelLoadingState } from './PanelLoadingState'
 import { PanelShell } from './PanelShell'
 
 export interface DeltaPanelProps {
@@ -56,15 +57,7 @@ export function DeltaPanel({
     return (
       <PanelShell>
         <PanelHeadline>Delta</PanelHeadline>
-        <div className="flex flex-row items-center gap-sm" role="status">
-          <span
-            className="size-4 shrink-0 rounded-full border-2 border-accent border-t-transparent animate-location-spin"
-            aria-hidden="true"
-          />
-          <p className="m-0 text-body font-body">
-            Calculating today&apos;s anomaly…
-          </p>
-        </div>
+        <PanelLoadingState label="Calculating today's anomaly…" />
       </PanelShell>
     )
   }

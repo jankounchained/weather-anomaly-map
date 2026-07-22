@@ -27,6 +27,7 @@ import { isAnomalyReady } from '../anomaly/anomaly'
 import type { TrendDayResult } from '../anomaly/types'
 import type { WeatherStatus } from '../weather/types'
 import { PanelHeadline } from './PanelHeadline'
+import { PanelLoadingState } from './PanelLoadingState'
 import { PanelShell } from './PanelShell'
 import { computeSharedYDomain } from './trend'
 import { TrendDayChart, TrendYAxisColumn } from './TrendDayChart'
@@ -66,13 +67,7 @@ export function TrendRow({
     return (
       <PanelShell as="section">
         <PanelHeadline>Last 7 Days</PanelHeadline>
-        <div className="flex flex-row items-center gap-sm" role="status">
-          <span
-            className="size-4 shrink-0 rounded-full border-2 border-accent border-t-transparent animate-location-spin"
-            aria-hidden="true"
-          />
-          <p className="m-0 text-body font-body">Loading the last 7 days…</p>
-        </div>
+        <PanelLoadingState label="Loading the last 7 days…" />
       </PanelShell>
     )
   }

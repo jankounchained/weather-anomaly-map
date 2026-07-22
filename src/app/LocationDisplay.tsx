@@ -6,6 +6,7 @@
 import { formatCoords } from '../lib/coords'
 import type { ReverseGeocodeStatus } from '../geocoding/types'
 import { PanelHeadline } from './PanelHeadline'
+import { PanelLoadingState } from './PanelLoadingState'
 import { PanelShell } from './PanelShell'
 
 export interface LocationDisplayProps {
@@ -41,13 +42,7 @@ export function LocationDisplay({
     return (
       <PanelShell>
         <PanelHeadline>Location</PanelHeadline>
-        <div className="flex flex-row items-center gap-sm" role="status">
-          <span
-            className="size-4 shrink-0 rounded-full border-2 border-accent border-t-transparent animate-location-spin"
-            aria-hidden="true"
-          />
-          <p className="m-0 text-body font-body">Looking up place name…</p>
-        </div>
+        <PanelLoadingState label="Looking up place name…" />
       </PanelShell>
     )
   }
