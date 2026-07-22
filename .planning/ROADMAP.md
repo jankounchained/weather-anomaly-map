@@ -83,7 +83,13 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
   2. User can expand and collapse the methodology section using both mouse and keyboard, with disclosure state and focus behaving accessibly (single-level, flat disclosure).
   3. User sees a plain-language percentile framing (e.g. "warmer than 98% of years for this date") presented alongside the z-score.
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+**Wave 1** *(parallel — no shared files)*
+
+- [ ] 07-01-PLAN.md — Empirical percentile math (`computePercentileRank`/`percentileLabel`) + Delta panel percentile line (EXPLAIN-04)
+- [ ] 07-02-PLAN.md — Always-visible Methodology disclosure panel (native `<details>`/`<summary>`, locked copy) mounted after TrendRow (EXPLAIN-03)
+
 **UI hint**: yes
 **Research flag**: None — native `<details>`/`<summary>` disclosure is a well-established pattern (skip research-phase). Verify the expand animation respects `prefers-reduced-motion` by toggling the OS setting, not just reading the CSS.
 
@@ -115,7 +121,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete | 2026-07-16 |
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
 | 6. Panel Restructure & Hierarchy | v1.2 | 4/4 | Complete    | 2026-07-22 |
-| 7. Methodology Section & Explainers | v1.2 | 0/TBD | Not started | - |
+| 7. Methodology Section & Explainers | v1.2 | 0/2 | Planned | - |
 | 8. Split-Violin Trend View | v1.2 | 0/TBD | Not started | - |
 
 ## Backlog
