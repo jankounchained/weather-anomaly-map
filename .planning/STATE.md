@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
-current_phase: 7
-current_phase_name: Methodology Section & Explainers
+current_phase: 07
+current_phase_name: methodology-section-explainers
 status: executing
-stopped_at: Phase 7 UI-SPEC approved
-last_updated: "2026-07-22T17:25:30.301Z"
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-07-22T18:00:31.596Z"
 last_activity: 2026-07-22
-last_activity_desc: Phase 06 complete, transitioned to Phase 7
+last_activity_desc: Phase 07 execution started
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
   percent: 33
 ---
 
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-21)
 
 **Core value:** For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
-**Current focus:** Phase 06 — panel-restructure-hierarchy
+**Current focus:** Phase 07 — methodology-section-explainers
 
 ## Current Position
 
-Phase: 7 — Methodology Section & Explainers
-Plan: Not started
+Phase: 07 (methodology-section-explainers) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-07-22 — Phase 06 complete, transitioned to Phase 7
+Last activity: 2026-07-22 — Phase 07 execution started
 
-Progress: [██████████] 100%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 06 P02 | 7min | 2 tasks | 3 files |
 | Phase 06 P03 | 12min | 3 tasks | 6 files |
 | Phase 06 P04 | 6min | 2 tasks | 4 files |
+| Phase 07 P01 | 22min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 6] App.tsx's anomaly/trendDays computations now call the shared isAnomalyReady predicate instead of an inline resolved-status literal, closing the combined-gate to exactly one place across all panels (PD-10)
 - [Phase ?]: Popover positioning kept as a pure, DOM-free function (computePopoverPosition) taking trigger rect + popover/viewport dimensions as plain inputs, matching the codebase's hand-rolled pure-math-helper convention
 - [Phase ?]: InfoTooltip popover portaled to document.body with fixed edge-aware positioning, with a shared popoverRef containment check across outside-click/blur/hover, fixing G-06-11 (Current Conditions popover painting behind Delta panel, Delta popover clipped off-frame)
+- [Phase ?]: computePercentileRank reuses the existing zScore===null degeneracy signal instead of re-deriving its own variance guard (PD-04, one shared definition)
+- [Phase ?]: Percentile line rendered as a plain <p> matching micro-copy style (no chip/pill wrapper), positioned between verdict and z-score chip (PD-06)
 
 ### Pending Todos
 
@@ -104,9 +107,9 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-22T16:49:33.333Z
-Stopped at: Phase 7 UI-SPEC approved
-Resume file: .planning/phases/07-methodology-section-explainers/07-UI-SPEC.md
+Last session: 2026-07-22T18:00:31.275Z
+Stopped at: Completed 07-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

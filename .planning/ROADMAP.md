@@ -83,11 +83,11 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
   2. User can expand and collapse the methodology section using both mouse and keyboard, with disclosure state and focus behaving accessibly (single-level, flat disclosure).
   3. User sees a plain-language percentile framing (e.g. "warmer than 98% of years for this date") presented alongside the z-score.
 
-**Plans**: 2 plans
+**Plans**: 1/2 plans executed
 
 **Wave 1** *(parallel — no shared files)*
 
-- [ ] 07-01-PLAN.md — Empirical percentile math (`computePercentileRank`/`percentileLabel`) + Delta panel percentile line (EXPLAIN-04)
+- [x] 07-01-PLAN.md — Empirical percentile math (`computePercentileRank`/`percentileLabel`) + Delta panel percentile line (EXPLAIN-04)
 - [ ] 07-02-PLAN.md — Always-visible Methodology disclosure panel (native `<details>`/`<summary>`, locked copy) mounted after TrendRow (EXPLAIN-03)
 
 **UI hint**: yes
@@ -121,7 +121,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete | 2026-07-16 |
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
 | 6. Panel Restructure & Hierarchy | v1.2 | 4/4 | Complete    | 2026-07-22 |
-| 7. Methodology Section & Explainers | v1.2 | 0/2 | Planned | - |
+| 7. Methodology Section & Explainers | v1.2 | 1/2 | In Progress|  |
 | 8. Split-Violin Trend View | v1.2 | 0/TBD | Not started | - |
 
 ## Backlog
