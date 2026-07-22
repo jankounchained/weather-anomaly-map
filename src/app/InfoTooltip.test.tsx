@@ -61,6 +61,43 @@ describe('InfoTooltip', () => {
     expect(document.activeElement).toBe(trigger)
   })
 
+  it('CR-01/WR-01: a real click (mouseenter, then the focus a click fires, then click) upgrades the hover-opened popover to persistent instead of closing it', () => {
+    const { getByRole, queryByRole } = render(
+      <InfoTooltip label="About the delta and z-score">Body copy</InfoTooltip>,
+    )
+
+    const trigger = getByRole('button')
+
+    // Real browsers fire mouseenter (cursor must move onto the button
+    // first), then a synchronous focus event as part of the click itself,
+    // then the click event - in that order.
+    fireEvent.mouseEnter(trigger)
+    expect(queryByRole('dialog')).not.toBeNull()
+
+    fireEvent.focus(trigger)
+    fireEvent.click(trigger)
+
+    expect(queryByRole('dialog')).not.toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  it('WR-01: pure keyboard Tab+Enter (focus with no preceding mouseenter, then click) still opens the popover', () => {
+    const { getByRole, queryByRole } = render(
+      <InfoTooltip label="About the delta and z-score">Body copy</InfoTooltip>,
+    )
+
+    const trigger = getByRole('button')
+
+    // No mouseenter here - simulates Tab-focusing the button, then
+    // activating it with Enter/Space (which the browser dispatches as a
+    // click on a <button>).
+    fireEvent.focus(trigger)
+    fireEvent.click(trigger)
+
+    expect(queryByRole('dialog')).not.toBeNull()
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  })
+
   it('renders the static body prose as text inside the open dialog, with no raw-HTML sink', () => {
     const { getByRole, getByText } = render(
       <InfoTooltip label="About the delta and z-score">

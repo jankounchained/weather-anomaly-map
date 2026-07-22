@@ -22,11 +22,19 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
   const popoverId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
-  // Tracks whether the popover was opened via hover/focus (progressive
-  // enhancement) vs. click (persists until explicitly dismissed) - a
-  // hover-opened popover stays open while the pointer is over the trigger
-  // OR the popover itself, and closes on blur only when NOT hover-pinned.
+  // Tracks whether the popover was opened via hover (progressive
+  // enhancement) vs. focus/click - a hover-opened popover stays open while
+  // the pointer is over the trigger OR the popover itself, and closes on
+  // blur only when NOT hover-pinned.
   const hoverPinnedRef = useRef(false)
+  // Tracks whether the popover has been explicitly upgraded to persistent
+  // via a click (or keyboard activation) - as opposed to merely being open
+  // as a hover/focus preview. Only a persisted popover toggles CLOSED on
+  // the next click; a preview (hover- or focus-opened, not yet persisted)
+  // instead UPGRADES to persistent on click/Enter (CR-01, WR-01: this
+  // distinction is what makes both a real mouse click and Tab+Enter
+  // correctly persist the popover instead of flashing it closed).
+  const persistedRef = useRef(false)
   // Suppresses the single synchronous focus event fired by the
   // returnFocus `.focus()` call below - without this, Escape-close would
   // immediately reopen the popover via handleFocus.
@@ -37,9 +45,16 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
     setOpen(true)
   }
 
+  const persistPopover = () => {
+    hoverPinnedRef.current = false
+    persistedRef.current = true
+    setOpen(true)
+  }
+
   const closePopover = (returnFocus: boolean) => {
     setOpen(false)
     hoverPinnedRef.current = false
+    persistedRef.current = false
     if (returnFocus) {
       suppressFocusOpenRef.current = true
       triggerRef.current?.focus()
@@ -64,13 +79,19 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
   }, [open])
 
   const handleTriggerClick = () => {
-    if (open && !hoverPinnedRef.current) {
-      // Already persistent (opened by an explicit click) -> toggle closed.
+    if (open && persistedRef.current) {
+      // Already persistent (opened by a prior explicit click) -> toggle
+      // closed.
       closePopover(false)
     } else {
-      // Closed, or currently hover/focus-pinned -> make it persistent.
-      hoverPinnedRef.current = false
-      setOpen(true)
+      // Closed, or currently just a hover/focus preview (not yet
+      // persisted) -> make it persistent. Covers both a real mouse click
+      // (mouseenter -> hoverPinnedRef true -> focus guarded, see
+      // handleFocus -> click) and pure keyboard Tab+Enter (focus opens a
+      // preview with hoverPinnedRef false -> click/Enter still upgrades it
+      // here, since persistedRef is what gates the toggle-close branch,
+      // not hoverPinnedRef).
+      persistPopover()
     }
   }
 
@@ -98,6 +119,13 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
       suppressFocusOpenRef.current = false
       return
     }
+    // A real click always fires `mouseenter` (setting hoverPinnedRef =
+    // true) before this `focus` event. If we're already hover-pinned, this
+    // focus is a side effect of the imminent click, not a genuine
+    // keyboard-Tab visit - leave hoverPinnedRef alone so
+    // handleTriggerClick still sees it as true and upgrades to persistent
+    // instead of toggling closed (CR-01).
+    if (hoverPinnedRef.current) return
     // Focus-open behaves like click-open (not hover-open), so a normal
     // blur closes it - see WCAG 1.4.13 "hoverable, dismissible,
     // persistent" contract.
