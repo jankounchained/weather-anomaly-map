@@ -98,7 +98,10 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
       suppressFocusOpenRef.current = false
       return
     }
-    openPopover(true)
+    // Focus-open behaves like click-open (not hover-open), so a normal
+    // blur closes it - see WCAG 1.4.13 "hoverable, dismissible,
+    // persistent" contract.
+    openPopover(false)
   }
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
