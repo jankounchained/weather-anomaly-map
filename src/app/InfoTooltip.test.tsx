@@ -1,6 +1,12 @@
-import { describe, it, expect } from 'vitest'
-import { render, fireEvent } from '@testing-library/react'
+import { describe, it, expect, afterEach } from 'vitest'
+import { render, fireEvent, cleanup } from '@testing-library/react'
 import { InfoTooltip } from './InfoTooltip'
+
+// No global vitest setupFiles configured in this project (out of this
+// task's scope to add one) - each `it` below renders its own InfoTooltip,
+// so without explicit cleanup the DOM accumulates buttons/dialogs across
+// tests and getByRole('button')/getByRole('dialog') become ambiguous.
+afterEach(cleanup)
 
 describe('InfoTooltip', () => {
   it('renders a real <button type="button"> with aria-expanded=false and aria-controls set before opening', () => {
