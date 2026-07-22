@@ -1,14 +1,14 @@
 ---
-status: diagnosed
+status: partial
 phase: 06-panel-restructure-hierarchy
 source: [06-01-SUMMARY.md, 06-02-SUMMARY.md, 06-03-SUMMARY.md]
 started: 2026-07-22T11:37:17Z
-updated: 2026-07-22T11:42:00Z
+updated: 2026-07-22T15:10:00Z
 ---
 
 ## Current Test
 
-[testing complete — 1 issue diagnosed]
+[testing paused — 1 item outstanding: test 11 visual re-verification of the 06-04 InfoTooltip fix]
 
 ## Tests
 
@@ -74,10 +74,10 @@ source: automated
 coverage_id: 06-03-D4
 
 ### 11. InfoTooltip authored bodies
-expected: Both panels expose an accessible InfoTooltip with the exact authored bodies (modeled-data caveat for Current; delta+z-score methodology for Delta)
-result: issue
-reported: "The info hover texts are broken. Current condition hover text renders behind the panels, so it's unreadable. Delta hover text renders out of the frame, so it's also unreadable."
-severity: major
+expected: Both panels expose an accessible InfoTooltip with the exact authored bodies (modeled-data caveat for Current; delta+z-score methodology for Delta), and the popover renders above the panels and inside the viewport
+result: blocked
+blocked_by: other
+reason: "User out of office — deferred visual re-verification of the 06-04 InfoTooltip fix. Fix is implemented and unit-tested; gap G-06-11 reconciled as resolved, awaiting human confirmation only."
 
 ### 12. Single-source anomaly gate
 expected: Both panels self-gate through isAnomalyReady; App.tsx's anomaly/trendDays computations call isAnomalyReady instead of an inline status literal — gate lives in one place
@@ -89,16 +89,18 @@ coverage_id: 06-03-D6
 
 total: 12
 passed: 11
-issues: 1
+issues: 0
 pending: 0
 skipped: 0
-blocked: 0
+blocked: 1
 
 ## Gaps
 
 - gap_id: G-06-11
   truth: "Both panels' InfoTooltip popover is fully readable when opened — appears above the panels and stays within the viewport"
-  status: failed
+  status: resolved
+  resolved_by: 06-04-PLAN.md
+  resolved_at: 2026-07-22
   reason: "User reported: info hover texts are broken. Current Conditions popover renders behind the panels (unreadable); Delta popover renders out of the frame (unreadable)."
   severity: major
   test: 11
