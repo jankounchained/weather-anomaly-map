@@ -12,7 +12,7 @@ For any location, the user can immediately tell how unusual today's temperature 
 
 **Shipped:** v1.1 Tailwind Migration + Glass/Atmospheric Redesign (2026-07-21). The dashboard's styling layer now runs entirely on Tailwind CSS v4 (CSS-first, no config file), and the UI wears a cohesive glassy/atmospheric design language: an anomaly-driven gradient backdrop, translucent glass surfaces, a color-coded anomaly-delta hero (now led with a Δ so it never reads as the current temperature), a framed zero-delta case, and a re-themed trend chart — all within a disciplined-glass performance policy (real `backdrop-blur` only on static backdrops, no JS/canvas animation loops, all motion behind `prefers-reduced-motion`). No feature or behavior changed from v1.0.
 
-**Next milestone:** v1.2 UI Layout Redesign & Explanatory Legend (in planning) — see Current Milestone below.
+**In progress:** v1.2 UI Layout Redesign & Explanatory Legend — Phase 6 (Panel Restructure & Hierarchy) complete (2026-07-22): the resolved anomaly view is now four headlined, self-explanatory panels — **Current conditions** + **Delta** (split from the former combined hero), joining **Location** + **History** — each with inline micro-copy and a keyboard/mouse info affordance, with the Delta preserved as the dominant focal point. Phases 7 (methodology + explainers) and 8 (split-violin trend) remain — see Current Milestone below.
 
 ## Current Milestone: v1.2 UI Layout Redesign & Explanatory Legend
 
@@ -50,6 +50,8 @@ For any location, the user can immediately tell how unusual today's temperature 
 - [x] Cohesive glassy/atmospheric design language: anomaly-driven gradient backdrop, translucent depth surfaces, refined typography, strengthened anomaly-hero focal point, re-themed recharts trend visuals — DESIGN-01..05, Validated in Phase 5 (v1.1)
 - [x] Zero-delta hero case reads clearly (framed "0°C" + "Right on the 30-year average"), closing the v1.0 bare-"0" UX gap — DESIGN-06, Validated in Phase 5 (v1.1)
 - [x] Disciplined-glass performance: real `backdrop-blur` only on static backdrops (never over the live map); all motion gated behind `prefers-reduced-motion`; no JS/canvas animation loops — PERF-01, PERF-02, Validated in Phase 5 (v1.1)
+
+- [x] Resolved anomaly view restructured into four self-explanatory, headlined panels — combined hero split into **Current conditions** + **Delta** (joining Location + History), each carrying a shared `PanelHeadline`, inline plain-language micro-copy, and a keyboard/mouse-accessible `InfoTooltip` info affordance; the Delta remains the dominant focal point (~1.7× scale, anomaly-color-driven, Δ-led) — LAYOUT-01, LAYOUT-02, LAYOUT-03, EXPLAIN-01, EXPLAIN-02, Validated in Phase 6 (v1.2)
 
 ### Active
 
@@ -123,4 +125,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-21 — v1.2 milestone (UI Layout Redesign & Explanatory Legend) started; defining requirements*
+*Last updated: 2026-07-22 — Phase 6 (Panel Restructure & Hierarchy) complete: four headlined, self-explanatory panels with the Delta preserved as the focal point (LAYOUT-01..03, EXPLAIN-01/02 validated)*
