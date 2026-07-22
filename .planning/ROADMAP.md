@@ -49,7 +49,10 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
   3. User's eye still lands on the Delta first — it remains the largest, color-driven, Δ-glyph-led element, visibly dominant (≈1.5-2× the Current-conditions scale), not visually equal to the other panels.
   4. User sees short inline micro-copy on each panel stating in plain language what its number means (current temperature, delta, z-score).
   5. User can reveal an in-place explanation of the delta, the z-score, and the current-temperature reading via an info affordance usable by both mouse and keyboard.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 06-01-PLAN.md — Shared primitives (PanelShell, PanelHeadline, InfoTooltip) + the isAnomalyReady gate predicate (Wave 1)
+- [ ] 06-02-PLAN.md — Migrate LocationDisplay + TrendRow onto the primitives; wire the History panel's four states (Wave 2)
+- [ ] 06-03-PLAN.md — Split the hero into Current Conditions + Delta panels, rewire App, retire AnomalyCard (Wave 3)
 **UI hint**: yes
 **Research flag**: Light design spike / UI-SPEC candidate — a low-fi layout mock confirming the eye lands on Delta first (acceptance: Delta scale ≥ ~1.5-2× the Current-conditions scale). Establishes the shared `PanelShell`/`PanelHeadline`/`InfoTooltip` primitives reused by Phases 7 and 8.
 
@@ -89,7 +92,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 3. Historical Trend Charts & Edge Cases | v1.0 | 6/6 | Complete | 2026-07-15 |
 | 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete | 2026-07-16 |
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
-| 6. Panel Restructure & Hierarchy | v1.2 | 0/TBD | Not started | - |
+| 6. Panel Restructure & Hierarchy | v1.2 | 0/3 | Not started | - |
 | 7. Methodology Section & Explainers | v1.2 | 0/TBD | Not started | - |
 | 8. Split-Violin Trend View | v1.2 | 0/TBD | Not started | - |
 
