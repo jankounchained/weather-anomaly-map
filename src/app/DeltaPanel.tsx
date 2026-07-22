@@ -13,8 +13,12 @@
 // z-score chip. All dynamic text (delta, verdict, z-score) renders as
 // ordinary JSX text nodes only - never through a raw-HTML sink
 // (T-01-02/T-02-07/T-06-05).
-import { formatDelta, isAnomalyReady, verdictLabel } from '../anomaly/anomaly'
-import type { VerdictTier } from '../anomaly/types'
+import {
+  formatDelta,
+  isAnomalyReady,
+  verdictLabel,
+  type AnomalyForToday,
+} from '../anomaly/anomaly'
 import type { WeatherStatus } from '../weather/types'
 import { InfoTooltip } from './InfoTooltip'
 import { PanelHeadline } from './PanelHeadline'
@@ -25,7 +29,7 @@ export interface DeltaPanelProps {
   hasSelection: boolean
   currentStatus: WeatherStatus
   baselineStatus: WeatherStatus
-  anomaly: { delta: number; zScore: number | null; verdictTier: VerdictTier } | null
+  anomaly: AnomalyForToday | null
 }
 
 export function DeltaPanel({

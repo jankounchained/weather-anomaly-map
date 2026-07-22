@@ -199,6 +199,16 @@ export function isAnomalyReady(
   return currentStatus === 'resolved' && baselineStatus === 'resolved'
 }
 
+/** Return shape of computeAnomalyForToday (IN-03) - exported so consumers
+ * (DeltaPanel) import this instead of hand-redeclaring an independent copy
+ * of the same shape, which would otherwise have no compiler-enforced link
+ * back to this function's actual return type. */
+export interface AnomalyForToday {
+  delta: number
+  zScore: number | null
+  verdictTier: VerdictTier
+}
+
 /** Computes today's anomaly against the +/-5-day day-of-year baseline
  * window derived from `daily` (ANOM-01/02/03/04). Returns null when the
  * window fails the shared hasUsableSampleCount gate - fewer than half of
@@ -211,7 +221,7 @@ export function computeAnomalyForToday(
   localDate: string,
   todayTemp: number,
   halfWidthDays = 5,
-): { delta: number; zScore: number | null; verdictTier: VerdictTier } | null {
+): AnomalyForToday | null {
   const parts = localDate.split('-')
   const targetMonth = Number(parts[1])
   const targetDay = Number(parts[2])
