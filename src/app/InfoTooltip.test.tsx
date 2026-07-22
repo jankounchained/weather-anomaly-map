@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { render, fireEvent, cleanup } from '@testing-library/react'
+import { render, fireEvent, cleanup, within } from '@testing-library/react'
 import { InfoTooltip } from './InfoTooltip'
 
 // No global vitest setupFiles configured in this project (out of this
@@ -110,5 +110,83 @@ describe('InfoTooltip', () => {
     expect(
       getByText("Δ is today's temperature minus the 30-year historical average."),
     ).toBeTruthy()
+  })
+
+  it('G-06-11: portals the open popover onto document.body, escaping the trigger subtree', () => {
+    const { getByRole, getByTestId } = render(
+      <div data-testid="wrapper">
+        <InfoTooltip label="About the delta and z-score">Body copy</InfoTooltip>
+      </div>,
+    )
+
+    fireEvent.click(getByRole('button'))
+
+    const wrapper = getByTestId('wrapper')
+    expect(within(wrapper).queryByRole('dialog')).toBeNull()
+    // getByRole queries from baseElement (document.body) by default, so the
+    // portaled dialog is still findable there.
+    expect(getByRole('dialog')).toBeTruthy()
+  })
+
+  it('G-06-11: renders the portaled popover with inline position:fixed and defined top/left', () => {
+    const { getByRole } = render(
+      <InfoTooltip label="About the delta and z-score">Body copy</InfoTooltip>,
+    )
+
+    fireEvent.click(getByRole('button'))
+
+    const dialog = getByRole('dialog')
+    const wrapper = dialog.parentElement as HTMLElement
+    expect(wrapper.style.position).toBe('fixed')
+    expect(wrapper.style.top).not.toBe('')
+    expect(wrapper.style.left).not.toBe('')
+  })
+
+  it('G-06-11: a mousedown on the popover body itself does not close it (popoverRef excluded from outside-click)', () => {
+    const { getByRole } = render(
+      <InfoTooltip label="About the delta and z-score">Body copy</InfoTooltip>,
+    )
+
+    const trigger = getByRole('button')
+    fireEvent.click(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+
+    const dialog = getByRole('dialog')
+    fireEvent.mouseDown(dialog)
+
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(getByRole('dialog')).toBeTruthy()
+  })
+
+  it('G-06-11: a mousedown outside both the trigger and the portaled popover still closes it', () => {
+    const { getByRole, queryByRole } = render(
+      <InfoTooltip label="About the delta and z-score">Body copy</InfoTooltip>,
+    )
+
+    const trigger = getByRole('button')
+    fireEvent.click(trigger)
+    expect(getByRole('dialog')).toBeTruthy()
+
+    fireEvent.mouseDown(document.body)
+
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(queryByRole('dialog')).toBeNull()
+  })
+
+  it('G-06-11: hover persists across the portal boundary (trigger -> popover) and closes leaving the popover', () => {
+    const { getByRole, queryByRole } = render(
+      <InfoTooltip label="About the delta and z-score">Body copy</InfoTooltip>,
+    )
+
+    const trigger = getByRole('button')
+    fireEvent.mouseEnter(trigger)
+    expect(queryByRole('dialog')).not.toBeNull()
+
+    const dialog = getByRole('dialog')
+    fireEvent.mouseLeave(trigger, { relatedTarget: dialog })
+    expect(queryByRole('dialog')).not.toBeNull()
+
+    fireEvent.mouseLeave(dialog, { relatedTarget: null })
+    expect(queryByRole('dialog')).toBeNull()
   })
 })

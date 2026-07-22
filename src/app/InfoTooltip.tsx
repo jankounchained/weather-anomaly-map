@@ -7,8 +7,13 @@
 // Popover body renders `children` as plain JSX text nodes only - never a
 // raw-HTML-injecting sink - preserving the T-01-02/T-02-07 no-raw-HTML-sink
 // invariant (T-06-01).
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { PanelShell } from './PanelShell'
+import { computePopoverPosition } from './popoverPosition'
+
+const POPOVER_GAP = 8
+const POPOVER_MARGIN = 8
 
 export interface InfoTooltipProps {
   /** Names the panel this tooltip explains, e.g. "About the delta and z-score" (EXPLAIN-02). */
@@ -19,9 +24,15 @@ export interface InfoTooltipProps {
 
 export function InfoTooltip({ label, children }: InfoTooltipProps) {
   const [open, setOpen] = useState(false)
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null)
   const popoverId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  // Portal wrapper ref (rendered via createPortal on document.body when
+  // open) - needed so the three WCAG 1.4.13 containment checks
+  // (outside-click, blur, hover) can treat the popover as "inside" even
+  // though it is no longer a DOM descendant of containerRef (G-06-11).
+  const popoverRef = useRef<HTMLDivElement>(null)
   // Tracks whether the popover was opened via hover (progressive
   // enhancement) vs. focus/click - a hover-opened popover stays open while
   // the pointer is over the trigger OR the popover itself, and closes on
@@ -53,12 +64,21 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
 
   const closePopover = (returnFocus: boolean) => {
     setOpen(false)
+    setCoords(null)
     hoverPinnedRef.current = false
     persistedRef.current = false
     if (returnFocus) {
       suppressFocusOpenRef.current = true
       triggerRef.current?.focus()
     }
+  }
+
+  // True when `node` sits inside EITHER the trigger container OR the
+  // portaled popover - the popover moved out of containerRef's DOM subtree
+  // (G-06-11), so every containment check below must accept both.
+  const isInsideTriggerOrPopover = (node: unknown) => {
+    if (!(node instanceof Node)) return false
+    return !!(containerRef.current?.contains(node) || popoverRef.current?.contains(node))
   }
 
   // Close on outside click (mousedown, per UI-SPEC "closes on ... click
@@ -68,13 +88,50 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
     if (!open) return
 
     const handleOutsideClick = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
+      if (!isInsideTriggerOrPopover(event.target as Node)) {
         closePopover(false)
       }
     }
 
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [open])
+
+  // Compute (and keep computing on resize/scroll) the portaled popover's
+  // fixed viewport coordinates from the trigger's live rect and the
+  // popover's own measured size (G-06-11). useLayoutEffect runs before
+  // paint so the measure -> position pass never visibly flashes; coords
+  // stays null (rendered at opacity 0, not display:none/visibility:hidden -
+  // see render below) until the first measurement lands.
+  useLayoutEffect(() => {
+    if (!open) return
+
+    const recomputePosition = () => {
+      const triggerRect = triggerRef.current?.getBoundingClientRect()
+      if (!triggerRect) return
+      const popoverEl = popoverRef.current
+      const popoverWidth = popoverEl?.offsetWidth ?? 0
+      const popoverHeight = popoverEl?.offsetHeight ?? 0
+      setCoords(
+        computePopoverPosition({
+          triggerRect,
+          popoverWidth,
+          popoverHeight,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          gap: POPOVER_GAP,
+          margin: POPOVER_MARGIN,
+        }),
+      )
+    }
+
+    recomputePosition()
+    window.addEventListener('resize', recomputePosition)
+    window.addEventListener('scroll', recomputePosition, true)
+    return () => {
+      window.removeEventListener('resize', recomputePosition)
+      window.removeEventListener('scroll', recomputePosition, true)
+    }
   }, [open])
 
   const handleTriggerClick = () => {
@@ -104,13 +161,16 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
     if (!open) openPopover(true)
   }
 
-  const handleMouseLeave = () => {
-    // The container wraps both the trigger and the popover, so leaving the
-    // container means the pointer left both - satisfies "hover-opened
-    // content stays open while the pointer moves onto the popover itself".
-    if (hoverPinnedRef.current) {
-      closePopover(false)
-    }
+  // Shared leave handler for BOTH the trigger container and the portaled
+  // popover wrapper (attached to each below) - the popover now lives
+  // outside the container's DOM subtree (G-06-11), so a plain
+  // container-only mouseleave can no longer tell "pointer moved onto the
+  // popover" from "pointer left entirely". Reading relatedTarget and
+  // checking both refs restores that distinction.
+  const handleSharedMouseLeave = (event: React.MouseEvent) => {
+    if (!hoverPinnedRef.current) return
+    if (isInsideTriggerOrPopover(event.relatedTarget as Node | null)) return
+    closePopover(false)
   }
 
   const handleFocus = () => {
@@ -134,9 +194,10 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
     // Only close on blur when not hover-pinned (UI-SPEC "closes on ...
     // blur when not hover-pinned") and focus is genuinely leaving the
-    // trigger+popover container (not moving between them).
+    // trigger+popover (not moving between them, which now spans the portal
+    // boundary - G-06-11).
     if (hoverPinnedRef.current) return
-    if (!containerRef.current?.contains(event.relatedTarget as Node)) {
+    if (!isInsideTriggerOrPopover(event.relatedTarget as Node)) {
       closePopover(false)
     }
   }
@@ -146,7 +207,7 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
       ref={containerRef}
       className="relative inline-block"
       onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={handleSharedMouseLeave}
       onBlur={handleBlur}
     >
       <button
@@ -161,18 +222,39 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
       >
         i
       </button>
-      {open && (
-        <div className="absolute z-10 mt-xs">
-          <PanelShell
-            id={popoverId}
-            role="dialog"
-            aria-label={label}
-            className="max-w-[240px]"
+      {open &&
+        createPortal(
+          // Portaled onto document.body (G-06-11) - document.body has no
+          // transformed/filtered ancestor, so position:fixed resolves
+          // against the viewport (escaping App's root overflow-hidden
+          // clip) and the popover sits outside every PanelShell
+          // backdrop-filter stacking context (escaping the paint-order
+          // trap that put Current Conditions' popover behind Delta).
+          // opacity (not display:none/visibility:hidden) hides the
+          // pre-measurement flash without removing the dialog from the
+          // accessibility tree.
+          <div
+            ref={popoverRef}
+            style={{
+              position: 'fixed',
+              top: coords?.top ?? 0,
+              left: coords?.left ?? 0,
+              opacity: coords ? 1 : 0,
+              zIndex: 9999,
+            }}
+            onMouseLeave={handleSharedMouseLeave}
           >
-            {children}
-          </PanelShell>
-        </div>
-      )}
+            <PanelShell
+              id={popoverId}
+              role="dialog"
+              aria-label={label}
+              className="max-w-[240px]"
+            >
+              {children}
+            </PanelShell>
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
