@@ -83,6 +83,19 @@ describe('DeltaPanel', () => {
     )
   })
 
+  it('IN-05: z-score chip renders "z 0.0" (not "z -0.0") for a small negative z-score that rounds to zero', () => {
+    const { getByText } = render(
+      <DeltaPanel
+        hasSelection={true}
+        currentStatus="resolved"
+        baselineStatus="resolved"
+        anomaly={{ delta: 0, zScore: -0.04, verdictTier: 'typical' }}
+      />,
+    )
+
+    expect(getByText('z 0.0')).toBeTruthy()
+  })
+
   it('z-score chip shows the exact no-variance fallback string when zScore is null', () => {
     const { getByText } = render(
       <DeltaPanel
