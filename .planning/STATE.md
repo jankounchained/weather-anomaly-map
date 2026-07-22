@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
-current_phase: 7
-current_phase_name: Methodology Section & Explainers
-status: planning
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-07-22T10:38:44.383Z"
+current_phase: 06
+current_phase_name: panel-restructure-hierarchy
+status: executing
+stopped_at: "Completed 06-04-PLAN.md (gap-closure: G-06-11 InfoTooltip portal fix)"
+last_updated: "2026-07-22T12:27:48.692Z"
 last_activity: 2026-07-22
-last_activity_desc: Phase 06 complete, transitioned to Phase 7
+last_activity_desc: Phase 06 execution started
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 4
+  completed_plans: 4
   percent: 33
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-21)
 
 **Core value:** For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
-**Current focus:** Phase 06 — Panel Restructure & Hierarchy
+**Current focus:** Phase 06 — panel-restructure-hierarchy
 
 ## Current Position
 
-Phase: 7 — Methodology Section & Explainers
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-07-22 — Phase 06 complete, transitioned to Phase 7
+Phase: 06 (panel-restructure-hierarchy) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-07-22 — Phase 06 execution started
 
 Progress: [██████████] 100%
 
@@ -59,6 +59,7 @@ Progress: [██████████] 100%
 | Phase 06 P01 | 6min | 3 tasks | 8 files |
 | Phase 06 P02 | 7min | 2 tasks | 3 files |
 | Phase 06 P03 | 12min | 3 tasks | 6 files |
+| Phase 06 P04 | 6min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase ?]: TrendRow reuses AnomalyCard's text-destructive error styling for its new History error state; role=status placed on the inner spinner-row div nested inside PanelShell, not forwarded onto PanelShell itself
 - [Phase ?]: [Phase 6] AnomalyCard split into CurrentConditionsPanel + DeltaPanel, composed as a 50/50 equal-height two-up row in App.tsx; DeltaPanel's InfoTooltip trigger placed beside the Δ number matching CurrentConditionsPanel's row convention
 - [Phase ?]: [Phase 6] App.tsx's anomaly/trendDays computations now call the shared isAnomalyReady predicate instead of an inline resolved-status literal, closing the combined-gate to exactly one place across all panels (PD-10)
+- [Phase ?]: Popover positioning kept as a pure, DOM-free function (computePopoverPosition) taking trigger rect + popover/viewport dimensions as plain inputs, matching the codebase's hand-rolled pure-math-helper convention
+- [Phase ?]: InfoTooltip popover portaled to document.body with fixed edge-aware positioning, with a shared popoverRef containment check across outside-click/blur/hover, fixing G-06-11 (Current Conditions popover painting behind Delta panel, Delta popover clipped off-frame)
 
 ### Pending Todos
 
@@ -101,8 +104,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-22T10:14:28.999Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-07-22T12:27:48.686Z
+Stopped at: Completed 06-04-PLAN.md (gap-closure: G-06-11 InfoTooltip portal fix)
 Resume file: None
 
 ## Operator Next Steps
