@@ -60,7 +60,7 @@ describe('DeltaPanel', () => {
         hasSelection={true}
         currentStatus="resolved"
         baselineStatus="resolved"
-        anomaly={{ delta: 3.2, zScore: 1.8, verdictTier: 'slightly-warmer' }}
+        anomaly={{ delta: 3.2, zScore: 1.8, verdictTier: 'slightly-warmer', percentile: 91 }}
       />,
     )
 
@@ -72,6 +72,7 @@ describe('DeltaPanel', () => {
       'How today compares to the 30-year average for this date.',
     )
     const verdict = getByText('Slightly warmer than usual')
+    const percentileLine = getByText('Warmer than 91% of years for this date.')
     const zScoreChip = getByText('z 1.8')
 
     const html = container.innerHTML
@@ -79,6 +80,9 @@ describe('DeltaPanel', () => {
       html.indexOf(verdict.outerHTML),
     )
     expect(html.indexOf(verdict.outerHTML)).toBeLessThan(
+      html.indexOf(percentileLine.outerHTML),
+    )
+    expect(html.indexOf(percentileLine.outerHTML)).toBeLessThan(
       html.indexOf(zScoreChip.outerHTML),
     )
   })
@@ -89,7 +93,7 @@ describe('DeltaPanel', () => {
         hasSelection={true}
         currentStatus="resolved"
         baselineStatus="resolved"
-        anomaly={{ delta: 0, zScore: -0.04, verdictTier: 'typical' }}
+        anomaly={{ delta: 0, zScore: -0.04, verdictTier: 'typical', percentile: 50 }}
       />,
     )
 
@@ -102,10 +106,26 @@ describe('DeltaPanel', () => {
         hasSelection={true}
         currentStatus="resolved"
         baselineStatus="resolved"
-        anomaly={{ delta: 0, zScore: null, verdictTier: 'typical' }}
+        anomaly={{ delta: 0, zScore: null, verdictTier: 'typical', percentile: null }}
       />,
     )
 
+    expect(getByText('z — (too little variance to compute)')).toBeTruthy()
+  })
+
+  it('suppresses the percentile line when zScore/percentile are null, while the z-chip no-variance fallback still renders (PD-04)', () => {
+    const { getByText, queryByText } = render(
+      <DeltaPanel
+        hasSelection={true}
+        currentStatus="resolved"
+        baselineStatus="resolved"
+        anomaly={{ delta: 0, zScore: null, verdictTier: 'typical', percentile: null }}
+      />,
+    )
+
+    expect(
+      queryByText((text) => text.includes('% of years for this date')),
+    ).toBeNull()
     expect(getByText('z — (too little variance to compute)')).toBeTruthy()
   })
 
@@ -115,7 +135,7 @@ describe('DeltaPanel', () => {
         hasSelection={true}
         currentStatus="resolved"
         baselineStatus="resolved"
-        anomaly={{ delta: 3.2, zScore: 1.8, verdictTier: 'slightly-warmer' }}
+        anomaly={{ delta: 3.2, zScore: 1.8, verdictTier: 'slightly-warmer', percentile: 91 }}
       />,
     )
 

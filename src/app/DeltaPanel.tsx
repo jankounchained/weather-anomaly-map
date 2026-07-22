@@ -17,6 +17,7 @@ import {
   formatDelta,
   isAnomalyReady,
   verdictLabel,
+  percentileLabel,
   type AnomalyForToday,
 } from '../anomaly/anomaly'
 import type { WeatherStatus } from '../weather/types'
@@ -96,6 +97,9 @@ export function DeltaPanel({
         How today compares to the 30-year average for this date.
       </p>
       <p className="m-0 text-heading font-heading">{verdictLabel(anomaly.verdictTier)}</p>
+      {anomaly.percentile !== null && (
+        <p className="m-0 text-body font-body">{percentileLabel(anomaly.percentile)}</p>
+      )}
       <p className="mt-xs inline-block w-fit text-label font-label text-muted bg-secondary rounded-full py-[2px] px-sm">
         {anomaly.zScore === null
           ? 'z — (too little variance to compute)'
