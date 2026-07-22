@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spike 001 — Per-Half Sample Sizes</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 15px/1.55 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: #0f1115; color: #e7e9ee; padding: 2rem 1.25rem 4rem;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 1.35rem; margin: 0 0 .25rem; }
+  .sub { color: #9aa1ad; margin: 0 0 1.5rem; }
+  code { background: #1b1f27; padding: .1em .4em; border-radius: 4px; font-size: .88em; }
+  .panel { background: #161a21; border: 1px solid #262c37; border-radius: 12px; padding: 1.1rem 1.25rem; margin-bottom: 1.1rem; }
+  .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+  input, button { font: inherit; }
+  input {
+    background: #0f1115; border: 1px solid #2c3440; color: #e7e9ee;
+    padding: .5rem .6rem; border-radius: 8px; width: 7.5rem;
+  }
+  button {
+    background: #2563eb; color: #fff; border: 0; padding: .55rem .9rem;
+    border-radius: 8px; cursor: pointer; font-weight: 600;
+  }
+  button.ghost { background: #232a35; color: #cfd4dd; }
+  button:disabled { opacity: .5; cursor: default; }
+  .presets { margin-top: .6rem; }
+  .presets button { background: #1c2230; color: #b8c0cd; font-weight: 500; font-size: .82rem; padding: .35rem .6rem; margin: .15rem .25rem 0 0; }
+  .gauge { margin-top: 1rem; }
+  .gauge h3 { margin: 0 0 .1rem; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: #9aa1ad; }
+  .bar-wrap { position: relative; height: 34px; background: #0f1115; border: 1px solid #2c3440; border-radius: 8px; overflow: hidden; margin-top: .35rem; }
+  .bar { height: 100%; display: flex; align-items: center; padding-left: .6rem; font-weight: 700; color: #fff; transition: width .4s ease; white-space: nowrap; }
+  .bar.recent { background: linear-gradient(90deg, #ea580c, #f97316); }
+  .bar.prior { background: linear-gradient(90deg, #3f4756, #57534e); }
+  .floor { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #eab308; }
+  .floor span { position: absolute; top: -1.35rem; left: 50%; transform: translateX(-50%); font-size: .7rem; color: #eab308; white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; margin-top: .4rem; font-size: .86rem; }
+  th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #232a35; }
+  th { color: #9aa1ad; font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; text-align: right; }
+  .ok { color: #4ade80; } .warn { color: #eab308; }
+  .status { min-height: 1.3rem; color: #9aa1ad; margin-top: .5rem; font-size: .88rem; }
+  .verdict { background: #12251a; border: 1px solid #1f4030; color: #b6f0c9; padding: .8rem 1rem; border-radius: 10px; margin-top: .5rem; font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Spike 001 — Per-Half Sample Sizes</h1>
+  <p class="sub">Split the same 30-yr Open-Meteo archive into a <b>recent 5-yr</b> half and a
+  <b>prior 25-yr</b> half using the app's real ±5-day window. How many samples does each half
+  actually get — and does the recent half ever dip below the ~15–20 curve-vs-rug floor?</p>
+
+  <div class="panel">
+    <div class="row">
+      <label>lat <input id="lat" value="52.52" /></label>
+      <label>lon <input id="lon" value="13.41" /></label>
+      <button id="go">Probe this location (live)</button>
+    </div>
+    <div class="presets" id="presets"></div>
+    <div class="status" id="status">Click a preset or enter coordinates — data fetched live from Open-Meteo.</div>
+
+    <div class="gauge" id="gauge" hidden>
+      <h3>Sample count per half (max recent&nbsp;55 · prior&nbsp;275)</h3>
+      <div class="bar-wrap"><div class="bar recent" id="barRecent"></div><div class="floor" id="floor"><span>n_min ≈ 20</span></div></div>
+      <div class="bar-wrap" style="margin-top:.5rem"><div class="bar prior" id="barPrior"></div><div class="floor" id="floor2"></div></div>
+      <div class="verdict" id="verdict"></div>
+      <table id="perDay" hidden>
+        <thead><tr><th>Target day</th><th class="n">recent n</th><th class="n">prior n</th><th>curve?</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin:.1rem 0 .4rem; font-size:.9rem;">Already measured (7 locations, full 30-yr fetch)</h3>
+    <table>
+      <thead><tr><th>Location</th><th class="n">recent n</th><th class="n">prior n</th><th class="n">coverage</th></tr></thead>
+      <tbody id="baseline"></tbody>
+    </table>
+    <p class="sub" style="margin:.6rem 0 0; font-size:.82rem;">Every band — equatorial to high Arctic to open ocean — returns the identical 55 / 275. ERA5 is a complete global grid: no data deserts.</p>
+  </div>
+</div>
+
+<script type="module">
+const HALF = 5, RECENT_START = 2021, RECENT_END = 2025, PRIOR_START = 1996, PRIOR_END = 2020
+const N_MIN = 20 // spike-002 will pin this; drawn here as the floor to beat
+const RECENT_MAX = 55, PRIOR_MAX = 275
+
+const PRESETS = [
+  ['Berlin', 52.52, 13.41], ['Singapore', 1.35, 103.82], ['Reykjavík', 64.15, -21.94],
+  ['Svalbard', 78.22, 15.63], ['Sahara', 23.42, 25.0], ['Mid-Pacific', 0.0, -140.0],
+  ['McMurdo AQ', -77.85, 166.67], ['Cape Horn', -55.98, -67.27],
+]
+const BASELINE = [
+  ['Berlin (mid-lat land)', 55, 275, '100%'], ['Singapore (equatorial)', 55, 275, '100%'],
+  ['Reykjavík (subarctic)', 55, 275, '100%'], ['Svalbard (high Arctic)', 55, 275, '100%'],
+  ['Sahara (hot desert)', 55, 275, '100%'], ['Mid-Pacific (open ocean)', 55, 275, '100%'],
+  ['McMurdo (Antarctica)', 55, 275, '100%'],
+]
+
+function windowBounds(year, month, day, hw) {
+  const safeDay = month === 2 && day === 29 ? 28 : day
+  const anchor = Date.UTC(year, month - 1, safeDay)
+  const s = new Date(anchor - hw * 86400000), e = new Date(anchor + hw * 86400000)
+  return { start: s.toISOString().slice(0, 10), end: e.toISOString().slice(0, 10) }
+}
+function windowCount(daily, m, d, y0, y1) {
+  const ranges = []
+  for (let y = y0; y <= y1; y++) ranges.push(windowBounds(y, m, d, HALF))
+  let n = 0
+  for (let i = 0; i < daily.time.length; i++) {
+    const v = daily.values[i]
+    if (v != null && ranges.some(r => daily.time[i] >= r.start && daily.time[i] <= r.end)) n++
+  }
+  return n
+}
+function lastSeven() {
+  const out = [], now = new Date('2026-07-23T00:00:00Z')
+  for (let i = 6; i >= 0; i--) { const dt = new Date(now - i * 86400000); out.push({ m: dt.getUTCMonth() + 1, d: dt.getUTCDate(), iso: dt.toISOString().slice(0, 10) }) }
+  return out
+}
+
+const $ = id => document.getElementById(id)
+function setFloor(el, max) { el.style.left = (N_MIN / max * 100) + '%' }
+setFloor($('floor'), RECENT_MAX); setFloor($('floor2'), PRIOR_MAX)
+
+// render presets + baseline
+$('presets').innerHTML = ''
+for (const [name, la, lo] of PRESETS) {
+  const b = document.createElement('button'); b.textContent = name
+  b.onclick = () => { $('lat').value = la; $('lon').value = lo; probe() }
+  $('presets').appendChild(b)
+}
+$('baseline').innerHTML = BASELINE.map(([n, r, p, c]) =>
+  `<tr><td>${n}</td><td class="n">${r}</td><td class="n">${p}</td><td class="n ok">${c}</td></tr>`).join('')
+
+async function probe() {
+  const lat = parseFloat($('lat').value), lon = parseFloat($('lon').value)
+  if (Number.isNaN(lat) || Number.isNaN(lon)) { $('status').textContent = 'Enter valid coordinates.'; return }
+  $('go').disabled = true; $('status').textContent = `Fetching 30 years for ${lat}, ${lon}…`
+  try {
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${PRIOR_START}-01-01&end_date=${RECENT_END}-12-31&daily=temperature_2m_mean&timezone=auto`
+    const res = await fetch(url); if (!res.ok) throw new Error('HTTP ' + res.status)
+    const j = await res.json()
+    const daily = { time: j.daily.time, values: j.daily.temperature_2m_mean }
+    const rows = lastSeven().map(dt => ({ iso: dt.iso, r: windowCount(daily, dt.m, dt.d, RECENT_START, RECENT_END), p: windowCount(daily, dt.m, dt.d, PRIOR_START, PRIOR_END) }))
+    const minR = Math.min(...rows.map(x => x.r)), minP = Math.min(...rows.map(x => x.p))
+    const nn = daily.values.filter(v => v != null).length
+    $('gauge').hidden = false
+    $('barRecent').style.width = (minR / RECENT_MAX * 100) + '%'; $('barRecent').textContent = `recent ${minR}`
+    $('barPrior').style.width = (minP / PRIOR_MAX * 100) + '%'; $('barPrior').textContent = `prior ${minP}`
+    const safe = minR >= N_MIN
+    $('verdict').className = 'verdict' + (safe ? '' : ' warn')
+    $('verdict').innerHTML = safe
+      ? `✓ Recent half = <b>${minR}</b> samples (min across 7 days) — <b>${(minR / N_MIN).toFixed(1)}× above</b> the n_min≈${N_MIN} floor. Coverage ${(nn / daily.time.length * 100).toFixed(1)}%. Both halves draw a real KDE curve; the rug fallback never fires here.`
+      : `⚠ Recent half dips to <b>${minR}</b> — below n_min≈${N_MIN}. This half would degrade to a rug/dot strip (PD-01).`
+    const tb = $('perDay').querySelector('tbody')
+    tb.innerHTML = rows.map(x => `<tr><td>${x.iso}</td><td class="n">${x.r}</td><td class="n">${x.p}</td><td class="${x.r >= N_MIN ? 'ok' : 'warn'}">${x.r >= N_MIN ? 'curve' : 'rug'}</td></tr>`).join('')
+    $('perDay').hidden = false
+    $('status').textContent = `Done — ${lat}, ${lon}.`
+  } catch (e) {
+    $('status').textContent = 'Fetch failed: ' + e.message + ' (Open-Meteo may be rate-limiting; try again in a moment).'
+  } finally { $('go').disabled = false }
+}
+$('go').onclick = probe
+</script>
+</body>
+</html>
