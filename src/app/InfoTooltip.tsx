@@ -64,10 +64,13 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
   }, [open])
 
   const handleTriggerClick = () => {
-    if (open) {
+    if (open && !hoverPinnedRef.current) {
+      // Already persistent (opened by an explicit click) -> toggle closed.
       closePopover(false)
     } else {
-      openPopover(false)
+      // Closed, or currently hover/focus-pinned -> make it persistent.
+      hoverPinnedRef.current = false
+      setOpen(true)
     }
   }
 
@@ -78,7 +81,7 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
   }
 
   const handleMouseEnter = () => {
-    openPopover(true)
+    if (!open) openPopover(true)
   }
 
   const handleMouseLeave = () => {
