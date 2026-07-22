@@ -40,7 +40,7 @@ empirically validate — non-negotiable for the real build:
 | # | Name | Type | Validates | Verdict | Tags |
 |---|------|------|-----------|---------|------|
 | 001 | per-half-sample-sizes | standard | Actual recent/prior per-half sample counts on real Open-Meteo data across latitudes; is the recent half ever sparse? | ✓ VALIDATED | statistics, sampling, gate |
-| 002 | kde-silverman-quality | standard | Does a hand-rolled Gaussian KDE + Silverman bandwidth render a believable (non-lumpy) curve at the recent half's real n? Pin n_min via thinning. | ○ PENDING | statistics, kde, bandwidth |
+| 002 | kde-silverman-quality | standard | Does a hand-rolled Gaussian KDE + Silverman bandwidth render a believable (non-lumpy) curve at the recent half's real n? Pin n_min via thinning. | ✓ VALIDATED | statistics, kde, bandwidth |
 | 003 | split-violin-tile | standard | Composed split-violin tile row on real data: does the recent-vs-prior shift read legibly, with marks + fallback on a shared Y-axis? | ○ PENDING | viz, svg, geometry, ux |
 
 ## Key Findings (running)
@@ -49,3 +49,16 @@ empirically validate — non-negotiable for the real build:
   exactly **55 recent / 275 prior** samples at **100% coverage**. ERA5 has no data deserts. ⇒ the
   recent half is never realistically sparse; the rug fallback is a defensive guard, not a common
   path. The real design constraint is the **55-vs-275 bandwidth asymmetry**, not sparsity.
+- **002:** Bandwidth = **textbook Silverman ×1.0** (parameter-free, robust). **n_min = 20** pinned
+  (curve error ≈1.7× the recent-half baseline there; confirms roadmap's ~15–20). Recent half
+  (n=55) curve is reliable-but-adequate (~15% error vs truth) → don't over-read small shifts
+  (supports deferring TREND-04). Failure mode under thinning is **shape drift, not spikiness**
+  (Silverman self-protects against lumps) → the rug fallback exists to avoid a confident
+  smooth-but-wrong curve, which is the honest framing for the legend.
+
+## Requirements (emerged from spiking)
+
+- **KDE bandwidth = Silverman ×1.0**, hand-rolled Gaussian kernel, no stats dependency (matches
+  `anomaly.ts` discipline). [002]
+- **Per-half `n_min` = 20** for the curve-vs-rug gate (PD-04 gate 2), in its own named helper. [002]
+- **Curve is the default render path**; rug is a rare guard (real halves are always 55/275). [001]
