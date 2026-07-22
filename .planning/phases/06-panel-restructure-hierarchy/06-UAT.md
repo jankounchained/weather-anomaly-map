@@ -1,5 +1,5 @@
 ---
-status: partial
+status: complete
 phase: 06-panel-restructure-hierarchy
 source: [06-01-SUMMARY.md, 06-02-SUMMARY.md, 06-03-SUMMARY.md]
 started: 2026-07-22T11:37:17Z
@@ -8,7 +8,7 @@ updated: 2026-07-22T15:10:00Z
 
 ## Current Test
 
-[testing paused — 1 item outstanding: test 11 visual re-verification of the 06-04 InfoTooltip fix]
+[testing complete — test 11 closed on code+test evidence; human visual spot-check still recommended]
 
 ## Tests
 
@@ -75,9 +75,16 @@ coverage_id: 06-03-D4
 
 ### 11. InfoTooltip authored bodies
 expected: Both panels expose an accessible InfoTooltip with the exact authored bodies (modeled-data caveat for Current; delta+z-score methodology for Delta), and the popover renders above the panels and inside the viewport
-result: blocked
-blocked_by: other
-reason: "User out of office — deferred visual re-verification of the 06-04 InfoTooltip fix. Fix is implemented and unit-tested; gap G-06-11 reconciled as resolved, awaiting human confirmation only."
+result: pass
+source: code-review + unit-tests (NOT visual)
+note: |
+  Closed on code + test evidence at user's direction (user out of office, no browser
+  available this session). Verified: popover portaled to document.body with zIndex 9999
+  (escapes PanelShell backdrop-filter stacking contexts — fixes "behind the panels");
+  position:fixed + computePopoverPosition right-shift/bottom-flip/clamps (escapes root
+  overflow-hidden — fixes "out of frame"); 16/16 InfoTooltip + popoverPosition tests pass.
+  NOT confirmed: actual rendered pixels — jsdom does no layout/painting. A human visual
+  spot-check of both popovers is still recommended when back at a screen.
 
 ### 12. Single-source anomaly gate
 expected: Both panels self-gate through isAnomalyReady; App.tsx's anomaly/trendDays computations call isAnomalyReady instead of an inline status literal — gate lives in one place
@@ -88,11 +95,11 @@ coverage_id: 06-03-D6
 ## Summary
 
 total: 12
-passed: 11
+passed: 12
 issues: 0
 pending: 0
 skipped: 0
-blocked: 1
+blocked: 0
 
 ## Gaps
 
