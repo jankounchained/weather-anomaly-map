@@ -15,6 +15,7 @@ import { LocationPanel } from './LocationPanel'
 import { CurrentConditionsPanel } from './CurrentConditionsPanel'
 import { DeltaPanel } from './DeltaPanel'
 import { TrendRow } from './TrendRow'
+import { MethodologyPanel } from './MethodologyPanel'
 
 function App() {
   const { lat, lng, zoom, setLocation } = useSelectedLocation()
@@ -131,6 +132,7 @@ function App() {
           days={trendDays}
           units={current.units}
         />
+        <MethodologyPanel />
       </LocationPanel>
     </div>
   )
