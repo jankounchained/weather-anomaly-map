@@ -1,7 +1,7 @@
 ---
 phase: 7
 slug: methodology-section-explainers
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-07-22
@@ -132,18 +132,29 @@ No primary CTA exists in this phase — Phase 7 is an information/explanation ad
 
 ## UI Considerations
 
-Applicable state considerations resolved: 8 covered, 0 backstop, 0 unresolved.
+State-coverage probe (`ui-consideration-probe`) over the two described surfaces — E1 Methodology panel, E2 percentile line. **14 applicable considerations resolved: 9 covered, 5 dismissed (not-applicable, with reason), 0 backstop, 0 unresolved.** Empty/loading/error COPY lives in `## Copywriting Contract`; this section records shape-rooted STATE coverage and references those rows rather than restating them.
 
-| Category | Element(s) | Status | Resolution / Reason |
-|----------|------------|--------|---------------------|
-| populated | Percentile line (Delta panel) | ✅ covered | Three copy branches defined and bounded — warmer (>55%), colder (<45%), near-median (45–55%) — see Copywriting Contract. |
-| null / degenerate-variance | Percentile line (Delta panel) | ✅ covered | Per PD-04, when `anomaly.zScore === null` the line is omitted entirely (no placeholder text, no "N/A" row) — silent suppression is the specified behavior, matching the existing z-chip's own null-variance handling in the same panel. |
-| overflow, long-text | Percentile line (Delta panel) | ✅ covered | Single short static sentence with a 1-3 digit dynamic number, inside the existing 760px `PanelShell` column — same bounded-content profile as the panel's other micro-copy (Phase 6 precedent). |
-| always-visible (PD-11) | Methodology panel | ✅ covered | Mounts unconditionally as a `LocationPanel` child in every state (idle/empty/loading/error/resolved) — no `hasSelection` or `isAnomalyReady` gate, confirmed against `LocationPanel.tsx`'s always-rendered children slot. |
-| long-text | Methodology panel body | ✅ covered | All copy is static/authored (no dynamic per-location text, per REQUIREMENTS.md "Out of Scope: dynamic methodology copy") and wraps normally inside the 760px column — no truncation risk. |
-| overflow | Methodology panel (expanded) | ✅ covered | Panel sits inside `LocationPanel`'s `overflow-y-auto` scrollable aside; expanding adds page-flow height, never clips or requires its own internal scroll region. |
-| interaction (keyboard + motion) | Methodology disclosure toggle | ✅ covered | Native `<details>`/`<summary>` is keyboard-operable (Enter/Space) and mouse-operable with zero custom JS; motion requirement satisfied by having no height animation to gate, only a `motion-safe:`-gated chevron rotation (see Component Inventory). |
-| consistency-risk (accepted tradeoff) | Percentile line vs. z-score verdict tier | ✅ covered | Empirical percentile rank and the parametric z-score verdict tier are computed from the same samples but by different methods (PD-01 rationale: distribution-free, honest on skewed climates) — they can rarely disagree at the edges (e.g. "much warmer" verdict alongside a percentile in the high-80s on a skewed distribution). This is an intentional, already-decided tradeoff (not a bug for planner/executor/checker to "fix"), documented here so it isn't re-litigated downstream. |
+| Element | Category | Status | Resolution / Reason |
+|---------|----------|--------|---------------------|
+| E2 Percentile line | populated | ✅ covered | Three copy branches defined and bounded — warmer (p>55%), colder (p<45%), near-median (45–55%) — rendering a whole-number `%`. See Copywriting Contract. |
+| E2 Percentile line | partial / degenerate-variance | ✅ covered | Per PD-04, when `anomaly.zScore === null` the line is omitted entirely — no placeholder, no "N/A" row. Silent suppression, matching the z-chip's own null-variance handling in the same panel. |
+| E2 Percentile line | empty | ✅ covered (by reference) | Line renders only inside `DeltaPanel`'s populated branch; the idle/no-selection state shows `DeltaPanel`'s existing Empty branch (Phase 6, unchanged) — the percentile line is simply not rendered. |
+| E2 Percentile line | loading | ✅ covered (by reference) | `DeltaPanel`'s existing Loading branch (Phase 6) handles the in-flight state; the line only mounts in the populated branch, so nothing line-specific shows while loading. |
+| E2 Percentile line | error | ✅ covered (by reference) | `DeltaPanel`'s existing Error branch (Phase 6) handles failures; the line is not rendered on error. |
+| E2 Percentile line | overflow | ✅ covered | Short static sentence + 1–3 digit number inside the existing 760px `PanelShell` column — same bounded-content profile as the panel's other micro-copy (Phase 6 precedent); wraps if ever needed, never clips. |
+| E2 Percentile line | long-text | ✅ covered | Copy is fixed/authored; only the integer varies (1–3 digits). No user-supplied or dynamic long text is possible — wrapping in the 760px column fully covers it. |
+| E2 Percentile line | zero-one-many | ✗ dismissed (N/A) | The percentile line is a single computed sentence, never a list/collection — the probe's `zero-one-many` classification is a heuristic misfire; the singular/plural axis does not apply. |
+| E1 Methodology panel | overflow | ✅ covered | Panel sits inside `LocationPanel`'s `overflow-y-auto` scrollable aside; expanding adds page-flow height, never clips and never needs its own internal scroll region. |
+| E1 Methodology panel | long-text | ✅ covered | All copy is static/authored (no dynamic per-location text, REQUIREMENTS.md "Out of Scope: dynamic methodology copy") and wraps normally inside the 760px column — no truncation risk. |
+| E1 Methodology panel | empty | ✗ dismissed (N/A) | Always-visible panel (PD-11) renders the same compiled-in copy in every state; there is no data source and no "zero items" condition. Heuristic misfire (classified as a data container). |
+| E1 Methodology panel | loading | ✗ dismissed (N/A) | Copy is compiled-in static text — no async data, nothing to load; the panel mounts fully rendered. Heuristic misfire. |
+| E1 Methodology panel | error | ✗ dismissed (N/A) | No data fetch or submit occurs, so nothing can fail. Heuristic misfire. |
+| E1 Methodology panel | partial | ✗ dismissed (N/A) | No dynamic or per-location text; all copy is authored and always fully present. Heuristic misfire. |
+
+**Carried-forward design notes (not probe categories, retained for downstream context):**
+- **Always-visible (PD-11):** the Methodology panel mounts unconditionally as a `LocationPanel` child in every state (idle/empty/loading/error/resolved) — no `hasSelection`/`isAnomalyReady` gate.
+- **Interaction (keyboard + motion):** native `<details>`/`<summary>` is keyboard-operable (Enter/Space) and mouse-operable with zero custom JS; the motion requirement is satisfied by having no height animation to gate — only a `motion-safe:`-gated chevron rotation (see Component Inventory).
+- **Consistency-risk (accepted tradeoff):** the empirical percentile rank and the parametric z-score verdict tier are computed from the same samples by different methods (PD-01: distribution-free, honest on skewed climates) — they can rarely disagree at the edges. This is an intentional, already-decided tradeoff, documented so it isn't re-litigated downstream.
 
 ---
 
@@ -157,11 +168,11 @@ Applicable state considerations resolved: 8 covered, 0 backstop, 0 unresolved.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED (gsd-ui-checker, 6/6 dimensions passed)
