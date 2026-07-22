@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
-current_phase: 07
-current_phase_name: methodology-section-explainers
-status: verifying
+current_phase: 8
+current_phase_name: Split-Violin Trend View
+status: planning
 stopped_at: Completed 07-02-PLAN.md
-last_updated: "2026-07-22T18:13:02.969Z"
-last_activity: 2026-07-22
-last_activity_desc: Phase 07 execution started
+last_updated: "2026-07-22T22:36:30.214Z"
+last_activity: 2026-07-23
+last_activity_desc: Phase 07 complete, transitioned to Phase 8
 progress:
   total_phases: 3
   completed_phases: 2
@@ -21,19 +21,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-21)
+See: .planning/PROJECT.md (updated 2026-07-23)
 
 **Core value:** For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
-**Current focus:** Phase 07 — methodology-section-explainers
+**Current focus:** Phase 8 — Split-Violin Trend View
 
 ## Current Position
 
-Phase: 07 (methodology-section-explainers) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-07-22 — Phase 07 execution started
+Phase: 8 — Split-Violin Trend View
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-23 — Phase 07 complete, transitioned to Phase 8
 
-Progress: [██████████] 100%
+Progress: [████████████████████] 6/6 plans (100%)
 
 ## Performance Metrics
 
@@ -95,7 +95,7 @@ None tracked for v1.2 yet.
 
 - [Phase 8] Reviewer-locked trend legend describes dot/line/diamond marks the violin replaces — requires an explicit reviewer copy round-trip, not a silent rewrite.
 - [Phase 8] Per-half KDE sample-size floor (n_min ~15-20) unresolved and width-normalization (equal-width vs n-scaled) undecided — pin empirically in the Phase 8 spike before implementation.
-- [Phase 6] Decision-coverage plan gate overridden at planning (false positive): `06-CONTEXT.md` uses `PD-NN` decision ids (deliberate — avoids colliding with the codebase's own `D-NN` ids), but the gate parser only recognizes `D-NN`, so it reported 0/0. The plan-checker independently verified all of PD-01..PD-10 are cited across the plans, so no decision was actually dropped. Phases 7 & 8 reuse the `PD-` convention and will trip the same gate.
+- [Phase 8] Decision-coverage plan gate false positive: the v1.2 phases use `PD-NN` decision ids (deliberate — avoids colliding with the codebase's own `D-NN` ids), but the gate parser only recognizes `D-NN`, so it reports 0/0. Verified harmless in Phases 6 & 7 (plan-checker confirmed all PD-* cited); Phase 8 reuses the `PD-` convention and will trip the same gate — override expected.
 
 ## Deferred Items
 
@@ -110,10 +110,10 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-22T18:13:02.291Z
-Stopped at: Completed 07-02-PLAN.md
+Last session: 2026-07-23
+Stopped at: Phase 07 complete (UAT 1/1 passed, security verified), ready to plan Phase 8
 Resume file: None
 
 ## Operator Next Steps
 
-- Plan Phase 6 with /gsd-plan-phase 6
+- Plan Phase 8 with /gsd-plan-phase 8

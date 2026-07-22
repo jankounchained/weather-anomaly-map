@@ -34,7 +34,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 **Milestone Goal:** Make every part of the anomaly view self-explanatory — restructure the resolved view into clearly-headlined panels, add methodology and inline explainers, and replace the trend row with a per-day split-violin visualization. (Desktop-focused reflow; mobile-responsive layout stays deferred.)
 
 - [x] **Phase 6: Panel Restructure & Hierarchy** - Split the hero into four headlined, self-explanatory panels with the Delta preserved as the focal point. (completed 2026-07-22)
-- [ ] **Phase 7: Methodology Section & Explainers** - Collapsible methodology disclosure plus a plain-language percentile framing of the z-score.
+- [x] **Phase 7: Methodology Section & Explainers** - Collapsible methodology disclosure plus a plain-language percentile framing of the z-score. (completed 2026-07-23)
 - [ ] **Phase 8: Split-Violin Trend View** - Replace dot-strip tiles with per-day recent-vs-prior split violins, gated for sparse samples, with an updated legend.
 
 ## Phase Details
@@ -121,7 +121,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete | 2026-07-16 |
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
 | 6. Panel Restructure & Hierarchy | v1.2 | 4/4 | Complete    | 2026-07-22 |
-| 7. Methodology Section & Explainers | v1.2 | 2/2 | In Progress|  |
+| 7. Methodology Section & Explainers | v1.2 | 2/2 | Complete    | 2026-07-23 |
 | 8. Split-Violin Trend View | v1.2 | 0/TBD | Not started | - |
 
 ## Backlog

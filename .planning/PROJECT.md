@@ -53,6 +53,8 @@ For any location, the user can immediately tell how unusual today's temperature 
 
 - [x] Resolved anomaly view restructured into four self-explanatory, headlined panels — combined hero split into **Current conditions** + **Delta** (joining Location + History), each carrying a shared `PanelHeadline`, inline plain-language micro-copy, and a keyboard/mouse-accessible `InfoTooltip` info affordance; the Delta remains the dominant focal point (~1.7× scale, anomaly-color-driven, Δ-led) — LAYOUT-01, LAYOUT-02, LAYOUT-03, EXPLAIN-01, EXPLAIN-02, Validated in Phase 6 (v1.2)
 
+- [x] Anomaly view carries a percentile explainer of today's reading vs the 30-year window (empirical Hazen/midrank rank, clamped 1–99, rendered as plain micro-copy in the Delta panel) plus an always-visible "How This Works" methodology disclosure (native `<details>`/`<summary>`) documenting the baseline/anomaly methodology — EXPLAIN-03, EXPLAIN-04, Validated in Phase 7 (v1.2)
+
 ### Active
 
 - [ ] Current-location button with explicit user-initiated geolocation request (never auto-prompted on load) — LOC-04, deferred to v2
@@ -125,4 +127,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-22 — Phase 6 (Panel Restructure & Hierarchy) complete: four headlined, self-explanatory panels with the Delta preserved as the focal point (LAYOUT-01..03, EXPLAIN-01/02 validated)*
+*Last updated: 2026-07-23 — Phase 7 (Methodology Section & Explainers) complete: percentile explainer in the Delta panel + always-visible "How This Works" methodology disclosure (EXPLAIN-03/04 validated)*

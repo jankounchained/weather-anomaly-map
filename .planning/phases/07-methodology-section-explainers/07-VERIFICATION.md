@@ -1,11 +1,12 @@
 ---
 phase: 07-methodology-section-explainers
 verified: 2026-07-22T18:50:53Z
-status: human_needed
+status: passed
 score: 3/3 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
 human_verification:
+
   - test: "Toggle the OS/browser reduced-motion setting (Chrome DevTools Rendering tab -> 'Emulate CSS media feature prefers-reduced-motion: reduce', or macOS System Settings -> Accessibility -> Display -> Reduce Motion), run `npm run dev`, and expand/collapse the 'How This Works' panel."
     expected: "The ▸ chevron snaps instantly (no smooth rotation) when reduce-motion is enabled, and rotates smoothly over ~200ms when motion is enabled. Also confirm the chevron visibly rotates at all when the panel opens/closes."
     why_human: "jsdom cannot emulate the prefers-reduced-motion media feature (07-RESEARCH.md Pitfall 4); this check was deliberately deferred from checkpoint:human-verify to end-of-phase per .planning/config.json's workflow.human_verify_mode=\"end-of-phase\", and is recorded as `pending`/`human_judgment: true` in 07-02-SUMMARY.md's own coverage table (item D4)."
@@ -76,6 +77,7 @@ No orphaned requirements: REQUIREMENTS.md traceability table maps only EXPLAIN-0
 None. Scanned all phase-modified files (`src/anomaly/anomaly.ts`, `src/anomaly/anomaly.test.ts`, `src/app/DeltaPanel.tsx`, `src/app/DeltaPanel.test.tsx`, `src/app/MethodologyPanel.tsx`, `src/app/MethodologyPanel.test.tsx`, `src/app/App.tsx`) for `TBD`/`FIXME`/`XXX`/`TODO`/`HACK`/`PLACEHOLDER`/`dangerouslySetInnerHTML`/empty-implementation patterns — zero matches beyond the code review's own non-blocking notes (below).
 
 **Non-blocking code-review findings (pre-existing, from `07-REVIEW.md`, `status: issues_found`, 0 critical):**
+
 - **WR-01** (warning): The percentile copy says "X% of years for this date," but the underlying sample set is the ±5-day day-of-year window across all years (~330 daily values), not one value per year — a product/copy accuracy note, not an implementation defect. Notably, this exact "% of years" phrasing is what ROADMAP.md's own success-criterion example text uses ("warmer than 98% of years for this date"), and the implementation follows the UI-SPEC's locked Copywriting Contract verbatim per its own prohibition ("MUST NOT... use... EXACT copy strings"). Not a phase-blocking gap; flagged for a future product/copy pass.
 - **WR-02** (warning): `computePercentileRank` is an exported pure function that trusts an unenforced caller invariant (only call it when `zScore !== null`) rather than self-guarding like its sibling functions. Currently honored by its one caller; a maintainability/defense-in-depth note, not a current functional bug.
 - **IN-01/IN-02** (info): stale doc comments and a redundant test assertion. Cosmetic.
