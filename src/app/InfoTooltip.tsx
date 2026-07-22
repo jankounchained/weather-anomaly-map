@@ -75,7 +75,6 @@ export function InfoTooltip({ label, children }: InfoTooltipProps) {
 
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   const handleTriggerClick = () => {
