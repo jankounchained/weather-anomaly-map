@@ -8,14 +8,14 @@
 
 ### Layout (LAYOUT)
 
-- [ ] **LAYOUT-01**: User sees today's current temperature and the anomaly delta in two separate, distinct panels — the combined hero is split into a "Current conditions" panel and a "Delta" panel.
-- [ ] **LAYOUT-02**: User sees a clear headline on every panel (Location, Current conditions, Delta, History), in the style of the existing "Last 7 days" headline, so it is immediately obvious what each panel shows.
+- [x] **LAYOUT-01**: User sees today's current temperature and the anomaly delta in two separate, distinct panels — the combined hero is split into a "Current conditions" panel and a "Delta" panel.
+- [x] **LAYOUT-02**: User sees a clear headline on every panel (Location, Current conditions, Delta, History), in the style of the existing "Last 7 days" headline, so it is immediately obvious what each panel shows.
 - [ ] **LAYOUT-03**: User still perceives the anomaly delta as the dominant focal point after the split — it remains the largest, color-driven, Δ-glyph-led element, not visually equal to the other panels.
 
 ### Explainers (EXPLAIN)
 
 - [ ] **EXPLAIN-01**: User sees short inline micro-copy on each panel stating in plain language what its number means (current temperature, delta, z-score).
-- [ ] **EXPLAIN-02**: User can reveal an in-place explanation of the delta, the z-score, and the current-temperature reading via an accessible info affordance (info icon / tooltip usable by mouse and keyboard).
+- [x] **EXPLAIN-02**: User can reveal an in-place explanation of the delta, the z-score, and the current-temperature reading via an accessible info affordance (info icon / tooltip usable by mouse and keyboard).
 - [ ] **EXPLAIN-03**: User can expand a collapsed-by-default methodology section that briefly explains how the anomaly is computed (30-year baseline, day-of-year window, z-score, delta) and what the tool is for.
 - [ ] **EXPLAIN-04**: User sees a plain-language percentile framing (e.g. "warmer than 98% of years for this date") presented alongside the z-score.
 
@@ -43,11 +43,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LAYOUT-01 | Phase 6 | Pending |
-| LAYOUT-02 | Phase 6 | Pending |
+| LAYOUT-01 | Phase 6 | Complete |
+| LAYOUT-02 | Phase 6 | Complete |
 | LAYOUT-03 | Phase 6 | Pending |
 | EXPLAIN-01 | Phase 6 | Pending |
-| EXPLAIN-02 | Phase 6 | Pending |
+| EXPLAIN-02 | Phase 6 | Complete |
 | EXPLAIN-03 | Phase 7 | Pending |
 | EXPLAIN-04 | Phase 7 | Pending |
 | TREND-01 | Phase 8 | Pending |

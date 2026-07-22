@@ -52,10 +52,10 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
   4. User sees short inline micro-copy on each panel stating in plain language what its number means (current temperature, delta, z-score).
   5. User can reveal an in-place explanation of the delta, the z-score, and the current-temperature reading via an info affordance usable by both mouse and keyboard.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 **Wave 1**
 
-- [ ] 06-01-PLAN.md — Shared primitives (PanelShell, PanelHeadline, InfoTooltip) + the isAnomalyReady gate predicate (Wave 1)
+- [x] 06-01-PLAN.md — Shared primitives (PanelShell, PanelHeadline, InfoTooltip) + the isAnomalyReady gate predicate (Wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -110,7 +110,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 3. Historical Trend Charts & Edge Cases | v1.0 | 6/6 | Complete | 2026-07-15 |
 | 4. Tailwind Foundation Migration | v1.1 | 4/4 | Complete | 2026-07-16 |
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
-| 6. Panel Restructure & Hierarchy | v1.2 | 0/3 | Not started | - |
+| 6. Panel Restructure & Hierarchy | v1.2 | 1/3 | In Progress|  |
 | 7. Methodology Section & Explainers | v1.2 | 0/TBD | Not started | - |
 | 8. Split-Violin Trend View | v1.2 | 0/TBD | Not started | - |
 
