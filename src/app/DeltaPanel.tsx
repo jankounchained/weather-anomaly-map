@@ -102,7 +102,7 @@ export function DeltaPanel({
       <p className="mt-xs inline-block w-fit text-label font-label text-muted bg-secondary rounded-full py-[2px] px-sm">
         {anomaly.zScore === null
           ? 'z — (too little variance to compute)'
-          : `z ${anomaly.zScore.toFixed(1)}`}
+          : `z ${anomaly.zScore.toFixed(1).replace('-0.0', '0.0')}`}
       </p>
     </PanelShell>
   )
