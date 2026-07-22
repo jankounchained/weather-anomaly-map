@@ -8,10 +8,12 @@ import {
   computeAnomalyForToday,
   computeTrendDay,
   anomalyColor,
+  isAnomalyReady,
   isDaytime,
 } from '../anomaly/anomaly'
 import { LocationPanel } from './LocationPanel'
-import { AnomalyCard } from './AnomalyCard'
+import { CurrentConditionsPanel } from './CurrentConditionsPanel'
+import { DeltaPanel } from './DeltaPanel'
 import { TrendRow } from './TrendRow'
 
 function App() {
@@ -40,24 +42,26 @@ function App() {
     hasSelection ? lng : null,
     'temperature_2m_mean',
   )
-  // D-09: only compute the anomaly once BOTH hooks have resolved, so the
-  // card's combined loading gate and this computation can never disagree.
+  // D-09/PD-10: only compute the anomaly once BOTH hooks have resolved, so
+  // the panels' combined loading gate and this computation can never
+  // disagree. Routed through the ONE shared isAnomalyReady predicate
+  // (06-01/06-03) rather than re-deriving the resolved-status comparison
+  // inline, so the gate condition lives in exactly one place.
   const anomaly =
-    current.status === 'resolved' &&
-    baseline.status === 'resolved' &&
+    isAnomalyReady(current.status, baseline.status) &&
     baseline.daily &&
     current.localDate != null &&
     current.tempC != null
       ? computeAnomalyForToday(baseline.daily, current.localDate, current.tempC)
       : null
 
-  // Same combined gate as `anomaly` above, plus a valid recentDaily series
-  // (D-13) - reuses the SINGLE already-fetched baseline.daily archive
-  // series for all 7 days (no new fetch, 03-CONTEXT.md efficiency note).
-  // TrendRow renders nothing when this is null (03-UI-SPEC.md gating).
+  // Same shared isAnomalyReady gate as `anomaly` above, plus a valid
+  // recentDaily series (D-13) - reuses the SINGLE already-fetched
+  // baseline.daily archive series for all 7 days (no new fetch,
+  // 03-CONTEXT.md efficiency note). TrendRow renders nothing when this is
+  // null (03-UI-SPEC.md gating).
   const trendDays =
-    current.status === 'resolved' &&
-    baseline.status === 'resolved' &&
+    isAnomalyReady(current.status, baseline.status) &&
     baseline.daily &&
     current.recentDaily
       ? current.recentDaily.time.map((dateStr, i) =>
@@ -101,15 +105,32 @@ function App() {
         anomalyColorValue={anomalyColorValue}
         isNight={isNight}
       >
-        <AnomalyCard
+        <div className="flex flex-row items-stretch gap-md">
+          <div className="flex-1 min-w-0">
+            <CurrentConditionsPanel
+              hasSelection={hasSelection}
+              currentStatus={current.status}
+              baselineStatus={baseline.status}
+              tempC={current.tempC}
+              units={current.units}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <DeltaPanel
+              hasSelection={hasSelection}
+              currentStatus={current.status}
+              baselineStatus={baseline.status}
+              anomaly={anomaly}
+            />
+          </div>
+        </div>
+        <TrendRow
           hasSelection={hasSelection}
           currentStatus={current.status}
           baselineStatus={baseline.status}
-          tempC={current.tempC}
+          days={trendDays}
           units={current.units}
-          anomaly={anomaly}
         />
-        <TrendRow days={trendDays} units={current.units} />
       </LocationPanel>
     </div>
   )
