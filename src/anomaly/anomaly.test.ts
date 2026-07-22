@@ -13,6 +13,7 @@ import {
   computeTrendDay,
   anomalyColor,
   isDaytime,
+  isAnomalyReady,
 } from './anomaly'
 
 describe('mean', () => {
@@ -228,6 +229,28 @@ describe('computeAnomalyForToday', () => {
     // technically-"≥2-samples" baseline that is still far too sparse to be usable.
     const result = computeAnomalyForToday(daily, '2021-07-11', 25)
     expect(result).toBeNull()
+  })
+})
+
+describe('isAnomalyReady', () => {
+  it('is true only when both statuses are resolved (PD-10 combined gate)', () => {
+    expect(isAnomalyReady('resolved', 'resolved')).toBe(true)
+  })
+
+  it('is false when currentStatus is not resolved', () => {
+    expect(isAnomalyReady('loading', 'resolved')).toBe(false)
+  })
+
+  it('is false when baselineStatus is not resolved', () => {
+    expect(isAnomalyReady('resolved', 'idle')).toBe(false)
+  })
+
+  it('is false when neither status is resolved', () => {
+    expect(isAnomalyReady('idle', 'idle')).toBe(false)
+  })
+
+  it('is false when currentStatus is resolved but baselineStatus is loading', () => {
+    expect(isAnomalyReady('resolved', 'loading')).toBe(false)
   })
 })
 
