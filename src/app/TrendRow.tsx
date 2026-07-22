@@ -15,29 +15,84 @@
 // TrendLegend renders below the row explaining the dot/line/diamond marks
 // without requiring a hover (VIZ-02 Gap 2).
 //
-// Cites: D-05, D-06, D-07, D-08, VIZ-01, VIZ-02.
+// 06-02 (LAYOUT-02): the outer glass card + inline eyebrow are now
+// PanelShell + PanelHeadline (verbatim-styled, same primitives every panel
+// uses), and the row gained UI-SPEC-authored empty/loading/error branches
+// so History is self-explanatory in every state, not only when populated.
+// The chart-internals block below (TrendYAxisColumn + 7x TrendDayChart +
+// TrendLegend) is untouched - Phase 8 rebuilds on this stable wrapper.
+//
+// Cites: D-05, D-06, D-07, D-08, VIZ-01, VIZ-02, LAYOUT-02.
+import { isAnomalyReady } from '../anomaly/anomaly'
 import type { TrendDayResult } from '../anomaly/types'
+import type { WeatherStatus } from '../weather/types'
+import { PanelHeadline } from './PanelHeadline'
+import { PanelShell } from './PanelShell'
 import { computeSharedYDomain } from './trend'
 import { TrendDayChart, TrendYAxisColumn } from './TrendDayChart'
 import { TrendLegend } from './TrendLegend'
 
 export interface TrendRowProps {
+  /** Whether a pin has been placed (independent of hook status, see App.tsx). */
+  hasSelection: boolean
+  currentStatus: WeatherStatus
+  baselineStatus: WeatherStatus
   days: TrendDayResult[] | null
   units: string | null
 }
 
-export function TrendRow({ days, units }: TrendRowProps) {
+export function TrendRow({
+  hasSelection,
+  currentStatus,
+  baselineStatus,
+  days,
+  units,
+}: TrendRowProps) {
+  if (!hasSelection) {
+    return (
+      <PanelShell as="section">
+        <PanelHeadline>Last 7 Days</PanelHeadline>
+        <p className="m-0 text-body font-body">
+          Drop a pin to see the last 7 days of temperatures here.
+        </p>
+      </PanelShell>
+    )
+  }
+
+  // Same combined D-09/PD-10 gate as Current Conditions/Delta - routed
+  // through the one shared predicate so this row can never drift out of
+  // sync with the anomaly panels' loading state.
+  if (!isAnomalyReady(currentStatus, baselineStatus)) {
+    return (
+      <PanelShell as="section">
+        <PanelHeadline>Last 7 Days</PanelHeadline>
+        <div className="flex flex-row items-center gap-sm" role="status">
+          <span
+            className="size-4 shrink-0 rounded-full border-2 border-accent border-t-transparent animate-location-spin"
+            aria-hidden="true"
+          />
+          <p className="m-0 text-body font-body">Loading the last 7 days…</p>
+        </div>
+      </PanelShell>
+    )
+  }
+
   if (days === null || days.length === 0) {
-    return null
+    return (
+      <PanelShell as="section">
+        <PanelHeadline>Last 7 Days</PanelHeadline>
+        <p className="m-0 text-body font-body text-destructive">
+          Recent history unavailable for this location.
+        </p>
+      </PanelShell>
+    )
   }
 
   const yDomain = computeSharedYDomain(days)
 
   return (
-    <section className="flex flex-col gap-sm bg-glass-surface border border-glass-border rounded-glass-lg shadow-glass backdrop-blur-lg px-md py-md">
-      <p className="m-0 text-label leading-[1.5] font-semibold text-muted uppercase tracking-[0.05em]">
-        Last 7 Days
-      </p>
+    <PanelShell as="section">
+      <PanelHeadline>Last 7 Days</PanelHeadline>
       <div className="flex flex-row items-start gap-sm">
         <div className="flex flex-col flex-none gap-xs">
           <span className="block h-4" aria-hidden="true" />
@@ -57,6 +112,6 @@ export function TrendRow({ days, units }: TrendRowProps) {
         </div>
       </div>
       <TrendLegend />
-    </section>
+    </PanelShell>
   )
 }
