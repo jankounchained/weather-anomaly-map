@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spike 003 — Split-Violin Tile Row</title>
+<style>
+  :root { color-scheme: dark;
+    --prior: #7c8698; --prior-fill: rgba(124,134,152,0.28);
+    --recent: #f97316; --recent-fill: rgba(249,115,22,0.32);
+    --mean-prior: #cbd5e1; --mean-recent: #fed7aa; --actual: #ea580c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.55 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #0f1115; color: #e7e9ee; padding: 2rem 1.25rem 4rem; }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: 1.35rem; margin: 0 0 .25rem; }
+  .sub { color: #9aa1ad; margin: 0 0 1.3rem; }
+  .panel { background: #12161d; border: 1px solid #242b36; border-radius: 14px; padding: 1.2rem 1.3rem; margin-bottom: 1.1rem; }
+  .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+  button { background: #1c2230; color: #b8c0cd; border: 1px solid #2c3440; padding: .35rem .6rem; border-radius: 7px; cursor: pointer; font: inherit; font-size: .82rem; }
+  button.on { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .preset { margin: .15rem .25rem 0 0; }
+  .chartwrap { display: flex; gap: 0; margin-top: 1rem; overflow-x: auto; padding-bottom: .3rem; }
+  .status { min-height: 1.2rem; color: #9aa1ad; font-size: .85rem; margin-top: .6rem; }
+  .legend { display: flex; gap: 1.3rem; flex-wrap: wrap; margin-top: 1rem; font-size: .82rem; color: #b8c0cd; align-items: center; }
+  .legend .k { display: inline-flex; align-items: center; gap: .4rem; }
+  .sw { width: 22px; height: 12px; border-radius: 3px; display: inline-block; }
+  label.f { font-size: .82rem; color: #b8c0cd; }
+  input[type=range] { width: 180px; vertical-align: middle; }
+  .note { font-size: .82rem; color: #9aa1ad; margin: .3rem 0 0; }
+  .flag { background: #21283a; border-left: 3px solid #2563eb; padding: .6rem .8rem; border-radius: 6px; margin-top: .8rem; font-size: .85rem; color: #cdd6e4; }
+  h3 { margin: 0 0 .3rem; font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Spike 003 — Split-Violin Tile Row</h1>
+  <p class="sub">The real thing: 7 per-day tiles, live Open-Meteo data, on one shared temperature
+  axis. Each tile mirrors that day's <b style="color:var(--recent)">recent 5-yr</b> distribution
+  (right) against its <b style="color:var(--prior)">prior 25-yr</b> distribution (left). The gap
+  between the two mean ticks is the climate-shift signal.</p>
+
+  <div class="panel">
+    <div id="presets"></div>
+    <div class="row" style="margin-top:.8rem">
+      <label class="f">Bandwidth:&nbsp;
+        <button data-bw="perHalf" class="on">per-half Silverman</button>
+        <button data-bw="shared">shared (pooled)</button>
+      </label>
+      <span style="flex:1"></span>
+      <label class="f">Force recent half thin → rug: <b id="thinLbl">55</b><br>
+        <input id="thin" type="range" min="5" max="55" value="55" step="1"></label>
+    </div>
+    <div class="status" id="status">Loading Berlin…</div>
+
+    <div class="chartwrap" id="chart"></div>
+
+    <div class="legend" id="legend">
+      <span class="k"><span class="sw" style="background:var(--recent-fill);border:1.5px solid var(--recent)"></span> recent 5-yr</span>
+      <span class="k"><span class="sw" style="background:var(--prior-fill);border:1.5px solid var(--prior)"></span> prior 25-yr</span>
+      <span class="k"><svg width="24" height="12"><line x1="2" y1="6" x2="22" y2="6" stroke="var(--mean-recent)" stroke-width="2"/></svg> per-half mean</span>
+      <span class="k"><svg width="14" height="14"><polygon points="7,1 13,7 7,13 1,7" fill="var(--actual)" stroke="#fff" stroke-width="1"/></svg> today's actual</span>
+      <span class="k"><svg width="24" height="12"><circle cx="6" cy="6" r="2" fill="var(--recent)" opacity=".6"/><circle cx="12" cy="6" r="2" fill="var(--recent)" opacity=".6"/><circle cx="18" cy="6" r="2" fill="var(--recent)" opacity=".6"/></svg> thin side → raw dots</span>
+    </div>
+    <p class="note"><i>Draft legend only — final copy is settled in 08-UI-SPEC.md via the reviewer round-trip (PD-10).</i></p>
+
+    <div class="flag" id="flag"></div>
+  </div>
+</div>
+
+<script type="module">
+import { buildViolinDay, sharedYDomain, makeYScale, N_MIN } from './violin.mjs'
+import { mean } from './kde.mjs'
+
+const HALF = 5, RS = 2021, RE = 2025, PS = 1996, PE = 2020
+const PRESETS = [['Berlin', 52.52, 13.41], ['Chicago', 41.88, -87.63], ['Singapore', 1.35, 103.82], ['Reykjavík', 64.15, -21.94], ['Cairo', 30.04, 31.24]]
+const TILE_W = 104, PLOT_H = 260, PAD_T = 14, PAD_B = 26, AXIS_W = 46
+const CX = TILE_W / 2, MAX_HALF = TILE_W / 2 - 8
+
+function wb(y, m, d, hw) { const sd = m === 2 && d === 29 ? 28 : d; const a = Date.UTC(y, m - 1, sd); return { start: new Date(a - hw * 864e5).toISOString().slice(0, 10), end: new Date(a + hw * 864e5).toISOString().slice(0, 10) } }
+function ws(daily, m, d, y0, y1) { const r = []; for (let y = y0; y <= y1; y++) r.push(wb(y, m, d, HALF)); const o = []; for (let i = 0; i < daily.time.length; i++) { const v = daily.values[i]; if (v != null && r.some(x => daily.time[i] >= x.start && daily.time[i] <= x.end)) o.push(v) } return o }
+function lookupExact(daily, iso) { const i = daily.time.indexOf(iso); return i >= 0 ? daily.values[i] : null }
+function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0;[a[i], a[j]] = [a[j], a[i]] } return a }
+const $ = id => document.getElementById(id)
+
+let DAYS = [], bwMode = 'perHalf'
+
+$('presets').innerHTML = 'Location: '
+for (const [n, la, lo] of PRESETS) { const b = document.createElement('button'); b.className = 'preset'; b.textContent = n; b.onclick = () => load(la, lo, n); $('presets').appendChild(b) }
+document.querySelectorAll('[data-bw]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-bw]').forEach(x => x.classList.remove('on')); b.classList.add('on'); bwMode = b.dataset.bw; render() })
+$('thin').oninput = () => { $('thinLbl').textContent = $('thin').value; render() }
+
+async function load(lat, lon, name) {
+  $('status').textContent = `Fetching ${name}…`
+  try {
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${PS}-01-01&end_date=${RE}-12-31&daily=temperature_2m_mean&timezone=auto`
+    const j = await (await fetch(url)).json()
+    const daily = { time: j.daily.time, values: j.daily.temperature_2m_mean }
+    // last 7 days of the most recent complete year as the tile row (real observed actuals)
+    DAYS = []
+    for (let i = 6; i >= 0; i--) {
+      const dt = new Date(Date.UTC(RE, 6, 23) - i * 864e5)
+      const m = dt.getUTCMonth() + 1, d = dt.getUTCDate()
+      const iso = dt.toISOString().slice(0, 10)
+      const recent = ws(daily, m, d, RS, RE)
+      const prior = ws(daily, m, d, PS, PE)
+      DAYS.push({ iso, label: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }), isToday: i === 0, recent, recentOrder: shuffle(recent), prior, actual: lookupExact(daily, iso) })
+    }
+    $('status').textContent = `${name}: 7 tiles · recent n=${DAYS[0].recent.length}, prior n=${DAYS[0].prior.length}`
+    render()
+  } catch (e) { $('status').textContent = 'Fetch failed: ' + e.message }
+}
+
+function render() {
+  if (!DAYS.length) return
+  const nThin = parseInt($('thin').value)
+  const thinned = DAYS.map(d => ({ ...d, recent: d.recentOrder.slice(0, nThin) }))
+  const [yMin, yMax] = sharedYDomain(thinned)
+  const yScale = makeYScale(yMin, yMax, PAD_T, PLOT_H - PAD_T - PAD_B)
+
+  // shared Y axis column
+  const ticks = []
+  const nT = 6
+  for (let i = 0; i <= nT; i++) { const t = yMin + (yMax - yMin) * i / nT; const yy = yScale(t); ticks.push(`<line x1="${AXIS_W - 4}" y1="${yy.toFixed(1)}" x2="${AXIS_W}" y2="${yy.toFixed(1)}" stroke="#3a4250"/><text x="${AXIS_W - 8}" y="${(yy + 4).toFixed(1)}" fill="#6b7280" font-size="11" text-anchor="end">${t.toFixed(0)}°</text>`) }
+  let html = `<svg width="${AXIS_W}" height="${PLOT_H + 22}" style="flex:none"><text x="${AXIS_W - 8}" y="10" fill="#8b93a1" font-size="10" text-anchor="end">°C</text>${ticks.join('')}<line x1="${AXIS_W}" y1="${PAD_T}" x2="${AXIS_W}" y2="${PLOT_H - PAD_B}" stroke="#2a313d"/></svg>`
+
+  let meanGaps = []
+  for (const d of thinned) {
+    const geo = buildViolinDay(d.recent, d.prior, { yMin, yMax, plotTop: PAD_T, plotHeight: PLOT_H - PAD_T - PAD_B, cx: CX, maxHalfWidth: MAX_HALF, bandwidthMode: bwMode })
+    const parts = []
+    // prior (left)
+    parts.push(renderHalf(geo.prior, -1, 'var(--prior-fill)', 'var(--prior)', 'var(--mean-prior)', yScale))
+    // recent (right)
+    parts.push(renderHalf(geo.recent, +1, 'var(--recent-fill)', 'var(--recent)', 'var(--mean-recent)', yScale))
+    // actual diamond
+    if (d.actual != null) { const ay = yScale(d.actual); parts.push(`<polygon points="${CX},${(ay - 5).toFixed(1)} ${CX + 5},${ay.toFixed(1)} ${CX},${(ay + 5).toFixed(1)} ${CX - 5},${ay.toFixed(1)}" fill="var(--actual)" stroke="#fff" stroke-width="1"><title>${d.label} actual ${d.actual.toFixed(1)}°C</title></polygon>`) }
+    // center guide
+    const centerLine = `<line x1="${CX}" y1="${PAD_T}" x2="${CX}" y2="${PLOT_H - PAD_B}" stroke="#232a35" stroke-width="1"/>`
+    const lblCls = d.isToday ? 'fill="#e7e9ee" font-weight="600"' : 'fill="#8b93a1"'
+    if (geo.prior.mean != null && geo.recent.mean != null) meanGaps.push(geo.recent.mean - geo.prior.mean)
+    html += `<svg width="${TILE_W}" height="${PLOT_H + 22}" style="flex:none">${centerLine}${parts.join('')}<text x="${CX}" y="${PLOT_H + 14}" ${lblCls} font-size="11" text-anchor="middle">${d.isToday ? 'Today' : d.label}</text></svg>`
+  }
+  $('chart').innerHTML = html
+
+  const avgGap = meanGaps.length ? mean(meanGaps) : 0
+  const anyRug = nThin < N_MIN
+  const f = $('flag')
+  if (anyRug) {
+    f.innerHTML = `<b>Rug fallback engaged.</b> Recent half thinned to ${nThin} (&lt; n_min=${N_MIN}) → every recent half now renders as raw dots, not a curve, while the prior 25-yr curve still draws. The tile stays symmetric and honest — no confident curve over thin data. <i>(Real data never triggers this; recent is always 55.)</i>`
+  } else {
+    f.innerHTML = `<b>Mean-gap shift:</b> recent runs on average <b>${avgGap >= 0 ? '+' : ''}${avgGap.toFixed(1)}°C</b> vs prior across the 7 days — visible as the offset between the pale (recent) and grey (prior) mean ticks. ${bwMode === 'shared' ? 'Shared-bandwidth mode: both halves use one pooled h, so shape differences reflect the data, not the n-driven bandwidth gap.' : 'Per-half mode: recent (n=55) gets a ~25% wider bandwidth than prior (n=275), so it reads slightly flatter even where spread is equal — toggle to “shared” to neutralize that artifact.'}`
+  }
+}
+
+function renderHalf(half, side, fill, stroke, meanColor, yScale) {
+  const parts = []
+  if (half.kind === 'curve') {
+    parts.push(`<path d="${half.path}" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`)
+  } else {
+    // rug: dots along that half's side, slight horizontal jitter (PD-01)
+    parts.push(half.points.map((p, i) => { const jx = CX + side * (6 + (i % 3) * 5); return `<circle cx="${jx}" cy="${p.y.toFixed(1)}" r="2" fill="${stroke}" opacity="0.55"/>` }).join(''))
+  }
+  // per-half mean tick (PD-07): short horizontal mark at the half's mean temp
+  if (half.mean != null) {
+    const my = yScale(half.mean)
+    parts.push(`<line x1="${CX}" y1="${my.toFixed(1)}" x2="${(CX + side * (MAX_HALF * 0.8)).toFixed(1)}" y2="${my.toFixed(1)}" stroke="${meanColor}" stroke-width="2"><title>${half.n}-sample mean ${half.mean.toFixed(1)}°C</title></line>`)
+  }
+  return parts.join('')
+}
+load(52.52, 13.41, 'Berlin')
+</script>
+</body>
+</html>

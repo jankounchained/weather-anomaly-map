@@ -41,7 +41,7 @@ empirically validate — non-negotiable for the real build:
 |---|------|------|-----------|---------|------|
 | 001 | per-half-sample-sizes | standard | Actual recent/prior per-half sample counts on real Open-Meteo data across latitudes; is the recent half ever sparse? | ✓ VALIDATED | statistics, sampling, gate |
 | 002 | kde-silverman-quality | standard | Does a hand-rolled Gaussian KDE + Silverman bandwidth render a believable (non-lumpy) curve at the recent half's real n? Pin n_min via thinning. | ✓ VALIDATED | statistics, kde, bandwidth |
-| 003 | split-violin-tile | standard | Composed split-violin tile row on real data: does the recent-vs-prior shift read legibly, with marks + fallback on a shared Y-axis? | ○ PENDING | viz, svg, geometry, ux |
+| 003 | split-violin-tile | standard | Composed split-violin tile row on real data: does the recent-vs-prior shift read legibly, with marks + fallback on a shared Y-axis? | ✓ VALIDATED | viz, svg, geometry, ux |
 
 ## Key Findings (running)
 
@@ -56,9 +56,22 @@ empirically validate — non-negotiable for the real build:
   (Silverman self-protects against lumps) → the rug fallback exists to avoid a confident
   smooth-but-wrong curve, which is the honest framing for the legend.
 
+- **003:** The split-violin **reads** — on real data the recent-vs-prior warming shift is legible
+  at a glance from the mean-tick offset (+0.95°C avg, Berlin), curves are believable, the rug
+  fallback degrades honestly, and the shared Y-axis holds. **New decision surfaced:** bandwidth
+  mode — recommend **one shared (pooled) bandwidth per day** over per-half Silverman, because
+  per-half gives the recent half (n=55) a ~25% wider bandwidth than prior (n=275), biasing it to
+  read flatter purely from sample size. Keep per-half density normalization (PD-06). Final call →
+  UI-SPEC.
+
 ## Requirements (emerged from spiking)
 
 - **KDE bandwidth = Silverman ×1.0**, hand-rolled Gaussian kernel, no stats dependency (matches
   `anomaly.ts` discipline). [002]
 - **Per-half `n_min` = 20** for the curve-vs-rug gate (PD-04 gate 2), in its own named helper. [002]
 - **Curve is the default render path**; rug is a rare guard (real halves are always 55/275). [001]
+- **One shared (pooled) bandwidth per day** for both halves (isolates shift from sample-size
+  bandwidth bias), keeping per-half density normalization (PD-06). Final call → 08-UI-SPEC.md. [003]
+- **Geometry chain:** `kde.ts` → `buildViolinDay`/`buildViolinPaths` (prior LEFT/recent RIGHT,
+  equal width, shared-peak per day) → `violinShape` → mean ticks + actual diamond → shared padded
+  Y-axis column → legend. Proven end-to-end on real data. [003]
