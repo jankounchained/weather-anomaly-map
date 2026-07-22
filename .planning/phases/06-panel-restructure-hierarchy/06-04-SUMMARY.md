@@ -162,3 +162,14 @@ None - no external service configuration required.
 ---
 *Phase: 06-panel-restructure-hierarchy*
 *Completed: 2026-07-22*
+
+## Self-Check: PASSED
+
+- FOUND: src/app/popoverPosition.ts
+- FOUND: src/app/popoverPosition.test.ts
+- FOUND: src/app/InfoTooltip.tsx
+- FOUND: src/app/InfoTooltip.test.tsx
+- FOUND: .planning/phases/06-panel-restructure-hierarchy/06-04-SUMMARY.md
+- FOUND commit: 9ff7629 (Task 1)
+- FOUND commit: 91b9849 (Task 2)
+- FOUND commit: 46577f1 (this SUMMARY.md)
