@@ -99,6 +99,9 @@ No primary CTA exists in this phase — Phase 6 is an information/explanation re
 | Delta — loading state | "Calculating today's anomaly…" (existing copy, unchanged) |
 | Delta — error state | "Couldn't compute an anomaly here." (existing copy, unchanged) |
 | z-score chip — no-variance fallback | "z — (too little variance to compute)" (existing copy, unchanged) |
+| History (Last 7 Days) — empty state | "Drop a pin to see the last 7 days of temperatures here." |
+| History (Last 7 Days) — loading state | "Loading the last 7 days…" |
+| History (Last 7 Days) — error state | "Recent history unavailable for this location." |
 | Destructive confirmation | N/A — no destructive actions in this phase |
 
 ---
@@ -124,15 +127,24 @@ Per ROADMAP's research flag, Phase 6 establishes three shared primitives reused 
 
 ## UI Considerations
 
-Applicable state considerations resolved: 5 covered, 0 backstop, 0 unresolved
+Applicable state considerations resolved: 13 covered, 0 backstop, 0 unresolved. Computed by the ui-consideration-probe engine (13 applicable across 5 surfaces), each resolved with the user post-verification.
 
 | Category | Element(s) | Status | Resolution / Reason |
 |----------|------------|--------|---------------------|
+| empty | History (Last 7 Days) panel | ✅ covered | Explicit empty-state copy authored this phase — see Copywriting Contract row "History (Last 7 Days) — empty state". Closes the pre-split gap where the trend panel had no dedicated empty message. |
+| loading | History (Last 7 Days) panel | ✅ covered | Explicit loading-state copy authored this phase — see Copywriting Contract row "History (Last 7 Days) — loading state". |
+| error | History (Last 7 Days) panel | ✅ covered | Explicit error-state copy authored this phase — see Copywriting Contract row "History (Last 7 Days) — error state". |
+| populated | History (Last 7 Days) panel | ✅ covered | Happy-path is the existing `TrendRow` rendering a fixed 7-day window of daily values — carried over unchanged; Phase 6 only adds the `PanelHeadline` eyebrow above it. |
+| partial | History (Last 7 Days) panel | ✅ covered | Some-days-missing rendering follows the already-shipped `TrendRow` behavior — no new partial-data handling introduced this phase. |
+| overflow | History (Last 7 Days) panel | ✅ covered | Fixed 7-day window is bounded content inside the 760px `PanelShell` column — existing `TrendRow` layout, no overflow risk. |
+| zero-one-many | History (Last 7 Days) panel | ✅ covered | Always exactly 7 days (fixed window) — no singular/plural copy or spacing variance to handle. |
 | empty | Current Conditions panel, Delta panel (both re-derived from `AnomalyCard`'s existing `!hasSelection` branch) | ✅ covered | Each split panel renders its own empty-state copy (see Copywriting Contract rows "Current Conditions — empty state" / "Delta — empty state") instead of one shared empty card — no behavior gap versus the pre-split single card. |
 | loading | Current Conditions panel, Delta panel | ✅ covered | Both panels keep the existing D-09 combined gate (`current.status === 'resolved' && baseline.status === 'resolved'`) — no partial reveal where temperature appears before the anomaly finishes; each panel shows its own tailored loading copy (see Copywriting Contract) while the gate is open. |
 | error | Current Conditions panel, Delta panel | ✅ covered | Temperature-unavailable and anomaly-uncomputable are now distinct copy per panel (previously one shared message covered both) — see Copywriting Contract error rows. |
+| overflow, long-text | Current Conditions panel | ✅ covered | The 28px temperature value and static "Today's measured temperature." micro-copy are short, bounded content inside the 760px panel; no dynamic long strings this phase (REQUIREMENTS.md "Out of Scope"), so no overflow risk. |
+| overflow, long-text | Delta panel | ✅ covered | The 47.6px Δ glyph, secondary z-score chip, and static micro-copy are bounded content; the z-score no-variance fallback copy is defined. No dynamic long strings, no overflow at extreme z-scores in the 760px panel. |
 | long-text | InfoTooltip popover body (interactive-control) | ✅ covered | Popover is capped at `max-w-[240px]` with normal text wrapping — bounded prose, never a single unbroken long token since all copy is static/authored (no dynamic location-specific text this phase, per REQUIREMENTS.md "Out of Scope"). |
-| long-text | Location panel place name (static-content, dynamic length from reverse-geocode) | ✅ covered | Pre-existing behavior carried over unchanged: `LocationDisplay`'s `h2` wraps naturally inside the 760px-wide `PanelShell`; the new "Location" eyebrow sits above it and does not constrain its width further. No new truncation logic introduced this phase. |
+| long-text / unclassified | Location panel place name (static-content, dynamic length from reverse-geocode) | ✅ covered | Pre-existing behavior carried over unchanged: `LocationDisplay`'s `h2` wraps naturally inside the 760px-wide `PanelShell`; the new "Location" eyebrow sits above it and does not constrain its width further. No new truncation logic introduced this phase. |
 
 ---
 
@@ -146,11 +158,11 @@ Applicable state considerations resolved: 5 covered, 0 backstop, 0 unresolved
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: FLAG (non-blocking) — 20px InfoTooltip trigger is a documented, production-inherited exception; revisit as a named token when PLAT-03 mobile layout lands.
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED (gsd-ui-checker, 5 PASS / 1 non-blocking FLAG)
