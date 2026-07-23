@@ -137,3 +137,7 @@ None - no external service configuration required.
 ---
 *Phase: 08-split-violin-trend-view*
 *Completed: 2026-07-23*
+
+## Self-Check: PASSED
+
+All created/modified files exist on disk (`src/anomaly/kde.ts`, `src/anomaly/kde.test.ts`, `src/anomaly/types.ts`, `src/anomaly/anomaly.ts`, `src/anomaly/anomaly.test.ts`, this SUMMARY.md). All task/summary commit hashes (`a34e469`, `d0eb1a7`, `6a896e2`) verified present in git log.

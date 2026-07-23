@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
-current_phase: 8
-current_phase_name: Split-Violin Trend View
+current_phase: 08
+current_phase_name: split-violin-trend-view
 status: executing
-stopped_at: Phase 08 UI-SPEC approved
-last_updated: "2026-07-23T08:01:43.849Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-07-23T08:23:30.559Z"
 last_activity: 2026-07-23
-last_activity_desc: Phase 07 complete, transitioned to Phase 8
+last_activity_desc: Phase 08 execution started
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 10
+  completed_plans: 7
   percent: 67
 ---
 
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-23)
 
 **Core value:** For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
-**Current focus:** Phase 8 — Split-Violin Trend View
+**Current focus:** Phase 08 — split-violin-trend-view
 
 ## Current Position
 
-Phase: 8 — Split-Violin Trend View
-Plan: Not started
+Phase: 08 (split-violin-trend-view) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-07-23 — Phase 07 complete, transitioned to Phase 8
+Last activity: 2026-07-23 — Phase 08 execution started
 
-Progress: [████████████████████] 6/6 plans (100%)
+Progress: [████████████████████] 6/6 plans ([███████░░░] 70%)
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [████████████████████] 6/6 pla
 | Phase 06 P04 | 6min | 2 tasks | 4 files |
 | Phase 07 P01 | 22min | 2 tasks | 4 files |
 | Phase 07 P02 | 4min | 2 tasks | 3 files |
+| Phase 08 P01 | 10min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Percentile line rendered as a plain <p> matching micro-copy style (no chip/pill wrapper), positioned between verdict and z-score chip (PD-06)
 - [Phase ?]: MethodologyPanel copies PanelHeadline's exact class string directly onto <summary> rather than nesting the component (invalid markup inside <summary>, RESEARCH Pitfall 2)
 - [Phase ?]: No expand/collapse height animation for the methodology disclosure; only the chevron rotation is gated behind prefers-reduced-motion (locked UI-SPEC simplicity choice)
+- [Phase ?]: 08-01: Reused anomaly.ts's sampleStdDev inside kde.ts's silvermanBandwidth instead of re-declaring a local stdDev/mean pair (one shared definition)
+- [Phase ?]: 08-01: TrendDayResult promoted (not kept alongside) to the two-sample recentSamples/priorSamples/recentMean/priorMean shape; old samples/mean retired
 
 ### Pending Todos
 
@@ -110,9 +113,9 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-22T23:35:33.238Z
-Stopped at: Phase 08 UI-SPEC approved
-Resume file: .planning/phases/08-split-violin-trend-view/08-UI-SPEC.md
+Last session: 2026-07-23T08:23:30.549Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

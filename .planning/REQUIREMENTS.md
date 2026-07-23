@@ -21,8 +21,8 @@
 
 ### Trend (TREND)
 
-- [ ] **TREND-01**: User sees, for each of the last ~7 days, a split-violin tile comparing that day's recent-5-year temperature distribution against its prior-25-year distribution, on the shared Y-axis, replacing the dot-strip tiles.
-- [ ] **TREND-02**: User sees a graceful fallback when a violin half has too few samples — a per-half data-sufficiency gate degrades the sparse half (curve → rug/dot strip or omission) rather than drawing a misleadingly confident curve.
+- [x] **TREND-01**: User sees, for each of the last ~7 days, a split-violin tile comparing that day's recent-5-year temperature distribution against its prior-25-year distribution, on the shared Y-axis, replacing the dot-strip tiles.
+- [x] **TREND-02**: User sees a graceful fallback when a violin half has too few samples — a per-half data-sufficiency gate degrades the sparse half (curve → rug/dot strip or omission) rather than drawing a misleadingly confident curve.
 - [ ] **TREND-03**: User sees an updated, legible trend legend that correctly explains the new split-violin marks (recent vs prior halves, and any retained mean/actual-value marks), finalized via a reviewer copy round-trip.
 
 ## Future Requirements (Deferred)
@@ -50,6 +50,6 @@
 | EXPLAIN-02 | Phase 6 | Complete |
 | EXPLAIN-03 | Phase 7 | Complete |
 | EXPLAIN-04 | Phase 7 | Complete |
-| TREND-01 | Phase 8 | Pending |
-| TREND-02 | Phase 8 | Pending |
+| TREND-01 | Phase 8 | Complete |
+| TREND-02 | Phase 8 | Complete |
 | TREND-03 | Phase 8 | Pending |
