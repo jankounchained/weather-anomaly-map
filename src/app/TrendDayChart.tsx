@@ -216,7 +216,7 @@ function makeMeanTickShape(
         y1={y}
         y2={y}
         stroke="var(--color-chart-mean)"
-        strokeWidth={2}
+        strokeWidth={3}
       >
         <title>{tooltipText}</title>
       </line>

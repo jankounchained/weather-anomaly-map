@@ -14,8 +14,10 @@
      Recharts Re-theme) - ties the historical dot-cloud into the new
      palette's calm-neutral mood instead of leftover accent-blue */
   --color-chart-historical: rgba(87, 83, 78, 0.22);
-  /* bright mean ReferenceLine (D-03) - reuses accent, no new hue */
-  --color-chart-mean: var(--color-accent);
+  /* neutral bold near-black average reference (PD-12) - matches the app's
+     existing body-text ink (#08060d) so the per-half mean ticks read as a
+     structural reference, not a competing accent hue */
+  --color-chart-mean: #08060d;
   /* distinct actual-value diamond marker (D-02) - new hue, reserved
      exclusively for this marker */
   --color-chart-actual: #ea580c;

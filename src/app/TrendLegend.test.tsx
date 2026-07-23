@@ -46,7 +46,10 @@ describe('TrendLegend', () => {
   it('renders the mean-tick swatch as a <line>', () => {
     const { container } = render(<TrendLegend priorStart={1997} priorEnd={2021} />)
 
-    expect(container.querySelector('line')).not.toBeNull()
+    const line = container.querySelector('line')
+    expect(line).not.toBeNull()
+    // PD-12: bold weight locked in lockstep with the tile's mean tick.
+    expect(line?.getAttribute('stroke-width')).toBe('3')
   })
 
   it('renders the actual-value swatch as a <polygon> diamond', () => {

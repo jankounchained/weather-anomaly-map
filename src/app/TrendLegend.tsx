@@ -113,7 +113,7 @@ export function TrendLegend({ priorStart, priorEnd }: TrendLegendProps = {}) {
             y1={SWATCH_CENTER}
             y2={SWATCH_CENTER}
             stroke="var(--color-chart-mean)"
-            strokeWidth={2}
+            strokeWidth={3}
           />
         }
       />
