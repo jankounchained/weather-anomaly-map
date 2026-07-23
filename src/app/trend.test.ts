@@ -51,6 +51,8 @@ describe('computeSharedYDomain', () => {
         recentMean: 15,
         priorMean: 15,
         actual: 12,
+        priorStart: 1997,
+        priorEnd: 2021,
       },
       {
         dateStr: '2026-07-15',
@@ -60,6 +62,8 @@ describe('computeSharedYDomain', () => {
         recentMean: 24,
         priorMean: 24,
         actual: 25,
+        priorStart: 1997,
+        priorEnd: 2021,
       },
     ]
     // allValues = [10,20,15,12,15,15, 18,30,24,25,24,24]; min=10, max=30, pad=(30-10)*0.1=2
@@ -78,6 +82,8 @@ describe('computeSharedYDomain', () => {
         recentMean: 5,
         priorMean: 40,
         actual: 10,
+        priorStart: 1997,
+        priorEnd: 2021,
       },
     ]
     // priorSamples' 40 must be the max driving the domain, proving priorSamples

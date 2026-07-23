@@ -33,6 +33,8 @@ function buildDay(
     priorMean:
       priorSamples.reduce((s, v) => s + v, 0) / (priorSamples.length || 1),
     actual: 21,
+    priorStart: 1997,
+    priorEnd: 2021,
     ...overrides,
   }
 }

@@ -61,7 +61,7 @@ describe('TrendRow', () => {
     expect(errorText.className).toContain('text-destructive')
   })
 
-  it('populated state: renders the headline and the unchanged chart (legend + svg) for a usable day', () => {
+  it('populated state: renders the headline and the split-violin chart (legend + svg) for a usable day', () => {
     const days: TrendDayResult[] = [
       {
         dateStr: '2026-07-15',
@@ -71,6 +71,8 @@ describe('TrendRow', () => {
         recentMean: 17,
         priorMean: 15,
         actual: 21,
+        priorStart: 1997,
+        priorEnd: 2021,
       },
     ]
 
@@ -86,6 +88,10 @@ describe('TrendRow', () => {
 
     expect(getByText('Last 7 Days')).toBeTruthy()
     expect(container.querySelector('svg')).not.toBeNull()
-    expect(getByText('30-year average')).toBeTruthy()
+    // 08-04, PD-10: the legend's prior-half label renders the day's actual
+    // priorStart/priorEnd as a dynamic range, proving TrendRow threads the
+    // year bounds from the usable day through to TrendLegend.
+    expect(getByText('1997–2021')).toBeTruthy()
+    expect(getByText('Period average')).toBeTruthy()
   })
 })

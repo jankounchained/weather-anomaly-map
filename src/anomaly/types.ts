@@ -32,7 +32,11 @@ export type VerdictTier =
  * two-half (recent-5yr / prior-25yr) model (TREND-01, PD-04): recentSamples
  * and priorSamples are both windowed off the SAME baseline.daily series, so
  * this is the ONLY `usable: true` shape - there is no single-sample
- * fallback to keep in sync. */
+ * fallback to keep in sync. `priorStart`/`priorEnd` (08-04, PD-10 reviewer
+ * round-trip) expose the prior-25yr half's actual calendar-year bounds so
+ * TrendLegend can render a real dynamic year range ("1997-2021") instead of
+ * a static "Prior 25 years" literal - every usable day shares the same
+ * endYear, so any one usable day's bounds are valid for the whole row. */
 export type TrendDayResult =
   | {
       dateStr: string
@@ -42,5 +46,7 @@ export type TrendDayResult =
       recentMean: number
       priorMean: number
       actual: number
+      priorStart: number
+      priorEnd: number
     }
   | { dateStr: string; usable: false }

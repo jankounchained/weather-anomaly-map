@@ -352,6 +352,12 @@ describe('computeTrendDay', () => {
     expect(result.priorMean).toBe(mean(result.priorSamples))
     expect(result.actual).toBe(20)
     expect(result.dateStr).toBe('2021-07-11')
+    // 08-04, PD-10: prior half's actual calendar-year bounds, exposed so
+    // TrendLegend can render a dynamic "1991-2015" range instead of a
+    // static literal. endYear=2020 (from daily.time) -> recentStart=2016 ->
+    // priorEnd=2015, priorStart=2016-25=1991.
+    expect(result.priorStart).toBe(1991)
+    expect(result.priorEnd).toBe(2015)
   })
 
   it('returns usable:false for a zero-sample (data-desert) daily series - the whole-tile placeholder, unchanged by the two-sample split', () => {
@@ -376,6 +382,8 @@ describe('computeTrendDay', () => {
     expect(result).toHaveProperty('recentMean')
     expect(result).toHaveProperty('priorMean')
     expect(result).toHaveProperty('actual')
+    expect(result).toHaveProperty('priorStart')
+    expect(result).toHaveProperty('priorEnd')
     expect(result).not.toHaveProperty('samples')
     expect(result).not.toHaveProperty('mean')
   })

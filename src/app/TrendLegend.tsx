@@ -6,17 +6,18 @@
 // tick line / diamond / rug dots) exactly, colored via the SAME
 // --color-chart-* tokens the tiles render - the key can never visually
 // drift from the marks it explains. All labels are static string literals
-// rendered as ordinary JSX text nodes, and all swatches are native SVG -
-// never a raw-HTML sink, never a Recharts custom-label HTML injection
-// (T-03-07).
+// (or numbers interpolated into a template literal) rendered as ordinary
+// JSX text nodes, and all swatches are native SVG - never a raw-HTML sink,
+// never a Recharts custom-label HTML injection (T-03-07).
 //
 // 08-04: rebuilt from the old 3-item (dot / 30-yr line / diamond) key to
 // the 5-item split-violin key (prior half, recent half, per-half mean
-// tick, actual diamond, rug fallback). Label wording below is DRAFT per
-// PD-10 - the UI-SPEC Copywriting Contract's legend table is the starting
-// point for a reviewer copy round-trip (Task 2 of 08-04-PLAN.md), the same
-// process that finalized the Phase 3 legend. Do not treat this wording as
-// locked until that round-trip records an explicit sign-off.
+// tick, actual diamond, rug fallback). Copy is FINAL per the PD-10
+// reviewer round-trip (08-04-SUMMARY.md records the verbatim verdict):
+// approved with 3 revisions - the prior-half label became a dynamic real
+// year range (not a static literal), the mean-tick label became "Period
+// average", and the actual-diamond label became "This week". The
+// recent-half and rug labels were reviewed and kept unchanged.
 import type { ReactNode } from 'react'
 
 const SWATCH_SIZE = 14
@@ -44,18 +45,37 @@ function TrendLegendItem({ label, swatch }: TrendLegendItemProps) {
   )
 }
 
-export function TrendLegend() {
+export interface TrendLegendProps {
+  /** The prior-25yr half's actual calendar-year bounds (from any usable
+   * `TrendDayResult` in the row - all 7 days share the same endYear, so any
+   * one is valid for the whole legend). Reviewer-approved (PD-10): render a
+   * real dynamic range ("1997-2021") instead of the old static "Prior 25
+   * years" literal. Both props are optional and BOTH must be present to
+   * render the dynamic range - if the row has no usable day (TrendRow
+   * guards this), the legend falls back to the static label rather than
+   * rendering a partial/undefined range. */
+  priorStart?: number
+  priorEnd?: number
+}
+
+export function TrendLegend({ priorStart, priorEnd }: TrendLegendProps = {}) {
+  const priorLabel =
+    priorStart !== undefined && priorEnd !== undefined
+      ? `${priorStart}–${priorEnd}`
+      : 'Prior 25 years'
+
   return (
     <div
       className="flex flex-row flex-wrap gap-md"
       role="list"
       aria-label="Trend chart legend"
     >
-      {/* DRAFT (PD-10) - "Prior 25 years": left-half violin-shape swatch,
-          bulging left off the shared center line, mirroring the tile's
-          prior-half curve path. */}
+      {/* PD-10 FINAL: dynamic real year range (e.g. "1997-2021") when the
+          caller supplies priorStart/priorEnd, else the static fallback -
+          left-half violin-shape swatch, bulging left off the shared center
+          line, mirroring the tile's prior-half curve path. */}
       <TrendLegendItem
-        label="Prior 25 years"
+        label={priorLabel}
         swatch={
           <path
             d={`M${SWATCH_CENTER},1 Q2,${SWATCH_CENTER} ${SWATCH_CENTER},${SWATCH_SIZE - 1} Z`}
@@ -65,9 +85,10 @@ export function TrendLegend() {
           />
         }
       />
-      {/* DRAFT (PD-10) - "Recent 5 years": right-half violin-shape swatch,
-          bulging right off the shared center line, mirroring the tile's
-          recent-half curve path. */}
+      {/* PD-10 FINAL - "Recent 5 years": reviewed and kept unchanged
+          (relative wording intentional, not an oversight). Right-half
+          violin-shape swatch, bulging right off the shared center line,
+          mirroring the tile's recent-half curve path. */}
       <TrendLegendItem
         label="Recent 5 years"
         swatch={
@@ -79,11 +100,12 @@ export function TrendLegend() {
           />
         }
       />
-      {/* DRAFT (PD-10) - "Average for that period": one short horizontal
-          tick swatch covers BOTH per-half mean ticks, since prior and
-          recent ticks share the same --color-chart-mean token (PD-07). */}
+      {/* PD-10 FINAL - "Period average" (was "Average for that period").
+          One short horizontal tick swatch covers BOTH per-half mean ticks,
+          since prior and recent ticks share the same --color-chart-mean
+          token (PD-07). */}
       <TrendLegendItem
-        label="Average for that period"
+        label="Period average"
         swatch={
           <line
             x1={2}
@@ -95,10 +117,11 @@ export function TrendLegend() {
           />
         }
       />
-      {/* Kept verbatim from today's legend (PD-08: actual-value diamond
+      {/* PD-10 FINAL - "This week" (was "Temperature now"); swatch kept
+          verbatim from today's legend (PD-08: actual-value diamond
           preserved unchanged). */}
       <TrendLegendItem
-        label="Temperature now"
+        label="This week"
         swatch={
           <polygon
             points={`${SWATCH_CENTER},1 ${SWATCH_SIZE - 1},${SWATCH_CENTER} ${SWATCH_CENTER},${SWATCH_SIZE - 1} 1,${SWATCH_CENTER}`}
@@ -108,10 +131,10 @@ export function TrendLegend() {
           />
         }
       />
-      {/* DRAFT (PD-10), NEW - "Too few years → shown as dots": explains
-          the per-half rug fallback (PD-01/PD-02) before a user ever
-          encounters a thin half, using the same historical-dot token/shape
-          as the rug marks themselves. */}
+      {/* PD-10 FINAL - "Too few years → shown as dots": reviewed and kept
+          unchanged. Explains the per-half rug fallback (PD-01/PD-02) before
+          a user ever encounters a thin half, using the same historical-dot
+          token/shape as the rug marks themselves. */}
       <TrendLegendItem
         label="Too few years → shown as dots"
         swatch={

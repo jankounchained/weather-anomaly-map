@@ -308,9 +308,12 @@ export function computeAnomalyForToday(
  * That whole-tile gate is intentionally NOT re-derived per half (D-10; see
  * kde.ts's separate per-half halfDrawsCurve gate, PD-04 gate 2, for the
  * curve-vs-rug decision downstream). Returns `{ usable: true, dateStr,
- * recentSamples, priorSamples, recentMean, priorMean, actual }` for a
- * healthy day: recent = the last 5 complete years, prior = the 25 years
- * before that (TREND-01 two-sample split). */
+ * recentSamples, priorSamples, recentMean, priorMean, actual, priorStart,
+ * priorEnd }` for a healthy day: recent = the last 5 complete years, prior
+ * = the 25 years before that (TREND-01 two-sample split). `priorStart`/
+ * `priorEnd` are the prior half's actual calendar-year bounds (08-04,
+ * PD-10) - exposed so TrendLegend can render a real dynamic year range
+ * instead of a static literal. */
 export function computeTrendDay(
   daily: { time: string[]; values: (number | null)[] },
   dateStr: string,
@@ -362,5 +365,7 @@ export function computeTrendDay(
     recentMean: mean(recentSamples),
     priorMean: mean(priorSamples),
     actual: actualTemp,
+    priorStart,
+    priorEnd,
   }
 }

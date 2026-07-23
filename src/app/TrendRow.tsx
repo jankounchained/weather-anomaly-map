@@ -85,6 +85,18 @@ export function TrendRow({
 
   const yDomain = computeSharedYDomain(days)
 
+  // 08-04, PD-10: all 7 days share the same endYear (computeTrendDay derives
+  // it from the SAME baseline.daily series for every day), so any one
+  // usable day's priorStart/priorEnd is valid for the whole row's legend.
+  // If every day is unusable (days.length===0 already returned above, but a
+  // fully-unusable non-empty array is defensively possible), omit both
+  // props and let TrendLegend fall back to its static label.
+  const firstUsableDay = days.find((day) => day.usable)
+  const legendYearRange =
+    firstUsableDay?.usable === true
+      ? { priorStart: firstUsableDay.priorStart, priorEnd: firstUsableDay.priorEnd }
+      : undefined
+
   return (
     <PanelShell as="section">
       <PanelHeadline>Last 7 Days</PanelHeadline>
@@ -106,7 +118,10 @@ export function TrendRow({
           ))}
         </div>
       </div>
-      <TrendLegend />
+      <TrendLegend
+        priorStart={legendYearRange?.priorStart}
+        priorEnd={legendYearRange?.priorEnd}
+      />
     </PanelShell>
   )
 }
