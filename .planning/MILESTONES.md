@@ -1,5 +1,24 @@
 # Milestones
 
+## v1.2 UI Layout Redesign & Explanatory Legend (Shipped: 2026-07-23)
+
+**Phases completed:** 3 phases, 10 plans, 22 tasks
+
+**Key accomplishments:**
+
+- Extracted `isAnomalyReady` combined-gate predicate plus `PanelShell`/`PanelHeadline`/`InfoTooltip` UI primitives — no existing panel touched, foundation-only for Wave 2/3 of Phase 6 and reused verbatim by Phases 7-8.
+- LocationDisplay and TrendRow rebuilt on PanelShell/PanelHeadline; History (TrendRow) gained UI-SPEC-authored empty/loading/error state branches wired through the shared isAnomalyReady gate, closing the pre-split gap where the trend panel rendered nothing outside the populated case.
+- Split the combined AnomalyCard hero into CurrentConditionsPanel (today's temperature) and DeltaPanel (the dominant 47.6px Δ focal point), composed as a 50/50 equal-height two-up row in App.tsx with a single shared isAnomalyReady gate — AnomalyCard.tsx deleted, full build and 128-test suite green.
+- Portaled InfoTooltip's popover onto document.body with position:fixed and edge-aware coordinates, fixing the Current Conditions/Delta popover stacking and clipping bug (G-06-11) while preserving the WCAG 1.4.13 hover/focus/persist/dismiss contract.
+- Hand-rolled Hazen/midrank empirical percentile (computePercentileRank + percentileLabel) wired into AnomalyForToday and rendered as a plain-text line between the verdict and z-score chip in DeltaPanel.
+- New stateless MethodologyPanel — a native `<details>`/`<summary>` disclosure inside PanelShell, collapsed by default, mounted unconditionally as the final LocationPanel child so any visitor can read what the tool does and how the anomaly is computed.
+- Hand-rolled Gaussian KDE + Silverman bandwidth module (`kde.ts`) with a per-half n_min=20 curve-vs-rug gate, plus `computeTrendDay`'s transformation from a single-sample to a two-sample (recent-5yr / prior-25yr) result — the pure statistics + data-shape core the split-violin trend tile stands on.
+- Pure `buildViolinPaths` SVG geometry — one shared pooled Silverman bandwidth, one shared max density, equal-width prior-left/recent-right violin halves clamped to each half's own sample range — plus the four locked recent/prior chart tokens, turning the two-sample `computeTrendDay` output from Plan 1 into renderable split-violin shapes for Plan 3.
+- Rewrote the per-day trend tile from a dot-strip + single mean line into a split violin — two `ViolinHalf` marks (filled KDE curve or bounded jittered rug), two per-half mean ticks whose gap is the climate-shift signal, and the preserved actual-value diamond, all sharing one explicit-margin pixel scale — restoring project-wide green typecheck across Phase 8.
+- Rebuilt TrendLegend into a 5-item split-violin key with copy finalized through the PD-10 reviewer round-trip — the prior-25yr half now renders a dynamic real year range instead of a static literal, threaded through a new `TrendDayResult.priorStart/priorEnd` field.
+
+---
+
 ## v1.1 Tailwind Migration + Glass/Atmospheric Redesign (Shipped: 2026-07-21)
 
 **Phases completed:** 2 phases, 7 plans, 21 tasks

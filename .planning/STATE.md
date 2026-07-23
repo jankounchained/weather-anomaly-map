@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
-current_phase: 999.1
-current_phase_name: BACKLOG → PROMOTED
-status: planning
+status: Awaiting next milestone
 stopped_at: Completed 08-04-PLAN.md — Phase 8 complete
-last_updated: "2026-07-23T12:39:46.298Z"
+last_updated: "2026-07-23T13:38:31.737Z"
 last_activity: 2026-07-23
-last_activity_desc: "Quick task 260723-ju7: split-violin mean-tick polish (length-align + neutral bold black); Phase 08 complete, transitioned to Phase 999.1"
+last_activity_desc: Milestone v1.2 completed and archived
 progress:
   total_phases: 3
   completed_phases: 3
   total_plans: 10
   completed_plans: 10
   percent: 100
+current_phase: 999.1
+current_phase_name: BACKLOG → PROMOTED
 ---
 
 # Project State
@@ -28,12 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-23)
 
 ## Current Position
 
-Phase: 999.1 — split-violin-plot-for-trend-day-distributions (BACKLOG → PROMOTED)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-07-23 — Quick task 260723-ju7: split-violin mean-tick polish (length-align + neutral bold black); Phase 08 complete, transitioned to Phase 999.1
-
-Progress: [████████████████████] 6/6 plans ([██████████] 100%)
+Phase: Milestone v1.2 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-07-23 — Milestone v1.2 completed and archived
 
 ## Performance Metrics
 
@@ -134,4 +132,4 @@ Resume file: None
 
 ## Operator Next Steps
 
-- Execute Phase 8 with /gsd-execute-phase 8 (4 plans, waves 1→2→3; 08-04 legend needs a reviewer copy sign-off before close)
+- Start the next milestone with /gsd-new-milestone

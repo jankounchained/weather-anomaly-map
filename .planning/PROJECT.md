@@ -10,24 +10,20 @@ For any location, the user can immediately tell how unusual today's temperature 
 
 ## Current State
 
-**Shipped:** v1.1 Tailwind Migration + Glass/Atmospheric Redesign (2026-07-21). The dashboard's styling layer now runs entirely on Tailwind CSS v4 (CSS-first, no config file), and the UI wears a cohesive glassy/atmospheric design language: an anomaly-driven gradient backdrop, translucent glass surfaces, a color-coded anomaly-delta hero (now led with a Δ so it never reads as the current temperature), a framed zero-delta case, and a re-themed trend chart — all within a disciplined-glass performance policy (real `backdrop-blur` only on static backdrops, no JS/canvas animation loops, all motion behind `prefers-reduced-motion`). No feature or behavior changed from v1.0.
+**Shipped:** v1.2 UI Layout Redesign & Explanatory Legend (2026-07-23). The resolved anomaly view is now four headlined, self-explanatory panels — **Current conditions** + **Delta** (split from the former combined hero), joining **Location** + **History** — each with inline micro-copy and a keyboard/mouse-accessible info affordance, with the Delta preserved as the dominant focal point (~1.7× scale, anomaly-color-driven, Δ-led). A plain-language percentile explainer (empirical Hazen/midrank) sits in the Delta panel, and an always-visible "How This Works" methodology disclosure (native `<details>`/`<summary>`) documents the baseline/anomaly method. The per-day trend row was rebuilt as a split-violin — prior-25yr (left) vs recent-5yr (right) hand-rolled Gaussian-KDE distributions on one shared Y-axis, per-half mean ticks whose gap is the climate-shift signal, the preserved actual-value diamond, a rug fallback when a half has too few years (n<20), and a reviewer-finalized 5-item legend. Milestone audit passed (10/10 requirements, integration verified, 196/196 tests green); accepted tech debt tracked below.
 
-**In progress:** v1.2 UI Layout Redesign & Explanatory Legend — Phases 6 (Panel Restructure & Hierarchy), 7 (Methodology Section & Explainers), and 8 (Split-Violin Trend View) all complete (2026-07-23). The resolved anomaly view is now four headlined, self-explanatory panels — **Current conditions** + **Delta** (split from the former combined hero), joining **Location** + **History** — each with inline micro-copy and a keyboard/mouse info affordance and the Delta preserved as the dominant focal point; augmented by a percentile explainer and an always-visible "How This Works" methodology disclosure; and the per-day trend row rebuilt as a split-violin (prior-25yr vs recent-5yr KDE distributions) with a reviewer-finalized legend. All of v1.2's planned phases are done — ready for milestone close (see Current Milestone below).
+**Prior:** v1.1 Tailwind Migration + Glass/Atmospheric Redesign (2026-07-21) — styling rebuilt on Tailwind CSS v4 (CSS-first, no config file) with a cohesive glassy/atmospheric design language; no feature/behavior change from v1.0. v1.0 MVP shipped 2026-07-15.
 
-## Current Milestone: v1.2 UI Layout Redesign & Explanatory Legend
+## Current Milestone: none — planning next
 
-**Goal:** Make every part of the anomaly view self-explanatory — restructure the resolved view into clearly-headlined panels, add methodology and inline explainers, and replace the trend row with a per-day split-violin visualization.
+v1.2 is shipped and archived (`.planning/milestones/v1.2-ROADMAP.md`). No active milestone. Run `/gsd-new-milestone` to scope the next one.
 
-**Target features:**
-- Four headlined panels: split the current hero into **"Current conditions"** (today's temperature) and **"Delta"** (anomaly delta + z-score), joining **Location** and **History** — each panel carrying a "Last 7 days"-style headline so it is immediately clear what is shown.
-- Per-panel micro-copy / info affordances so the current temperature, the delta, and the z-score are each self-explanatory in place.
-- A collapsible methodology section (collapsed by default) briefly explaining how the anomaly is computed and what the tool is for.
-- Split-violin trend row: replace the 7-day dot-strip tiles with per-day split violins (last-5-years vs prior-25-years distribution halves) to surface climate-shift signal.
+**Deferred / accepted at v1.2 close (tech debt, non-blocking):**
+- Three manual visual spot-checks never run in-browser this milestone (no browser available): InfoTooltip popover renders readably above panels / in-frame (the once-regressed G-06-11 defect — logic unit-tested), Delta perceived as focal point (objective 1.7× ratio met in source), and reduced-motion chevron behavior (jsdom can't emulate `prefers-reduced-motion`).
+- Nyquist validation reconciled for Phase 8 only; Phases 6 & 7 have no VALIDATION.md (both predate the Nyquist toggle) — run `/gsd-validate-phase 06` / `07` if desired.
+- Copy/maintainability notes from Phase 7 review: percentile "% of years" phrasing vs the ±5-day window sample set (WR-01); `computePercentileRank` trusts an unenforced caller invariant (WR-02).
 
-**Scope decisions:**
-- Desktop-focused reflow — mobile-responsive layout (PLAT-03) stays deferred to a later milestone.
-- No separate anomaly color-scale legend and no dedicated first-run intro screen; "legend" here means panel headlines + inline explainers. The existing trend legend copy is reviewer-locked.
-- Split-violin keeps the per-day 7-tile small-multiples structure; each tile becomes a split violin.
+**Candidate directions for the next milestone** (from the still-Active requirements below): mobile-responsive layout (PLAT-03), current-location geolocation button (LOC-04), and "since when" record context (ANOM-05).
 
 ## Requirements
 
@@ -130,4 +126,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-23 — Phase 8 (Split-Violin Trend View) complete: per-day trend row rebuilt as a prior-25yr vs recent-5yr split-violin (hand-rolled Gaussian KDE, shared Y-axis, rug fallback, reviewer-finalized legend); TREND-01/02/03 validated. All v1.2 planned phases (6–8) complete — ready for milestone close.*
+*Last updated: 2026-07-23 after v1.2 milestone — UI Layout Redesign & Explanatory Legend shipped (Phases 6-8): four headlined self-explanatory panels with Delta focal point + info affordances, percentile explainer, always-visible methodology disclosure, and a per-day split-violin trend row with a reviewer-finalized legend. LAYOUT-01..03, EXPLAIN-01..04, TREND-01..03 validated. Milestone archived; next milestone TBD.*
