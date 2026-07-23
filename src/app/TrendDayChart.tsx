@@ -439,9 +439,21 @@ export interface TrendYAxisColumnProps {
  * Pitfall 3). Untouched this phase (PD-09) - still uses Recharts' implicit
  * default margin, which is numerically identical to TrendDayChart's now-
  * explicit PLOT_MARGIN above, so the two stay aligned. */
+// Small positive plot area to the right of the reserved axis band. The chart
+// must be WIDER than the YAxis width (plus horizontal margins) or Recharts
+// computes a zero/negative cartesian plot area and renders no tick labels at
+// all. Vertical geometry (top/bottom PLOT_MARGIN, CHART_HEIGHT, hidden XAxis)
+// stays identical to every TrendDayChart tile so the axis ticks land at the
+// exact same pixel y as the violin/diamond marks (shared-scale must-have).
+const AXIS_COLUMN_PLOT = 8
+
 export function TrendYAxisColumn({ yDomain }: TrendYAxisColumnProps) {
   return (
-    <ComposedChart width={AXIS_WIDTH} height={CHART_HEIGHT}>
+    <ComposedChart
+      width={AXIS_WIDTH + AXIS_COLUMN_PLOT}
+      height={CHART_HEIGHT}
+      margin={{ top: PLOT_MARGIN, right: 0, bottom: PLOT_MARGIN, left: 0 }}
+    >
       <XAxis type="number" dataKey="x" domain={[0, 1]} hide />
       <YAxis
         type="number"
@@ -450,7 +462,13 @@ export function TrendYAxisColumn({ yDomain }: TrendYAxisColumnProps) {
         width={AXIS_WIDTH}
         tick={{ fill: 'var(--color-muted)', fontSize: 14 }}
       />
-      <Scatter data={[]} shape={emptyShape} isAnimationActive={false} />
+      {/* A single dummy datum (matching the tiles' dummyPoint) so Recharts
+          establishes the y-scale and emits ticks; emptyShape draws nothing. */}
+      <Scatter
+        data={[{ x: 0.5, y: yDomain[0] }]}
+        shape={emptyShape}
+        isAnimationActive={false}
+      />
     </ComposedChart>
   )
 }

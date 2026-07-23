@@ -142,9 +142,16 @@ export function buildViolinPaths(
         return `${(cx + side * w).toFixed(1)},${y(p.x).toFixed(1)}`
       })
       .join(' L')
+    // Anchor order MUST match the edge traversal: kdeCurve emits points
+    // ascending domainMin -> domainMax, so edge[0] sits at y(min) (bottom of
+    // the tile) and edge[last] at y(max) (top). Open the path at the
+    // bottom-center spine point (matching edge[0]'s end) and close at the
+    // top-center point (matching edge[last]'s end); Z then draws the vertical
+    // spine back down. Opening at top-center instead produced a self-crossing
+    // bowtie (two long diagonals) that rendered as a sheared/angled violin.
     const top = `${cx.toFixed(1)},${y(max).toFixed(1)}`
     const bottom = `${cx.toFixed(1)},${y(min).toFixed(1)}`
-    return `M${top} L${edge} L${bottom} Z`
+    return `M${bottom} L${edge} L${top} Z`
   }
 
   const rugPoints = (samples: number[]): { y: number }[] =>
