@@ -5,15 +5,15 @@ milestone_name: UI Layout Redesign & Explanatory Legend
 current_phase: 08
 current_phase_name: split-violin-trend-view
 status: executing
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-07-23T08:33:44.283Z"
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-07-23T10:26:37.731Z"
 last_activity: 2026-07-23
 last_activity_desc: Phase 08 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 67
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-23)
 ## Current Position
 
 Phase: 08 (split-violin-trend-view) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-07-23 — Phase 08 execution started
 
-Progress: [████████████████████] 6/6 plans ([████████░░] 80%)
+Progress: [████████████████████] 6/6 plans ([█████████░] 90%)
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [████████████████████] 6/6 pla
 | Phase 07 P02 | 4min | 2 tasks | 3 files |
 | Phase 08 P01 | 10min | 2 tasks | 5 files |
 | Phase 08 P02 | 12min | 2 tasks | 3 files |
+| Phase 08 P03 | 20min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 08-01: TrendDayResult promoted (not kept alongside) to the two-sample recentSamples/priorSamples/recentMean/priorMean shape; old samples/mean retired
 - [Phase ?]: [Phase 8] 08-02: computeSharedYDomain kept at exact 10% pad (not the ~8% must_haves wording) per the plan's own explicit <action> instruction - explicit code directive wins over looser prose paraphrase
 - [Phase ?]: [Phase 8] 08-02: buildViolinPaths ports spike's buildViolinDay dropping the bandwidthMode param entirely - real build only ever computes ONE shared pooled Silverman bandwidth, never per-half
+- [Phase ?]: [Phase 8] 08-03: TrendDayChart.tsx explicit PLOT_MARGIN (matching Recharts' CartesianChart default verbatim) locks buildViolinPaths' precomputed mark positions to the same y-scale as the diamond's Recharts-domain-driven cy
+- [Phase ?]: [Phase 8] 08-03: App.tsx and TrendRow.tsx needed zero code changes to flow the two-sample TrendDayResult through - confirms Plan 08-01's prediction; only TrendRow.test.tsx's stale fixture needed a Rule 3 blocking-fix
 
 ### Pending Todos
 
@@ -116,8 +119,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-23T08:33:44.274Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-07-23T10:26:37.721Z
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

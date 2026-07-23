@@ -105,7 +105,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
   3. User sees the actual-value marker and the shared Y-axis scale preserved, so tiles stay visually comparable across days.
   4. User sees an updated, legible trend legend that correctly explains the new split-violin marks (recent vs prior halves plus any retained mean/actual-value marks), finalized via a reviewer copy round-trip.
 
-**Plans**: 2/4 plans executed
+**Plans**: 3/4 plans executed
 
 **Wave 1**
 
@@ -117,7 +117,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 
 **Wave 3** *(parallel — blocked on Wave 2; no shared files)*
 
-- [ ] 08-03-PLAN.md — Split-violin tile render: `violinShape()`, two per-half mean ticks, rug fallback, preserved diamond + shared axis, App/TrendRow wiring (TREND-01/02/03)
+- [x] 08-03-PLAN.md — Split-violin tile render: `violinShape()`, two per-half mean ticks, rug fallback, preserved diamond + shared axis, App/TrendRow wiring (TREND-01/02/03)
 - [ ] 08-04-PLAN.md — Trend legend rebuilt for the split-violin marks, finalized via the PD-10 reviewer copy round-trip (blocking checkpoint) (TREND-03)
 
 **UI hint**: yes
@@ -136,7 +136,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
 | 6. Panel Restructure & Hierarchy | v1.2 | 4/4 | Complete    | 2026-07-22 |
 | 7. Methodology Section & Explainers | v1.2 | 2/2 | Complete    | 2026-07-23 |
-| 8. Split-Violin Trend View | v1.2 | 2/4 | In Progress|  |
+| 8. Split-Violin Trend View | v1.2 | 3/4 | In Progress|  |
 
 ## Backlog
 
