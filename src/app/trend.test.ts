@@ -267,6 +267,85 @@ describe('buildViolinPaths', () => {
       for (const p of recentPts) expect(p.x).toBeGreaterThanOrEqual(baseOpts.cx - 0.1)
     }
   })
+
+  it('prevents bowtie self-crossing by opening at the bottom spine and closing at the top, with no sudden y-jumps', () => {
+    // Build two healthy samples (n>=20 each) to ensure curve rendering.
+    // Use 55 and 275 to match spike testing patterns.
+    const recentSamples = makeSamples(55, 15, 10)
+    const priorSamples = makeSamples(275, 15, 10)
+    const { prior, recent } = buildViolinPaths(recentSamples, priorSamples, baseOpts)
+
+    // Both must draw curves for this bowtie test.
+    expect(prior.kind).toBe('curve')
+    expect(recent.kind).toBe('curve')
+
+    if (prior.kind === 'curve' && recent.kind === 'curve') {
+      // Helper: extract all (x, y) pairs from path, splitting on M/L/Z.
+      const extractAllPoints = (path: string): { x: number; y: number }[] => {
+        // Match all coordinate pairs: "x,y" where x/y can have decimals and signs.
+        const pairs = path.match(/-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?/g) ?? []
+        return pairs.map((pair) => {
+          const [x, y] = pair.split(',').map(Number)
+          return { x: x!, y: y! }
+        })
+      }
+
+      // Helper: compute pixel y from temperature value using the same mapping
+      // that buildViolinPaths uses internally.
+      const yFromTemp = (temp: number): number =>
+        baseOpts.plotTop +
+        ((baseOpts.yMax - temp) / (baseOpts.yMax - baseOpts.yMin)) *
+          baseOpts.plotHeight
+
+      // Test prior half.
+      const priorPts = extractAllPoints(prior.path)
+      expect(priorPts.length).toBeGreaterThanOrEqual(2)
+
+      // The path structure is: M{bottom} L{edge[0]} L{edge[1]} ... L{edge[last]} L{top} Z
+      // The path opens at y(min) [bottom] and closes at y(max) [top], where min/max
+      // are clamped to the half's own sample range, not the full yMin/yMax domain.
+      const priorFirst = priorPts[0]!
+      const priorLast = priorPts[priorPts.length - 1]!
+      const priorMin = Math.min(...priorSamples)
+      const priorMax = Math.max(...priorSamples)
+
+      // First point (opening M) must be at cx, y(min).
+      expect(priorFirst.x).toBeCloseTo(baseOpts.cx, 1)
+      expect(priorFirst.y).toBeCloseTo(yFromTemp(priorMin), 0)
+
+      // Last point (before Z) must be at cx, y(max).
+      expect(priorLast.x).toBeCloseTo(baseOpts.cx, 1)
+      expect(priorLast.y).toBeCloseTo(yFromTemp(priorMax), 0)
+
+      // Check for bowtie: consecutive points must never jump more than ~plotHeight/2.
+      // A bowtie produces two long diagonals from top→edge[0] and edge[last]→bottom,
+      // each spanning roughly the full plotHeight. This threshold catches that.
+      for (let i = 1; i < priorPts.length; i++) {
+        const dy = Math.abs(priorPts[i]!.y - priorPts[i - 1]!.y)
+        expect(dy).toBeLessThan(baseOpts.plotHeight / 2)
+      }
+
+      // Test recent half (same invariants).
+      const recentPts = extractAllPoints(recent.path)
+      expect(recentPts.length).toBeGreaterThanOrEqual(2)
+
+      const recentFirst = recentPts[0]!
+      const recentLast = recentPts[recentPts.length - 1]!
+      const recentMin = Math.min(...recentSamples)
+      const recentMax = Math.max(...recentSamples)
+
+      expect(recentFirst.x).toBeCloseTo(baseOpts.cx, 1)
+      expect(recentFirst.y).toBeCloseTo(yFromTemp(recentMin), 0)
+
+      expect(recentLast.x).toBeCloseTo(baseOpts.cx, 1)
+      expect(recentLast.y).toBeCloseTo(yFromTemp(recentMax), 0)
+
+      for (let i = 1; i < recentPts.length; i++) {
+        const dy = Math.abs(recentPts[i]!.y - recentPts[i - 1]!.y)
+        expect(dy).toBeLessThan(baseOpts.plotHeight / 2)
+      }
+    }
+  })
 })
 
 describe('formatSlotLabel', () => {

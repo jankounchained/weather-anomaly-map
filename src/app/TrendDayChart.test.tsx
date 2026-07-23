@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { TrendDayChart } from './TrendDayChart'
+import { TrendDayChart, TrendYAxisColumn } from './TrendDayChart'
+import { computeAxisTicks } from './trend'
 import type { TrendDayResult } from '../anomaly/types'
 
 // No ResizeObserver mock is added anywhere in this file - the fixed-size
@@ -223,5 +224,46 @@ describe('TrendDayChart', () => {
       screen.getByLabelText('Not enough history for this day'),
     ).toBeTruthy()
     expect(container.querySelector('svg')).toBeNull()
+  })
+})
+
+describe('TrendYAxisColumn', () => {
+  it('renders at least 2 real numeric tick labels for the y-axis, guarding against empty-axis defect', () => {
+    const yDomain: [number, number] = [10, 25]
+    const { container } = render(<TrendYAxisColumn yDomain={yDomain} />)
+
+    // Find all <text> elements rendered by Recharts' YAxis ticks.
+    // Each tick label is rendered as a native SVG <text> node.
+    const textElements = Array.from(container.querySelectorAll('text'))
+
+    // Filter out any non-numeric or axis labels (we're after the tick value labels).
+    // Tick labels are the numeric values rendered on the axis itself.
+    const tickTexts = textElements
+      .map((el) => el.textContent?.trim() ?? '')
+      .filter((text) => text.length > 0)
+
+    // Must have at least 2 tick labels (guards against zero-tick rendering).
+    expect(tickTexts.length).toBeGreaterThanOrEqual(2)
+
+    // Every tick label must parse to a finite number within or near the domain.
+    const tickNumbers = tickTexts
+      .map((text) => Number(text))
+      .filter((n) => Number.isFinite(n))
+
+    // At least 2 tick values must be finite numbers (guards against NaN/undefined/empty).
+    expect(tickNumbers.length).toBeGreaterThanOrEqual(2)
+
+    // Verify the rendered ticks match the expected ticks from computeAxisTicks.
+    const expectedTicks = computeAxisTicks(yDomain)
+    expect(expectedTicks.length).toBeGreaterThanOrEqual(2)
+
+    // Every rendered tick number should match one of the expected ticks.
+    for (const num of tickNumbers) {
+      expect(expectedTicks).toContain(num)
+    }
+
+    // Verify no NaN/undefined string ever reached the DOM (T-08-05 guard).
+    expect(tickTexts.some((t) => t.includes('NaN'))).toBe(false)
+    expect(tickTexts.some((t) => t.includes('undefined'))).toBe(false)
   })
 })
