@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-07-23)
 Phase: 999.1 — split-violin-plot-for-trend-day-distributions (BACKLOG → PROMOTED)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-07-23 — Phase 08 complete, transitioned to Phase 999.1
+Last activity: 2026-07-23 — Quick task 260723-ju7: split-violin mean-tick polish (length-align + neutral bold black); Phase 08 complete, transitioned to Phase 999.1
 
 Progress: [████████████████████] 6/6 plans ([██████████] 100%)
 
@@ -107,6 +107,12 @@ None tracked for v1.2 yet.
 - [Phase 8] Reviewer-locked trend legend describes dot/line/diamond marks the violin replaces — requires an explicit reviewer copy round-trip, not a silent rewrite.
 - [Phase 8] Per-half KDE sample-size floor (n_min ~15-20) unresolved and width-normalization (equal-width vs n-scaled) undecided — pin empirically in the Phase 8 spike before implementation.
 - [Phase 8] Decision-coverage plan gate false positive: the v1.2 phases use `PD-NN` decision ids (deliberate — avoids colliding with the codebase's own `D-NN` ids), but the gate parser only recognizes `D-NN`, so it reports 0/0. Verified harmless in Phases 6 & 7 (plan-checker confirmed all PD-* cited); Phase 8 reuses the `PD-` convention and will trip the same gate — override expected. **OVERRIDE APPLIED 2026-07-23 at Phase 8 planning:** §13a gate returned `passed:false / could-not-parse / 0` as predicted; proceeded anyway — the plan-checker (VERIFICATION PASSED) independently confirmed PD-01…PD-12 all cited across the 4 plans, and the §13e post-planning gap analysis reported 3/3 requirements covered. No real coverage gap. verify-phase should treat the PD-* citations, not the parser's 0/0, as ground truth.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260723-ju7 | Split-violin mean tick: length-align to distribution width + neutral bold black line | 2026-07-23 | 63bff27 | [260723-ju7-split-violin-mean-tick-length-align-to-d](./quick/260723-ju7-split-violin-mean-tick-length-align-to-d/) |
 
 ## Deferred Items
 
