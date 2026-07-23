@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
-current_phase: 08
-current_phase_name: split-violin-trend-view
-status: verifying
+current_phase: 999.1
+current_phase_name: BACKLOG → PROMOTED
+status: planning
 stopped_at: Completed 08-04-PLAN.md — Phase 8 complete
-last_updated: "2026-07-23T11:34:42.197Z"
+last_updated: "2026-07-23T11:48:44.741Z"
 last_activity: 2026-07-23
-last_activity_desc: Phase 08 execution started
+last_activity_desc: Phase 08 complete, transitioned to Phase 999.1
 progress:
   total_phases: 3
   completed_phases: 3
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-23)
 
 ## Current Position
 
-Phase: 08 (split-violin-trend-view) — COMPLETE
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-07-23 — Phase 08 execution complete (08-04 legend reviewer round-trip applied)
+Phase: 999.1 — split-violin-plot-for-trend-day-distributions (BACKLOG → PROMOTED)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-23 — Phase 08 complete, transitioned to Phase 999.1
 
 Progress: [████████████████████] 6/6 plans ([██████████] 100%)
 
