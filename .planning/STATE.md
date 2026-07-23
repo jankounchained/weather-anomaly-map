@@ -6,9 +6,9 @@ current_phase: 999.1
 current_phase_name: BACKLOG → PROMOTED
 status: planning
 stopped_at: Completed 08-04-PLAN.md — Phase 8 complete
-last_updated: "2026-07-23T11:48:44.741Z"
+last_updated: "2026-07-23T12:39:46.298Z"
 last_activity: 2026-07-23
-last_activity_desc: Phase 08 complete, transitioned to Phase 999.1
+last_activity_desc: "Quick task 260723-ju7: split-violin mean-tick polish (length-align + neutral bold black); Phase 08 complete, transitioned to Phase 999.1"
 progress:
   total_phases: 3
   completed_phases: 3
@@ -113,6 +113,7 @@ None tracked for v1.2 yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260723-ju7 | Split-violin mean tick: length-align to distribution width + neutral bold black line | 2026-07-23 | 63bff27 | [260723-ju7-split-violin-mean-tick-length-align-to-d](./quick/260723-ju7-split-violin-mean-tick-length-align-to-d/) |
+| 2 | Evenly-spaced trend Y-axis ticks (computeAxisTicks) — fixed tick/label spacing | 2026-07-23 | ed235f2 | — |
 
 ## Deferred Items
 
