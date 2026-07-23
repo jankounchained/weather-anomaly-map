@@ -54,7 +54,6 @@ const AXIS_WIDTH = 40
 // 8pt token scale, same treatment CHART_WIDTH/AXIS_WIDTH already get.
 const CX = 44 // CHART_WIDTH / 2 - where both halves meet and the diamond sits.
 const MAX_HALF_WIDTH = 36 // cx - 8px (spacing-sm) gutter each edge (PD-05, equal-width both halves).
-const MEAN_TICK_LEN = 29 // maxHalfWidth * 0.8 - long enough to read as a mark, short of the frame.
 
 // Explicit ComposedChart margin (matches Recharts' own CartesianChart
 // default of {top:5,right:5,bottom:5,left:5} verbatim, confirmed against
@@ -196,17 +195,24 @@ function makeViolinShape(
 }
 
 /** Custom shape for one per-half mean tick (PD-07): a short horizontal
- * `<line>` extending `side * MEAN_TICK_LEN` from `cx`, wrapping a native
- * <title>. The vertical gap between the recent and prior ticks IS the
- * climate-shift read (no additional annotation this phase, TREND-04 stays
- * deferred). Zero-arg shape function, same precedent as makeViolinShape
- * above. */
-function makeMeanTickShape(y: number, side: -1 | 1, tooltipText: string) {
+ * `<line>` extending `side * meanWidth` from `cx` - meanWidth (from
+ * buildViolinPaths) is the same density-to-pixel value the curve edge
+ * itself is drawn at, so the tick's end lands exactly on that half's curve
+ * rather than a fixed length. Wraps a native <title>. The vertical gap
+ * between the recent and prior ticks IS the climate-shift read (no
+ * additional annotation this phase, TREND-04 stays deferred). Zero-arg
+ * shape function, same precedent as makeViolinShape above. */
+function makeMeanTickShape(
+  y: number,
+  side: -1 | 1,
+  meanWidth: number,
+  tooltipText: string,
+) {
   return function meanTickShape() {
     return (
       <line
         x1={CX}
-        x2={CX + side * MEAN_TICK_LEN}
+        x2={CX + side * meanWidth}
         y1={y}
         y2={y}
         stroke="var(--color-chart-mean)"
@@ -381,6 +387,7 @@ export function TrendDayChart({
             shape={makeMeanTickShape(
               priorMeanY,
               -1,
+              violinPaths.prior.meanWidth,
               formatMeanTickTooltip(
                 'Prior 25-yr',
                 violinPaths.prior.n,
@@ -397,6 +404,7 @@ export function TrendDayChart({
             shape={makeMeanTickShape(
               recentMeanY,
               1,
+              violinPaths.recent.meanWidth,
               formatMeanTickTooltip(
                 'Recent 5-yr',
                 violinPaths.recent.n,

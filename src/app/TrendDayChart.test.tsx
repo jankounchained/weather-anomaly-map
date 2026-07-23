@@ -172,6 +172,19 @@ describe('TrendDayChart', () => {
     )
     expect(meanTicks).toHaveLength(2)
 
+    // PD-07: each tick's horizontal extent is meanWidth-driven - positive,
+    // bounded by MAX_HALF_WIDTH (36), and no longer the old fixed 29px.
+    // x1 always stays anchored at CX (44).
+    for (const tick of meanTicks) {
+      const x1 = Number(tick.getAttribute('x1'))
+      const x2 = Number(tick.getAttribute('x2'))
+      const extent = Math.abs(x2 - x1)
+      expect(x1).toBe(44)
+      expect(extent).toBeGreaterThan(0)
+      expect(extent).toBeLessThanOrEqual(36)
+      expect(extent).not.toBe(29)
+    }
+
     const titles = titleTexts(container)
     expect(
       titles.some((t) => t.startsWith('Recent 5-yr mean (55 samples):')),

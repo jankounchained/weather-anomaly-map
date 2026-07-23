@@ -140,6 +140,20 @@ describe('buildViolinPaths', () => {
       expect(recent.path.startsWith('M')).toBe(true)
       expect(recent.path.endsWith('Z')).toBe(true)
       expect(recent.n).toBe(20)
+      // PD-07: meanWidth lands the tick end on the curve edge - a positive
+      // value bounded by maxHalfWidth, never the old fixed length.
+      expect(recent.meanWidth).toBeGreaterThan(0)
+      expect(recent.meanWidth).toBeLessThanOrEqual(baseOpts.maxHalfWidth)
+    }
+  })
+
+  it('gives identical curve halves (mirror recent/prior) equal meanWidth', () => {
+    const samples = makeSamples(25, 15, 10)
+    const { prior, recent } = buildViolinPaths(samples, samples, baseOpts)
+    expect(prior.kind).toBe('curve')
+    expect(recent.kind).toBe('curve')
+    if (prior.kind === 'curve' && recent.kind === 'curve') {
+      expect(prior.meanWidth).toBeCloseTo(recent.meanWidth, 5)
     }
   })
 
@@ -150,6 +164,9 @@ describe('buildViolinPaths', () => {
     if (recent.kind === 'rug') {
       expect(recent.points).toHaveLength(19)
       expect(recent.mean).not.toBeNull()
+      // PD-07: a sparse (rug) half with a non-null mean still falls back to
+      // the full maxHalfWidth so its tick reads.
+      expect(recent.meanWidth).toBe(baseOpts.maxHalfWidth)
     }
   })
 
@@ -160,6 +177,7 @@ describe('buildViolinPaths', () => {
       expect(prior.points).toEqual([])
       expect(prior.mean).toBeNull()
       expect(prior.n).toBe(0)
+      expect(prior.meanWidth).toBe(0)
     }
   })
 

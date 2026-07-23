@@ -5,7 +5,7 @@
 // don't add a dependency") - no React imports, same dependency-free spirit
 // as src/anomaly/anomaly.ts.
 import type { TrendDayResult } from '../anomaly/types'
-import { silvermanBandwidth, kdeCurve, halfDrawsCurve } from '../anomaly/kde'
+import { silvermanBandwidth, kdeCurve, halfDrawsCurve, kdeAt } from '../anomaly/kde'
 import { mean } from '../anomaly/anomaly'
 
 /** Deterministic pseudo-random x-offset for the historical dot at `index`
@@ -62,8 +62,20 @@ export function computeSharedYDomain(days: TrendDayResult[]): [number, number] {
  * thinner half degrades to a rug of raw sample points instead (mean is
  * null only for a truly empty half, n===0). */
 export type ViolinHalf =
-  | { kind: 'curve'; path: string; mean: number; n: number }
-  | { kind: 'rug'; points: { y: number }[]; mean: number | null; n: number }
+  | {
+      kind: 'curve'
+      path: string
+      mean: number
+      meanWidth: number
+      n: number
+    }
+  | {
+      kind: 'rug'
+      points: { y: number }[]
+      mean: number | null
+      meanWidth: number
+      n: number
+    }
 
 /** Options for buildViolinPaths' SVG geometry (UI-SPEC Violin Geometry &
  * Marks Contract). `yMin`/`yMax` are the shared padded y-domain
@@ -157,26 +169,42 @@ export function buildViolinPaths(
   const rugPoints = (samples: number[]): { y: number }[] =>
     samples.map((s) => ({ y: y(s) }))
 
+  // PD-07: meanWidth lands the mean tick's end exactly on the curve edge -
+  // reuses the SAME pooled bandwidth `h` and `sharedMax` the curve edge
+  // itself is built from (never recomputed here), evaluated at the half's
+  // own mean via kdeAt, so the two can never drift apart. A rug half (below
+  // halfDrawsCurve's threshold) has no density curve to land on, so a
+  // non-empty rug falls back to the full maxHalfWidth (still a readable
+  // mark); a truly empty half (n=0, mean null) gets 0.
   const half = (
     samples: number[],
     curve: { x: number; density: number }[],
     side: -1 | 1,
     min: number,
     max: number,
-  ): ViolinHalf =>
-    halfDrawsCurve(samples.length)
-      ? {
-          kind: 'curve',
-          path: halfPath(curve, side, min, max),
-          mean: mean(samples),
-          n: samples.length,
-        }
-      : {
-          kind: 'rug',
-          points: rugPoints(samples),
-          mean: samples.length ? mean(samples) : null,
-          n: samples.length,
-        }
+  ): ViolinHalf => {
+    if (halfDrawsCurve(samples.length)) {
+      const m = mean(samples)
+      const meanWidth = Math.max(
+        0,
+        Math.min(maxHalfWidth, (kdeAt(m, samples, h) / sharedMax) * maxHalfWidth),
+      )
+      return {
+        kind: 'curve',
+        path: halfPath(curve, side, min, max),
+        mean: m,
+        meanWidth,
+        n: samples.length,
+      }
+    }
+    return {
+      kind: 'rug',
+      points: rugPoints(samples),
+      mean: samples.length ? mean(samples) : null,
+      meanWidth: samples.length ? maxHalfWidth : 0,
+      n: samples.length,
+    }
+  }
 
   return {
     prior: half(priorSamples, priorCurve, -1, priorMin, priorMax),
