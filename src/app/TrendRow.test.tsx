@@ -66,8 +66,10 @@ describe('TrendRow', () => {
       {
         dateStr: '2026-07-15',
         usable: true,
-        samples: [15, 16, 17, 18, 19],
-        mean: 17,
+        recentSamples: Array.from({ length: 55 }, (_, i) => 15 + (i % 5)),
+        priorSamples: Array.from({ length: 275 }, (_, i) => 13 + (i % 5)),
+        recentMean: 17,
+        priorMean: 15,
         actual: 21,
       },
     ]
