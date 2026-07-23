@@ -330,18 +330,53 @@ describe('computeTrendDay', () => {
     expect(result).toEqual({ dateStr: '2021-07-11', usable: false })
   })
 
-  it('returns { usable: true, dateStr, samples, mean, actual } for a healthy day', () => {
-    const daily = {
-      time: ['2019-07-11', '2020-07-11'],
-      values: [15, 17],
+  it('returns a two-sample usable:true result: recentSamples from the last 5 complete years, priorSamples from the 25 years before, both windowed off the SAME series (TREND-01)', () => {
+    // 30 complete years (1991-2020), one in-window value per year = year - 1990,
+    // so recentSamples (2016-2020) = [26,27,28,29,30] and priorSamples
+    // (1991-2015) = [1..25]. endYear is derived from daily.time, not dateStr.
+    const time: string[] = []
+    const values: number[] = []
+    for (let y = 1991; y <= 2020; y++) {
+      time.push(`${y}-07-11`)
+      values.push(y - 1990)
     }
+    const daily = { time, values }
     const result = computeTrendDay(daily, '2021-07-11', 20)
-    expect(result).toEqual({
-      dateStr: '2021-07-11',
-      usable: true,
-      samples: [15, 17],
-      mean: 16,
-      actual: 20,
-    })
+    expect(result.usable).toBe(true)
+    if (!result.usable) throw new Error('expected usable:true')
+    expect(result.recentSamples).toEqual([26, 27, 28, 29, 30])
+    expect(result.priorSamples).toEqual(
+      Array.from({ length: 25 }, (_, i) => i + 1),
+    )
+    expect(result.recentMean).toBe(mean(result.recentSamples))
+    expect(result.priorMean).toBe(mean(result.priorSamples))
+    expect(result.actual).toBe(20)
+    expect(result.dateStr).toBe('2021-07-11')
+  })
+
+  it('returns usable:false for a zero-sample (data-desert) daily series - the whole-tile placeholder, unchanged by the two-sample split', () => {
+    const daily = { time: [], values: [] }
+    const result = computeTrendDay(daily, '2021-07-11', 20)
+    expect(result).toEqual({ dateStr: '2021-07-11', usable: false })
+  })
+
+  it('contract: the usable:true member exposes recentSamples/priorSamples/recentMean/priorMean/actual and no longer exposes samples/mean (retired single-sample shape)', () => {
+    const time: string[] = []
+    const values: number[] = []
+    for (let y = 1991; y <= 2020; y++) {
+      time.push(`${y}-07-11`)
+      values.push(15)
+    }
+    const daily = { time, values }
+    const result = computeTrendDay(daily, '2021-07-11', 20)
+    expect(result.usable).toBe(true)
+    if (!result.usable) throw new Error('expected usable:true')
+    expect(result).toHaveProperty('recentSamples')
+    expect(result).toHaveProperty('priorSamples')
+    expect(result).toHaveProperty('recentMean')
+    expect(result).toHaveProperty('priorMean')
+    expect(result).toHaveProperty('actual')
+    expect(result).not.toHaveProperty('samples')
+    expect(result).not.toHaveProperty('mean')
   })
 })

@@ -24,17 +24,23 @@ export type VerdictTier =
   | 'slightly-warmer'
   | 'much-warmer'
 
-/** Per-day trend-chart input (VIZ-01). The `usable` discriminant is what
- * TrendDayChart (Plan 03) branches on to render either the dot/strip chart
- * or the "not enough history" placeholder - one shape, one code path,
- * whether the cause is a genuine data desert or a fetch-timing gap
- * (D-11, D-12, D-14). */
+/** Per-day trend-chart input (VIZ-01, TREND-01). The `usable` discriminant
+ * is what buildViolinPaths/TrendDayChart branches on to render either the
+ * split-violin tile or the "not enough history" placeholder - one shape,
+ * one code path, whether the cause is a genuine data desert or a
+ * fetch-timing gap (D-11, D-12, D-14). The `usable: true` member is the
+ * two-half (recent-5yr / prior-25yr) model (TREND-01, PD-04): recentSamples
+ * and priorSamples are both windowed off the SAME baseline.daily series, so
+ * this is the ONLY `usable: true` shape - there is no single-sample
+ * fallback to keep in sync. */
 export type TrendDayResult =
   | {
       dateStr: string
       usable: true
-      samples: number[]
-      mean: number
+      recentSamples: number[]
+      priorSamples: number[]
+      recentMean: number
+      priorMean: number
       actual: number
     }
   | { dateStr: string; usable: false }

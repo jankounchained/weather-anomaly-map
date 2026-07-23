@@ -205,7 +205,7 @@ export function computeWindowSamples(
   daily: { time: string[]; values: (number | null)[] },
   dateStr: string,
   halfWidthDays = 5,
-): { samples: number[]; totalYears: number } | null {
+): { samples: number[]; totalYears: number; endYear: number } | null {
   const parts = dateStr.split('-')
   const targetMonth = Number(parts[1])
   const targetDay = Number(parts[2])
@@ -226,7 +226,7 @@ export function computeWindowSamples(
     halfWidthDays,
   )
 
-  return { samples, totalYears: endYear - startYear + 1 }
+  return { samples, totalYears: endYear - startYear + 1, endYear }
 }
 
 /** Single "usable history" gate (D-09/D-10): operationalizes D-09's "at
@@ -296,16 +296,21 @@ export function computeAnomalyForToday(
   return { delta, zScore, verdictTier, percentile }
 }
 
-/** Computes one day's trend-chart input against the +/-5-day day-of-year
- * baseline window derived from `daily` (VIZ-01, D-11, D-13). `daily` is the
- * SAME 30-year archive series already fetched once via
- * useHistoricalBaseline - this reuses filterDayOfYearWindow per day
- * against that one series rather than issuing a new fetch (RESEARCH.md
- * Pattern 1/03-CONTEXT.md efficiency note). Returns `{ usable: false,
- * dateStr }` when `actualTemp` is null/non-finite OR the window fails the
- * shared hasUsableSampleCount gate - one unusable code path regardless of
- * cause (data desert vs. a fetch-timing gap, D-14). Returns `{ usable:
- * true, dateStr, samples, mean, actual }` for a healthy day. */
+/** Computes one day's split-violin trend-chart input against the +/-5-day
+ * day-of-year baseline window derived from `daily` (VIZ-01, D-11, D-13,
+ * TREND-01). `daily` is the SAME 30-year archive series already fetched
+ * once via useHistoricalBaseline - re-windowed TWICE (recent/prior) off
+ * that one series rather than issuing a new fetch (RESEARCH.md Pattern
+ * 1/03-CONTEXT.md efficiency note, PD-13). Returns `{ usable: false,
+ * dateStr }` when `actualTemp` is null/non-finite OR the shared
+ * hasUsableSampleCount gate over the COMBINED window fails - one unusable
+ * code path regardless of cause (data desert vs. a fetch-timing gap, D-14).
+ * That whole-tile gate is intentionally NOT re-derived per half (D-10; see
+ * kde.ts's separate per-half halfDrawsCurve gate, PD-04 gate 2, for the
+ * curve-vs-rug decision downstream). Returns `{ usable: true, dateStr,
+ * recentSamples, priorSamples, recentMean, priorMean, actual }` for a
+ * healthy day: recent = the last 5 complete years, prior = the 25 years
+ * before that (TREND-01 two-sample split). */
 export function computeTrendDay(
   daily: { time: string[]; values: (number | null)[] },
   dateStr: string,
@@ -314,7 +319,7 @@ export function computeTrendDay(
 ): TrendDayResult {
   const window = computeWindowSamples(daily, dateStr, halfWidthDays)
   if (window === null) return { dateStr, usable: false }
-  const { samples, totalYears } = window
+  const { samples, totalYears, endYear } = window
 
   if (
     actualTemp === null ||
@@ -324,11 +329,38 @@ export function computeTrendDay(
     return { dateStr, usable: false }
   }
 
+  const parts = dateStr.split('-')
+  const targetMonth = Number(parts[1])
+  const targetDay = Number(parts[2])
+
+  const recentStart = endYear - 4
+  const priorEnd = recentStart - 1
+  const priorStart = recentStart - 25
+
+  const recentSamples = filterDayOfYearWindow(
+    daily,
+    targetMonth,
+    targetDay,
+    recentStart,
+    endYear,
+    halfWidthDays,
+  )
+  const priorSamples = filterDayOfYearWindow(
+    daily,
+    targetMonth,
+    targetDay,
+    priorStart,
+    priorEnd,
+    halfWidthDays,
+  )
+
   return {
     dateStr,
     usable: true,
-    samples,
-    mean: mean(samples),
+    recentSamples,
+    priorSamples,
+    recentMean: mean(recentSamples),
+    priorMean: mean(priorSamples),
     actual: actualTemp,
   }
 }
