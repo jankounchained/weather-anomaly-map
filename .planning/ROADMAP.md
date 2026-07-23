@@ -105,7 +105,21 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
   3. User sees the actual-value marker and the shared Y-axis scale preserved, so tiles stay visually comparable across days.
   4. User sees an updated, legible trend legend that correctly explains the new split-violin marks (recent vs prior halves plus any retained mean/actual-value marks), finalized via a reviewer copy round-trip.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+**Wave 1**
+
+- [ ] 08-01-PLAN.md — Statistics & data-shape core: hand-rolled Gaussian KDE + Silverman (`kde.ts`), the per-half `n_min=20` curve-vs-rug gate, and `computeTrendDay` → two-sample recent/prior return (TREND-01/02)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 08-02-PLAN.md — Violin geometry: `buildViolinPaths`/`ViolinHalf` (shared pooled bandwidth, shared density peak, prior-left/recent-right, clamped tails) + extended `computeSharedYDomain` + new recent/prior chart tokens (TREND-01/02)
+
+**Wave 3** *(parallel — blocked on Wave 2; no shared files)*
+
+- [ ] 08-03-PLAN.md — Split-violin tile render: `violinShape()`, two per-half mean ticks, rug fallback, preserved diamond + shared axis, App/TrendRow wiring (TREND-01/02/03)
+- [ ] 08-04-PLAN.md — Trend legend rebuilt for the split-violin marks, finalized via the PD-10 reviewer copy round-trip (blocking checkpoint) (TREND-03)
+
 **UI hint**: yes
 **Research flag**: Highest-risk phase — dedicated statistics/design spike before implementation. Validate Silverman bandwidth on this app's per-half sample sizes, pin the per-half `n_min` curve-vs-rug threshold (~15-20), decide width-normalization (equal-width vs n-scaled), settle the one-half-passes fallback (render available half vs drop tile), and get reviewer sign-off on which reviewer-locked legend marks survive as a violin overlay. Build bottom-up: `kde.ts` math → `buildViolinPaths()` geometry → `violinShape()` render → legend. `computeTrendDay()` changes to a two-sample (`recentSamples`/`priorSamples`) return shape; the fetch layer and 30-year archive call are unchanged.
 
@@ -122,7 +136,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
 | 6. Panel Restructure & Hierarchy | v1.2 | 4/4 | Complete    | 2026-07-22 |
 | 7. Methodology Section & Explainers | v1.2 | 2/2 | Complete    | 2026-07-23 |
-| 8. Split-Violin Trend View | v1.2 | 0/TBD | Not started | - |
+| 8. Split-Violin Trend View | v1.2 | 0/4 | Planned | - |
 
 ## Backlog
 
