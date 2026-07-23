@@ -25,3 +25,10 @@ dist-ssr
 
 # GSD research HTTP cache (local, regenerable — not an artifact)
 .planning/research/.cache/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
