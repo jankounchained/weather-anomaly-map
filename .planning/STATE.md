@@ -4,9 +4,9 @@ milestone: v1.2
 milestone_name: UI Layout Redesign & Explanatory Legend
 current_phase: 8
 current_phase_name: Split-Violin Trend View
-status: planning
-stopped_at: Phase 8 context gathered
-last_updated: "2026-07-22T22:55:46.352Z"
+status: executing
+stopped_at: Phase 08 UI-SPEC approved
+last_updated: "2026-07-23T08:01:43.849Z"
 last_activity: 2026-07-23
 last_activity_desc: Phase 07 complete, transitioned to Phase 8
 progress:
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-23)
 
 Phase: 8 — Split-Violin Trend View
 Plan: Not started
-Status: Ready to plan
+Status: Ready to execute
 Last activity: 2026-07-23 — Phase 07 complete, transitioned to Phase 8
 
 Progress: [████████████████████] 6/6 plans (100%)
@@ -95,7 +95,7 @@ None tracked for v1.2 yet.
 
 - [Phase 8] Reviewer-locked trend legend describes dot/line/diamond marks the violin replaces — requires an explicit reviewer copy round-trip, not a silent rewrite.
 - [Phase 8] Per-half KDE sample-size floor (n_min ~15-20) unresolved and width-normalization (equal-width vs n-scaled) undecided — pin empirically in the Phase 8 spike before implementation.
-- [Phase 8] Decision-coverage plan gate false positive: the v1.2 phases use `PD-NN` decision ids (deliberate — avoids colliding with the codebase's own `D-NN` ids), but the gate parser only recognizes `D-NN`, so it reports 0/0. Verified harmless in Phases 6 & 7 (plan-checker confirmed all PD-* cited); Phase 8 reuses the `PD-` convention and will trip the same gate — override expected.
+- [Phase 8] Decision-coverage plan gate false positive: the v1.2 phases use `PD-NN` decision ids (deliberate — avoids colliding with the codebase's own `D-NN` ids), but the gate parser only recognizes `D-NN`, so it reports 0/0. Verified harmless in Phases 6 & 7 (plan-checker confirmed all PD-* cited); Phase 8 reuses the `PD-` convention and will trip the same gate — override expected. **OVERRIDE APPLIED 2026-07-23 at Phase 8 planning:** §13a gate returned `passed:false / could-not-parse / 0` as predicted; proceeded anyway — the plan-checker (VERIFICATION PASSED) independently confirmed PD-01…PD-12 all cited across the 4 plans, and the §13e post-planning gap analysis reported 3/3 requirements covered. No real coverage gap. verify-phase should treat the PD-* citations, not the parser's 0/0, as ground truth.
 
 ## Deferred Items
 
@@ -110,10 +110,10 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-22T22:55:46.345Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-split-violin-trend-view/08-CONTEXT.md
+Last session: 2026-07-22T23:35:33.238Z
+Stopped at: Phase 08 UI-SPEC approved
+Resume file: .planning/phases/08-split-violin-trend-view/08-UI-SPEC.md
 
 ## Operator Next Steps
 
-- Plan Phase 8 with /gsd-plan-phase 8
+- Execute Phase 8 with /gsd-execute-phase 8 (4 plans, waves 1→2→3; 08-04 legend needs a reviewer copy sign-off before close)
