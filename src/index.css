@@ -19,6 +19,14 @@
   /* distinct actual-value diamond marker (D-02) - new hue, reserved
      exclusively for this marker */
   --color-chart-actual: #ea580c;
+  /* Split-violin recent/prior tokens (08-UI-SPEC.md Color, PD-12) - drawn
+     from the app's own anomaly-color vocabulary rather than new hues.
+     Mean ticks/actual diamond/rug-fallback dots keep their existing tokens
+     above; these two pairs style ONLY the violin half fill/stroke. */
+  --color-chart-prior-fill: rgba(87, 83, 78, 0.24);
+  --color-chart-prior-stroke: #57534e; /* = --color-anomaly-normal */
+  --color-chart-recent-fill: rgba(154, 52, 18, 0.26);
+  --color-chart-recent-stroke: #9a3412; /* = --color-anomaly-hot */
   /* formalizes the muted gray already inlined in AnomalyCard's zscore chip */
   --color-muted: #4b5563;
   /* placeholder card border only (D-12/D-14 empty state) */
