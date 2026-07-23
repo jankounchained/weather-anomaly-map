@@ -3,6 +3,7 @@ import {
   jitterX,
   buildHistoricalPoints,
   computeSharedYDomain,
+  computeAxisTicks,
   buildViolinPaths,
   formatSlotLabel,
 } from './trend'
@@ -276,5 +277,31 @@ describe('formatSlotLabel', () => {
   it('returns a stable UTC weekday abbreviation for a known date', () => {
     // 2026-07-15 is a Wednesday (UTC)
     expect(formatSlotLabel('2026-07-15', false)).toBe('Wed')
+  })
+})
+
+describe('computeAxisTicks', () => {
+  it('produces evenly-spaced ticks with one fixed gap (no uneven final step)', () => {
+    const ticks = computeAxisTicks([10, 25])
+    expect(ticks.length).toBeGreaterThanOrEqual(2)
+    const gaps = ticks.slice(1).map((t, i) => t - ticks[i]!)
+    expect(new Set(gaps).size).toBe(1) // every gap identical
+    expect(ticks).toEqual([10, 15, 20, 25]) // nice step reaches both ends here
+  })
+
+  it('yields whole-degree (integer) tick values', () => {
+    for (const t of computeAxisTicks([-7, 19])) {
+      expect(Number.isInteger(t)).toBe(true)
+    }
+  })
+
+  it('never emits duplicate labels on a flat, narrow domain (1° minimum step)', () => {
+    const ticks = computeAxisTicks([19, 21])
+    expect(ticks).toEqual([19, 20, 21])
+    expect(new Set(ticks).size).toBe(ticks.length)
+  })
+
+  it('returns a single tick for a degenerate (zero-span) domain', () => {
+    expect(computeAxisTicks([12, 12])).toEqual([12])
   })
 })

@@ -30,7 +30,12 @@ import { ComposedChart, Scatter, XAxis, YAxis } from 'recharts'
 import type { ScatterShapeProps } from 'recharts'
 import { formatDelta, mean } from '../anomaly/anomaly'
 import type { TrendDayResult } from '../anomaly/types'
-import { buildViolinPaths, formatSlotLabel, jitterX } from './trend'
+import {
+  buildViolinPaths,
+  computeAxisTicks,
+  formatSlotLabel,
+  jitterX,
+} from './trend'
 import type { ViolinHalf } from './trend'
 
 export interface TrendDayChartProps {
@@ -467,6 +472,7 @@ export function TrendYAxisColumn({ yDomain }: TrendYAxisColumnProps) {
         type="number"
         dataKey="y"
         domain={yDomain}
+        ticks={computeAxisTicks(yDomain)}
         width={AXIS_WIDTH}
         tick={{ fill: 'var(--color-muted)', fontSize: 14 }}
       />

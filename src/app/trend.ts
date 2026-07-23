@@ -57,6 +57,36 @@ export function computeSharedYDomain(days: TrendDayResult[]): [number, number] {
   return [Math.floor(min - pad), Math.ceil(max + pad)]
 }
 
+/** Evenly-spaced "nice" Y-axis tick values across [yMin, yMax] (D-06). The
+ * default Recharts number axis anchors a tick on the exact domain max, which
+ * leaves an uneven final gap (e.g. 10/14/18/22/25 — the 22→25 step is 3° not
+ * 4°). Here a single nice step (1/2/5 × 10^k sized so ~targetCount ticks span
+ * the range, floored at 1° so labels stay whole degrees and never round to
+ * duplicates on a flat week) is laid from the first multiple ≥ yMin up to
+ * yMax, so every gap — and therefore every tick/label's pixel spacing — is
+ * identical. Pure and dependency-free, same spirit as the other helpers. */
+export function computeAxisTicks(
+  [yMin, yMax]: [number, number],
+  targetCount = 5,
+): number[] {
+  const span = yMax - yMin
+  if (!(span > 0) || targetCount < 2) return [Math.round(yMin)]
+  const rawStep = span / (targetCount - 1)
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)))
+  const norm = rawStep / mag
+  const niceNorm = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10
+  const step = Math.max(1, niceNorm * mag)
+  const ticks: number[] = []
+  for (
+    let v = Math.ceil(yMin / step) * step;
+    v <= yMax + step * 1e-9;
+    v += step
+  ) {
+    ticks.push(Math.round(v))
+  }
+  return ticks
+}
+
 /** Per-half split-violin geometry output (TREND-02, PD-01/PD-02): a half
  * with n >= N_MIN (halfDrawsCurve) renders as a closed KDE curve path; a
  * thinner half degrades to a rug of raw sample points instead (mean is
