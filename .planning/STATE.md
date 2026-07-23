@@ -24,7 +24,7 @@ current_phase_name: BACKLOG → PROMOTED
 See: .planning/PROJECT.md (updated 2026-07-23)
 
 **Core value:** For any location, the user can immediately tell how unusual today's temperature is compared to historical norms — the anomaly score must be accurate and easy to interpret at a glance.
-**Current focus:** Phase 08 — split-violin-trend-view
+**Current focus:** Planning next milestone (v1.2 shipped 2026-07-23)
 
 ## Current Position
 
