@@ -5,15 +5,15 @@ milestone_name: UI Layout Redesign & Explanatory Legend
 current_phase: 08
 current_phase_name: split-violin-trend-view
 status: executing
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-07-23T08:23:30.559Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-07-23T08:33:44.283Z"
 last_activity: 2026-07-23
 last_activity_desc: Phase 08 execution started
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 67
 ---
 
@@ -29,11 +29,11 @@ See: .planning/PROJECT.md (updated 2026-07-23)
 ## Current Position
 
 Phase: 08 (split-violin-trend-view) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-07-23 — Phase 08 execution started
 
-Progress: [████████████████████] 6/6 plans ([███████░░░] 70%)
+Progress: [████████████████████] 6/6 plans ([████████░░] 80%)
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [████████████████████] 6/6 pla
 | Phase 07 P01 | 22min | 2 tasks | 4 files |
 | Phase 07 P02 | 4min | 2 tasks | 3 files |
 | Phase 08 P01 | 10min | 2 tasks | 5 files |
+| Phase 08 P02 | 12min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Recent decisions affecting current work:
 - [Phase ?]: No expand/collapse height animation for the methodology disclosure; only the chevron rotation is gated behind prefers-reduced-motion (locked UI-SPEC simplicity choice)
 - [Phase ?]: 08-01: Reused anomaly.ts's sampleStdDev inside kde.ts's silvermanBandwidth instead of re-declaring a local stdDev/mean pair (one shared definition)
 - [Phase ?]: 08-01: TrendDayResult promoted (not kept alongside) to the two-sample recentSamples/priorSamples/recentMean/priorMean shape; old samples/mean retired
+- [Phase ?]: [Phase 8] 08-02: computeSharedYDomain kept at exact 10% pad (not the ~8% must_haves wording) per the plan's own explicit <action> instruction - explicit code directive wins over looser prose paraphrase
+- [Phase ?]: [Phase 8] 08-02: buildViolinPaths ports spike's buildViolinDay dropping the bandwidthMode param entirely - real build only ever computes ONE shared pooled Silverman bandwidth, never per-half
 
 ### Pending Todos
 
@@ -113,8 +116,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-07-23T08:23:30.549Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-07-23T08:33:44.274Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
