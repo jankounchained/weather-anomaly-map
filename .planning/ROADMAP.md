@@ -35,7 +35,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 
 - [x] **Phase 6: Panel Restructure & Hierarchy** - Split the hero into four headlined, self-explanatory panels with the Delta preserved as the focal point. (completed 2026-07-22)
 - [x] **Phase 7: Methodology Section & Explainers** - Collapsible methodology disclosure plus a plain-language percentile framing of the z-score. (completed 2026-07-23)
-- [ ] **Phase 8: Split-Violin Trend View** - Replace dot-strip tiles with per-day recent-vs-prior split violins, gated for sparse samples, with an updated legend.
+- [x] **Phase 8: Split-Violin Trend View** - Replace dot-strip tiles with per-day recent-vs-prior split violins, gated for sparse samples, with an updated legend. (completed 2026-07-23)
 
 ## Phase Details
 
@@ -105,7 +105,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
   3. User sees the actual-value marker and the shared Y-axis scale preserved, so tiles stay visually comparable across days.
   4. User sees an updated, legible trend legend that correctly explains the new split-violin marks (recent vs prior halves plus any retained mean/actual-value marks), finalized via a reviewer copy round-trip.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 
 **Wave 1**
 
@@ -118,7 +118,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 **Wave 3** *(parallel — blocked on Wave 2; no shared files)*
 
 - [x] 08-03-PLAN.md — Split-violin tile render: `violinShape()`, two per-half mean ticks, rug fallback, preserved diamond + shared axis, App/TrendRow wiring (TREND-01/02/03)
-- [ ] 08-04-PLAN.md — Trend legend rebuilt for the split-violin marks, finalized via the PD-10 reviewer copy round-trip (blocking checkpoint) (TREND-03)
+- [x] 08-04-PLAN.md — Trend legend rebuilt for the split-violin marks, finalized via the PD-10 reviewer copy round-trip (blocking checkpoint) (TREND-03)
 
 **UI hint**: yes
 **Research flag**: Highest-risk phase — dedicated statistics/design spike before implementation. Validate Silverman bandwidth on this app's per-half sample sizes, pin the per-half `n_min` curve-vs-rug threshold (~15-20), decide width-normalization (equal-width vs n-scaled), settle the one-half-passes fallback (render available half vs drop tile), and get reviewer sign-off on which reviewer-locked legend marks survive as a violin overlay. Build bottom-up: `kde.ts` math → `buildViolinPaths()` geometry → `violinShape()` render → legend. `computeTrendDay()` changes to a two-sample (`recentSamples`/`priorSamples`) return shape; the fetch layer and 30-year archive call are unchanged.
@@ -136,7 +136,7 @@ Full detail archived at `.planning/milestones/v1.1-ROADMAP.md`.
 | 5. Glass / Atmospheric Redesign | v1.1 | 3/3 | Complete | 2026-07-21 |
 | 6. Panel Restructure & Hierarchy | v1.2 | 4/4 | Complete    | 2026-07-22 |
 | 7. Methodology Section & Explainers | v1.2 | 2/2 | Complete    | 2026-07-23 |
-| 8. Split-Violin Trend View | v1.2 | 3/4 | In Progress|  |
+| 8. Split-Violin Trend View | v1.2 | 4/4 | Complete    | 2026-07-23 |
 
 ## Backlog
 
