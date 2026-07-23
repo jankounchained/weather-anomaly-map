@@ -37,6 +37,45 @@
 
 ---
 
+## Milestone: v1.2 — UI Layout Redesign & Explanatory Legend
+
+**Shipped:** 2026-07-23
+**Phases:** 3 | **Plans:** 10 | **Sessions:** ~2
+
+### What Was Built
+- Resolved anomaly view restructured into four headlined, self-explanatory panels (Current conditions + Delta split from the former combined hero, joining Location + History), each with inline micro-copy and a WCAG-accessible InfoTooltip, Delta preserved as the ~1.7× focal point — all on shared `PanelShell`/`PanelHeadline`/`InfoTooltip` primitives reused across phases 7-8.
+- A plain-language percentile explainer (hand-rolled Hazen/midrank empirical rank) in the Delta panel, plus an always-visible native `<details>`/`<summary>` "How This Works" methodology disclosure.
+- The per-day trend row rebuilt as a split violin: hand-rolled Gaussian KDE + Silverman bandwidth (`kde.ts`), two-sample `computeTrendDay` (recent-5yr vs prior-25yr) off the same archive series, `buildViolinPaths` geometry (one shared pooled bandwidth, shared max density, per-half n≥20 curve-vs-rug gate), preserved diamond + shared Y-axis, and a 5-item legend finalized via the PD-10 reviewer copy round-trip.
+
+### What Worked
+- **Bottom-up phase-8 sequencing.** Building `kde.ts` math → `buildViolinPaths` geometry → `violinShape` render → legend, each layer with its own tests, kept every seam independently verifiable; the mid-phase red typecheck (retired single-sample shape) was an expected, documented consequence, not a regression chase.
+- **Primitives-first in Phase 6.** Extracting `isAnomalyReady` + the three shared UI primitives foundation-only (Wave 1, touching no existing panel) meant Phases 7 and 8 reused them verbatim with zero rework.
+- **The dedicated spike de-risked the hardest phase.** The pre-phase-8 statistics/design spike pinned Silverman bandwidth, the n_min≈20 threshold, equal-width normalization, and the rug fallback before implementation — the plan just executed the settled decisions.
+- **Reviewer copy round-trip (PD-10) as a blocking checkpoint.** Legend wording went through an explicit human verdict recorded verbatim, the same process that fixed the Phase 3 legend — chart copy is exactly where at-a-glance clarity lives.
+
+### What Was Inefficient
+- **Two once-caught render defects had no standing regression test.** The bowtie path-anchor and empty Y-axis bugs (fixed in `dcd5f66`) were verified only by throwaway tests that were deleted, so the suite would have stayed green if either regressed. `/gsd-validate-phase 08` later added the two permanent tests — but only because Nyquist validation was turned on retroactively at milestone-audit time.
+- **Nyquist coverage uneven across the milestone.** Phase 8 got validated; Phases 6 & 7 predate the toggle and still lack VALIDATION.md, so the milestone closed with partial Nyquist coverage.
+- **Visual spot-checks deferred, not done.** Three jsdom-invisible checks (popover stacking, focal-point perception, reduced-motion chevron) were carried as deferred debt because no browser was available this session — the same class of visual gap that has mattered every prior milestone.
+
+### Patterns Established
+- **Per-half data-sufficiency gate distinct from the whole-tile gate.** `halfDrawsCurve(n) = n >= 20` is structurally separate from `hasUsableSampleCount`, each the single source of its own threshold.
+- **One shared pooled bandwidth + one shared max density per split violin.** Never per-half — so a taller/narrower peak genuinely means more concentration, and both halves stay comparable.
+- **Explicit chart margin constant shared between precomputed marks and Recharts-scale marks.** `PLOT_MARGIN` declared verbatim so `yFromValue()` pixel positions provably (not coincidentally) share the diamond's Recharts-driven scale.
+- **Retroactive Nyquist validation (State B).** `/gsd-validate-phase` can reconstruct a VALIDATION.md from SUMMARYs + VERIFICATION + the live suite and fill standing-regression gaps after the fact.
+
+### Key Lessons
+1. When a defect is caught and fixed by a human, add the standing regression test in the same pass — a fix verified only by a throwaway test leaves the suite blind to the regression. Turn Nyquist validation on before, not after, the phases that need it.
+2. A dedicated spike ahead of the highest-risk phase pays for itself: phase-8 planning had no open statistical unknowns because the spike had already settled them.
+3. Foundation-only first waves (primitives, gate predicates) with no edits to existing files make later phases cheap and keep diffs attributable.
+
+### Cost Observations
+- Model mix: planning on opus, execution on sonnet, auditor/checker subagents on haiku (per configured profile).
+- Sessions: ~2.
+- Notable: milestone audit spawned haiku integration + Nyquist auditor subagents; the retroactive `/gsd-validate-phase 08` added 2 regression tests (194→196) without touching implementation.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -45,6 +84,7 @@
 |-----------|----------|--------|------------|
 | v1.0 | ~3 | 3 | Initial MVP; established phase→plan→execute→verify loop |
 | v1.1 | ~2 | 2 | Foundation-first split (migrate, then redesign); conversational UAT + quick-task gap closure over formal per-phase VERIFICATION.md |
+| v1.2 | ~2 | 3 | Primitives-first foundation wave; dedicated spike ahead of the highest-risk phase; Nyquist validation enabled mid-milestone and applied retroactively |
 
 ### Cumulative Quality
 
@@ -52,8 +92,10 @@
 |-----------|-------|----------|-------------------|
 | v1.0 | ~28 tasks | — | hand-rolled z-score/delta (no stats dep) |
 | v1.1 | 99 | — | none (styling-only; Tailwind v4 + plugin only) |
+| v1.2 | 196 | Nyquist: phase 8 compliant, 6 & 7 unvalidated | hand-rolled Gaussian KDE + Silverman + empirical percentile (no stats dep) |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. Human/in-app verification catches the issues that matter most in this project — both milestones had their real blocking gaps found by a person looking at the running UI (v1.0: squished leftmost trend tile + missing legend; v1.1: delta-vs-temp ambiguity, off-center chart), never by tests.
-2. Isolate risky mechanical work from judgment-heavy work into separate phases — it keeps each diff reviewable and each regression attributable.
+1. Human/in-app verification catches the issues that matter most in this project — every milestone had its real blocking gaps found by a person looking at the running UI (v1.0: squished leftmost trend tile + missing legend; v1.1: delta-vs-temp ambiguity, off-center chart; v1.2: the two render defects a human reviewer caught before checkpoint), never by tests alone.
+2. Isolate risky mechanical work from judgment-heavy work into separate phases (and foundation-only first waves) — it keeps each diff reviewable and each regression attributable.
+3. A fix is not done until its regression test is standing; verify-once-then-delete leaves the suite blind. Enable coverage gates (Nyquist) before the phases that need them, not retroactively.
